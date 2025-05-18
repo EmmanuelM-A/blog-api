@@ -1,10 +1,10 @@
 const express = require('express');
+const connectToDatabase = require('./config/db-connection');
+require('dotenv').config();
 
-
-// Initialize express app
+connectToDatabase();
 const app = express();
 app.use(express.json());
-require('dotenv').config();
 
 // Import routes here
 app.use('/api/posts', require('./routes/posts'));
