@@ -26,3 +26,5 @@ const loginUser = asyncHandler( async () => {
 const currentUser = asyncHandler( async () => {
 
 });
+
+module.exports = { registerUser, loginUser, currentUser};
