@@ -48,7 +48,7 @@ const deletePost = asyncHandler( async () => {
 /**
  * @description Comment on a post.
  * @route POST api/posts/:id/comments
- * @access private
+ * @access public
  */
 const commentOnPost = asyncHandler( async () => {
 
@@ -58,8 +58,10 @@ const commentOnPost = asyncHandler( async () => {
 /**
  * @description Like/Unlike a post.
  * @route POST api/posts/:id/like
- * @access private
+ * @access public
  */
 const likePost = asyncHandler( async () => {
 
 });
+
+module.exports = { getPosts, getPost, createPost, editPost, deletePost, commentOnPost, likePost };
