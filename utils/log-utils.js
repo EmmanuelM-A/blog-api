@@ -44,7 +44,7 @@ const logMessage = ({
     }
 
     if (error && response) {
-        response.status(statusCode);
+        response.status(statusCode || 400); // Default to 400 if not given
         throw new Error(error);
     }
 };

@@ -1,4 +1,4 @@
-module.exports = {
+exports.status = {
     OK: 200,
     CREATED: 201,
     VALIDATION_ERROR: 400,
