@@ -7,13 +7,28 @@ const levels = {
 };
 
 /**
- * Handles message logging, status code resposes and error messages.
- * @param {string} msg The message to be logged.
- * @param {string} level The level of the log message.
- * @param {object} response The response object.
- * @param {string} error The error message.
- * @param {number} statusCode The status code for the response.
- * 
+ * Logs a message at the specified level and optionally handles errors via an HTTP response.
+ *
+ * @param {Object} options - Configuration object.
+ * @param {string} options.msg - The message to log.
+ * @param {'info' | 'warn' | 'error' | 'debug' | 'log'} [options.level='info'] - The type of log message.
+ * @param {Object} [options.response=null] - Express response object (optional). Required if using error handling.
+ * @param {string} [options.error=null] - Optional error message to throw and send in the HTTP response.
+ * @param {number} [options.statusCode=400] - HTTP status code to send if an error is thrown.
+ *
+ * @throws {Error} Throws an error with the provided error message if `error` and `response` are given.
+ *
+ * @example
+ * logMessage({ msg: 'User created', level: 'info' });
+ *
+ * @example
+ * logMessage({
+ *   msg: 'Invalid credentials',
+ *   level: 'error',
+ *   response: res,
+ *   error: 'Authentication failed',
+ *   statusCode: 401
+ * });
  */
 const logMessage = ({
     msg,
@@ -22,9 +37,11 @@ const logMessage = ({
     error = null,
     statusCode = null
 }) => {
-    const logFn = levels[level] || console.log;
+    if(msg) {
+        const logFn = levels[level] || console.log;
 
-    logFn(`[${level.toUpperCase()}]: ${msg}`);
+        logFn(`[${level.toUpperCase()}]: ${msg}`);
+    }
 
     if (error && response) {
         response.status(statusCode);
