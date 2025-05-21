@@ -1,12 +1,13 @@
 const asyncHandler = require("express-async-handler");
+const { status } = require("../utils/status");
 
 /**
  * @description Gets all posts posted by a user.
  * @route GET api/posts
  * @access public
  */
-const getPosts = asyncHandler( async () => {
-
+const getPosts = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "Get Posts" });
 });
 
 /**
@@ -14,8 +15,8 @@ const getPosts = asyncHandler( async () => {
  * @route GET api/posts/:id
  * @access public
  */
-const getPost = asyncHandler( async () => {
-
+const getPost = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "Get Post" });
 });
 
 /**
@@ -23,8 +24,8 @@ const getPost = asyncHandler( async () => {
  * @route POST api/posts
  * @access private
  */
-const createPost = asyncHandler( async () => {
-
+const createPost = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "Create Post" });
 });
 
 /**
@@ -32,8 +33,8 @@ const createPost = asyncHandler( async () => {
  * @route PUT api/posts/:id
  * @access private
  */
-const editPost = asyncHandler( async () => {
-
+const editPost = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "Edit Post" });
 });
 
 /**
@@ -41,8 +42,8 @@ const editPost = asyncHandler( async () => {
  * @route DELETE api/posts/:id
  * @access private
  */
-const deletePost = asyncHandler( async () => {
-
+const deletePost = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "Delete Post" });
 });
 
 /**
@@ -50,8 +51,8 @@ const deletePost = asyncHandler( async () => {
  * @route POST api/posts/:id/comments
  * @access public
  */
-const commentOnPost = asyncHandler( async () => {
-
+const commentOnPost = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "Commnet On Post" });
 });
 
 
@@ -60,8 +61,8 @@ const commentOnPost = asyncHandler( async () => {
  * @route POST api/posts/:id/like
  * @access public
  */
-const likePost = asyncHandler( async () => {
-
+const likePost = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "Like Post" });
 });
 
 module.exports = { getPosts, getPost, createPost, editPost, deletePost, commentOnPost, likePost };
