@@ -7,6 +7,7 @@ const {
     validatePassword,
     validateEmail 
 } = require("../utils/input-validator");
+const bcrypt = require("bcrypt");
 
 /**
  * @description Register a new user.
@@ -18,49 +19,37 @@ const registerUser = asyncHandler( async (request, response) => {
 
     logMessage({ msg: `Registration attempt for email: ${email}`, level: "debug" });
 
-    if(!username || !email || !password) {
-        logMessage({
-            msg: "Validation failed: Missing fields.",
-            level: "warn",
-            response: response,
-            error: "All fields must be filled!",
-            statusCode: status.VALIDATION_ERROR
-        });
+    const validations = [
+        { check: username, validateFunc: validateUsername(username), error: "Invalid username!" },
+        { check: email, validateFunc: validateEmail(email), error: "Invalid email!" },
+        { check: password, validateFunc: validatePassword(password), error: "Invalid password!" },
+    ];
+
+    for(const { check, validateFunc, error } of validations) {
+        if(!check) {
+            logMessage({
+                msg: "Validation failed: Missing fields.",
+                level: "warning",
+                response,
+                error: "All fields must be filled!",
+                statusCode: status.VALIDATION_ERROR
+            });
+        }
+
+        if(!validateFunc) {
+            logMessage({
+                msg: error,
+                level: "warning",
+                response,
+                error: "Invalid input!",
+                statusCode: status.VALIDATION_ERROR
+            });
+        }
     }
 
-    if(!validateUsername(username)) {
-        logMessage({
-            msg: "Username inputted is invalid.",
-            level: "warn",
-            response: response,
-            error: "Invalid input!",
-            statusCode: status.VALIDATION_ERROR
-        });
-    }
+    const isUserAvailable = await User.findOne({ username, email });
 
-    if(!validatePassword(password)) {
-        logMessage({
-            msg: "Password inputted is invalid.",
-            level: "warn",
-            response: response,
-            error: "Invalid input!",
-            statusCode: status.VALIDATION_ERROR
-        });
-    }
-
-    if(!validateEmail(email)) {
-        logMessage({
-            msg: "Email inputted is invalid.",
-            level: "warn",
-            response: response,
-            error: "Invalid input!",
-            statusCode: status.VALIDATION_ERROR
-        });
-    }
-
-    const userAvailable = await User.findOne({ email });
-
-    if (userAvailable) {
+    if (isUserAvailable) {
         logMessage({
             response: response, 
             error: "Unable to register with the provided credentials",
@@ -100,8 +89,8 @@ const registerUser = asyncHandler( async (request, response) => {
  * @route POST api/users/login
  * @access public
  */
-const loginUser = asyncHandler( async () => {
-
+const loginUser = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "User Login" });
 });
 
 /**
@@ -109,8 +98,8 @@ const loginUser = asyncHandler( async () => {
  * @route GET api/users/current
  * @access public
  */
-const currentUser = asyncHandler( async () => {
-
+const currentUser = asyncHandler( async (request, response) => {
+    response.status(status.OK).json({ message: "Get Current User" });
 });
 
 module.exports = { registerUser, loginUser, currentUser};

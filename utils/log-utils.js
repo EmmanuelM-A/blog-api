@@ -1,6 +1,6 @@
 const levels = {
     info: console.info,
-    warn: console.warn,
+    warning: console.warn,
     error: console.error,
     debug: console.debug,
     log: console.log,
@@ -11,7 +11,7 @@ const levels = {
  *
  * @param {Object} options - Configuration object.
  * @param {string} options.msg - The message to log.
- * @param {'info' | 'warn' | 'error' | 'debug' | 'log'} [options.level='info'] - The type of log message.
+ * @param {'info' | 'warning' | 'error' | 'debug' | 'log'} [options.level='info'] - The type of log message.
  * @param {Object} [options.response=null] - Express response object (optional). Required if using error handling.
  * @param {string} [options.error=null] - Optional error message to throw and send in the HTTP response.
  * @param {number} [options.statusCode=400] - HTTP status code to send if an error is thrown.
