@@ -7,7 +7,9 @@ const {
     validatePassword,
     validateEmail 
 } = require("../utils/input-validator");
-const bcrypt = require("bcrypt");
+const { hashedPassword, hashPassword } = require("../utils/helpers");
+
+// TODO - Test validation and the register method
 
 /**
  * @description Register a new user.
@@ -57,8 +59,7 @@ const registerUser = asyncHandler( async (request, response) => {
         });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = hashPassword(password);
 
     const user = await User.create({
         username,

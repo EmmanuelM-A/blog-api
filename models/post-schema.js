@@ -15,7 +15,7 @@ const postSchema = new mongoose.Schema({
         type: String,
         required: [true, "All posts must have content!"],
     },
-    user_id: {
+    author_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: "User"
