@@ -1,13 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/user-schema");
 const { status } = require("../utils/status");
-const { logMessage } = require("../utils/log-utils");
-const { 
-    validateUsername,
-    validatePassword,
-    validateEmail 
-} = require("../utils/input-validator");
-const { hashedPassword, hashPassword } = require("../utils/helpers");
+const { validateUsername, validatePassword, validateEmail } = require("../utils/input-validator");
+const { hashPassword } = require("../utils/helpers");
 const logger = require("../utils/logger");
 
 // TODO - Test validation and the register method
@@ -20,8 +15,6 @@ const logger = require("../utils/logger");
 const registerUser = asyncHandler( async (request, response) => {
     const { username, email, password } = request.body;
 
-    //logMessage({ msg: `Registration attempt for email: ${email}`, level: "debug" });
-
     logger.info(`Registration attempt for email: ${email}.`);
 
     const validations = [
@@ -31,39 +24,25 @@ const registerUser = asyncHandler( async (request, response) => {
     ];
 
     for(const { check, validateFunc, error } of validations) {
-        if(!check) {
-            /*logMessage({
-                msg: "Validation failed: Missing fields.",
-                level: "warning",
-                response,
-                error: "All fields must be filled!",
-                statusCode: status.VALIDATION_ERROR
-            });*/
-            
+        if(!check) {            
             logger.error("Validation failed: Missing fields detected.");
             response.status(status.VALIDATION_ERROR);
             throw new Error("All fields must be filled!");
         }
 
         if(!validateFunc) {
-            return logMessage({
-                msg: error,
-                level: "warning",
-                response,
-                error: "Invalid input!",
-                statusCode: status.VALIDATION_ERROR
-            });
+            logger.error(error);
+            response.status(status.VALIDATION_ERROR);
+            throw new Error("Invalid input!");
         }
     }
 
-    const isUserAvailable = await User.findOne({ username, email });
+    const isUserAvailable = await User.findOne({ $or: [{ username }, { email }] });
 
     if (isUserAvailable) {
-        return logMessage({
-            response: response, 
-            error: "Unable to register with the provided credentials",
-            statusCode: status.VALIDATION_ERROR
-        });
+        logger.error("User already exists!");
+        response.status(status.VALIDATION_ERROR);
+        throw new Error("Unable to register with the provided credentials");
     }
 
     const hashedPassword = await hashPassword(password);
@@ -74,14 +53,12 @@ const registerUser = asyncHandler( async (request, response) => {
         password: hashedPassword
     });
 
-    logMessage({ msg: `User created: ${user}`, level: "debug" });
+    logger.info(`User created: ${user}`);
 
     if (!user) {
-        return logMessage({
-            response: response,
-            error: "User data is not valid!",
-            statusCode: status.VALIDATION_ERROR
-        });
+        logger.error(`User registration failed for the user: ${user}`);
+        response.status(status.VALIDATION_ERROR);
+        throw new Error("An error occured during user registration!");
     }
 
     response.status(status.CREATED).json({
