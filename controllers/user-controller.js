@@ -29,7 +29,7 @@ const registerUser = asyncHandler( async (request, response) => {
 
     for(const { check, validateFunc, error } of validations) {
         if(!check) {
-            logMessage({
+            return logMessage({
                 msg: "Validation failed: Missing fields.",
                 level: "warning",
                 response,
@@ -39,7 +39,7 @@ const registerUser = asyncHandler( async (request, response) => {
         }
 
         if(!validateFunc) {
-            logMessage({
+            return logMessage({
                 msg: error,
                 level: "warning",
                 response,
@@ -52,7 +52,7 @@ const registerUser = asyncHandler( async (request, response) => {
     const isUserAvailable = await User.findOne({ username, email });
 
     if (isUserAvailable) {
-        logMessage({
+        return logMessage({
             response: response, 
             error: "Unable to register with the provided credentials",
             statusCode: status.VALIDATION_ERROR
@@ -70,7 +70,7 @@ const registerUser = asyncHandler( async (request, response) => {
     logMessage({ msg: `User created: ${user}`, level: "debug" });
 
     if (!user) {
-        logMessage({
+        return logMessage({
             response: response,
             error: "User data is not valid!",
             statusCode: status.VALIDATION_ERROR
