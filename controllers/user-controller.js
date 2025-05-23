@@ -8,6 +8,7 @@ const {
     validateEmail 
 } = require("../utils/input-validator");
 const { hashedPassword, hashPassword } = require("../utils/helpers");
+const logger = require("../utils/logger");
 
 // TODO - Test validation and the register method
 
@@ -19,7 +20,9 @@ const { hashedPassword, hashPassword } = require("../utils/helpers");
 const registerUser = asyncHandler( async (request, response) => {
     const { username, email, password } = request.body;
 
-    logMessage({ msg: `Registration attempt for email: ${email}`, level: "debug" });
+    //logMessage({ msg: `Registration attempt for email: ${email}`, level: "debug" });
+
+    logger.info(`Registration attempt for email: ${email}.`);
 
     const validations = [
         { check: username, validateFunc: validateUsername(username), error: "Invalid username!" },
@@ -29,13 +32,17 @@ const registerUser = asyncHandler( async (request, response) => {
 
     for(const { check, validateFunc, error } of validations) {
         if(!check) {
-            return logMessage({
+            /*logMessage({
                 msg: "Validation failed: Missing fields.",
                 level: "warning",
                 response,
                 error: "All fields must be filled!",
                 statusCode: status.VALIDATION_ERROR
-            });
+            });*/
+            
+            logger.error("Validation failed: Missing fields detected.");
+            response.status(status.VALIDATION_ERROR);
+            throw new Error("All fields must be filled!");
         }
 
         if(!validateFunc) {
@@ -59,7 +66,7 @@ const registerUser = asyncHandler( async (request, response) => {
         });
     }
 
-    const hashedPassword = hashPassword(password);
+    const hashedPassword = await hashPassword(password);
 
     const user = await User.create({
         username,
