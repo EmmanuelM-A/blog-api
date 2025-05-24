@@ -3,29 +3,29 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user-schema");
 const { status } = require("../utils/status");
 
-const authRouteProtection = asyncHandler(async (req, res, next) => {
+const authRouteProtection = asyncHandler(async (request, response, next) => {
     let token;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    if (request.headers.authorization && request.headers.authorization.startsWith("Bearer")) {
         try {
             // Extract token
-            token = req.headers.authorization.split(" ")[1];
+            token = request.headers.authorization.split(" ")[1];
 
             // Verify token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
             // Get user from token without password
-            req.user = await User.findById(decoded.id).select("-password");
+            request.user = await User.findById(decoded.id).select("-password");
 
             next();
         } catch (error) {
-            res.status(status.UNAUTHORIZED);
+            response.status(status.UNAUTHORIZED);
             throw new Error("Not authorized: token failed");
         }
     }
 
     if (!token) {
-        res.status(status.UNAUTHORIZED);
+        response.status(status.UNAUTHORIZED);
         throw new Error("Not authorized: no token");
     }
 });

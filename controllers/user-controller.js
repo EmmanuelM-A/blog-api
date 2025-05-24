@@ -4,8 +4,7 @@ const { status } = require("../utils/status");
 const { validateUsername, validatePassword, validateEmail } = require("../utils/input-validator");
 const { hashPassword, comparePassword } = require("../utils/helpers");
 const logger = require("../utils/logger");
-
-// TODO - Test validation and the register method
+const jwt = require('jsonwebtoken')
 
 /**
  * @description Register a new user.
@@ -99,11 +98,9 @@ const loginUser = asyncHandler( async (request, response) => {
     }
 
     // Find user in DB using the inputted email
-    const userDB = User.findOne({ email });
+    const userDB = await User.findOne({ email });
 
     if(userDB && (await comparePassword(password, userDB.password))) {
-        logger.info(`Login successful: ${email}`);
-
         response.status(status.OK).json({
             _id: userDB.id,
             username: userDB.username,
@@ -111,6 +108,8 @@ const loginUser = asyncHandler( async (request, response) => {
             role: userDB.role,
             token: generateToken(userDB.id)
         });
+
+        logger.info(`Login successful: ${email}`);
     } else {
         logger.error(`Invalid login: ${email}`);
         res.status(status.UNAUTHORIZED);
@@ -124,7 +123,7 @@ const loginUser = asyncHandler( async (request, response) => {
  * @access public
  */
 const currentUser = asyncHandler( async (request, response) => {
-    response.status(status.OK).json({ message: "Get Current User" });
+    response.status(status.OK).json(request.user);
 });
 
 
