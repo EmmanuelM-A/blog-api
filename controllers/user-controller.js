@@ -25,15 +25,15 @@ const registerUser = asyncHandler( async (request, response) => {
 
     for(const { check, validateFunc, error } of validations) {
         if(!check) {            
-            logger.error("Validation failed: Missing fields detected.");
+            logger.error("Registration failed: Missing fields detected.");
             response.status(status.VALIDATION_ERROR);
             throw new Error("All fields must be filled!");
         }
 
         if(!validateFunc) {
-            logger.error(error);
+            logger.error("Registration failed: Invalid input!");
             response.status(status.VALIDATION_ERROR);
-            throw new Error("Invalid input!");
+            throw new Error(`Registration failed: ${error}`);
         }
     }
 
@@ -45,7 +45,7 @@ const registerUser = asyncHandler( async (request, response) => {
         throw new Error("Unable to register with the provided credentials");
     }
 
-    const hashedPassword = hashPassword(password);
+    const hashedPassword = await hashPassword(password);
 
     const user = await User.create({
         username,
@@ -56,7 +56,7 @@ const registerUser = asyncHandler( async (request, response) => {
     logger.info(`User created: ${user}`);
 
     if (!user) {
-        logger.error(`User registration failed for the user: ${user}`);
+        logger.error(`User registration failed for the user: ${email}`);
         response.status(status.VALIDATION_ERROR);
         throw new Error("An error occured during user registration!");
     }
@@ -67,6 +67,8 @@ const registerUser = asyncHandler( async (request, response) => {
         email: user.email,
         role: user.role
     });
+
+    logger.info(`Registration successful for the user: ${email}.`);
 });
 
 /**
