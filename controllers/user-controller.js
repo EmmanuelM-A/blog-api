@@ -40,12 +40,12 @@ const registerUser = asyncHandler( async (request, response) => {
     const isUserAvailable = await User.findOne({ $or: [{ username }, { email }] });
 
     if (isUserAvailable) {
-        logger.error("User already exists!");
+        logger.error(`Registration failed: A user with the username: ${username} or email: ${email} already exists!`);
         response.status(status.VALIDATION_ERROR);
         throw new Error("Unable to register with the provided credentials");
     }
 
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = hashPassword(password);
 
     const user = await User.create({
         username,
