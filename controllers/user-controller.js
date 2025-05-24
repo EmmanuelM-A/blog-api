@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user-schema");
 const { status } = require("../utils/status");
 const { validateUsername, validatePassword, validateEmail } = require("../utils/input-validator");
-const { hashPassword } = require("../utils/helpers");
+const { hashPassword, comparePassword } = require("../utils/helpers");
 const logger = require("../utils/logger");
 
 // TODO - Test validation and the register method
@@ -77,7 +77,45 @@ const registerUser = asyncHandler( async (request, response) => {
  * @access public
  */
 const loginUser = asyncHandler( async (request, response) => {
-    response.status(status.OK).json({ message: "User Login" });
+    const { email, password } = request.body;
+
+    const validations = [
+        { check: email, validateFunc: validateEmail(email), error: "Invalid email!" },
+        { check: password, validateFunc: validatePassword(password), error: "Invalid password!" },
+    ];
+
+    for(const { check, validateFunc, error } of validations) {
+        if(!check) {            
+            logger.error("Login failed: Missing fields detected.");
+            response.status(status.VALIDATION_ERROR);
+            throw new Error("All fields must be filled!");
+        }
+
+        if(!validateFunc) {
+            logger.error("Login failed: Invalid input!");
+            response.status(status.VALIDATION_ERROR);
+            throw new Error(`Login failed: ${error}`);
+        }
+    }
+
+    // Find user in DB using the inputted email
+    const userDB = User.findOne({ email });
+
+    if(userDB && (await comparePassword(password, userDB.password))) {
+        logger.info(`Login successful: ${email}`);
+
+        response.status(status.OK).json({
+            _id: userDB.id,
+            username: userDB.username,
+            email: userDB.email,
+            role: userDB.role,
+            token: generateToken(userDB.id)
+        });
+    } else {
+        logger.error(`Invalid login: ${email}`);
+        res.status(status.UNAUTHORIZED);
+        throw new Error("Invalid credentials");
+    }
 });
 
 /**
@@ -88,5 +126,12 @@ const loginUser = asyncHandler( async (request, response) => {
 const currentUser = asyncHandler( async (request, response) => {
     response.status(status.OK).json({ message: "Get Current User" });
 });
+
+
+const generateToken = (userId) => {
+    return jwt.sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "5m"
+    });
+};
 
 module.exports = { registerUser, loginUser, currentUser};
