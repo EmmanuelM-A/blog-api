@@ -30,6 +30,6 @@ describe("currentUser", () => {
 
         expect(response.json).toHaveBeenCalledWith(request.user);
 
-        expect(logger.info).toHaveBeenCalledWith(`Fetched current user: ${request.user.email || "unknown email"}`);
+        expect(logger.info).toHaveBeenCalledWith(`Fetched current user: ${request.user?.email || "unknown email"}`);
     });
 });

@@ -5,7 +5,6 @@ const { validateUsername, validatePassword, validateEmail } = require("../utils/
 const { hashPassword, comparePassword, generateToken } = require("../utils/helpers");
 const logger = require("../utils/logger");
 
-// TODO: Create UNIT TESTS for loginUser and currentUser
 // TODO: ADD RBAC - ADD ROLES TO USER
 
 /**
@@ -51,7 +50,8 @@ const registerUser = asyncHandler( async (request, response) => {
     const user = await User.create({
         username,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        role: "user"
     });
 
     logger.info(`User created: ${user}`);
@@ -127,7 +127,7 @@ const loginUser = asyncHandler( async (request, response) => {
 const currentUser = asyncHandler( async (request, response) => {
     response.status(status.OK).json(request.user);
 
-    logger.info(`Fetched current user: ${request.user.email || "unknown email"}`);
+    logger.info(`Fetched current user: ${request.user?.email || "unknown email"}`);
 });
 
 
