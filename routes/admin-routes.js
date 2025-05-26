@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authorizeRoles } = require("../middleware/roleMiddleware");
+const { authorizeRoles } = require("../middleware/role-middleware");
 const { getAllUsers, deleteUser, updateUserRole } = require("../controllers/admin-controller");
 const { authRouteProtection } = require('../middleware/auth-middleware');
 

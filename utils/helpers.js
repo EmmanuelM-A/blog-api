@@ -13,7 +13,7 @@ async function comparePassword(inputtedPassword, dbPassword) {
 
 const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "5m"
+        expiresIn: "5m" // TODO: LOOK INTO REFRESH TOKENS
     });
 };
 
