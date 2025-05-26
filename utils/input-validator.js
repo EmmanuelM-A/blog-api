@@ -1,4 +1,5 @@
 const validator = require('validator');
+const restrictedUsernames = require('../config/restricted-usernames.json');
 
 /**
  * Validates the username.
@@ -9,7 +10,8 @@ const validateUsername = (input) => {
     return (
         typeof input === "string" &&
         validator.isLength(input, { min: 3, max: 20 }) &&
-        /^[a-zA-Z0-9_]+$/.test(input)
+        /^[a-zA-Z0-9_]+$/.test(input) &&
+        !restrictedUsernames.includes(input.toLowerCase())
     );
 };
 
