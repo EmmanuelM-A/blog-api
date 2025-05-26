@@ -17,6 +17,4 @@ const generateToken = (userId) => {
     });
 };
 
-const usernameChecker
-
 module.exports = { hashPassword, comparePassword, generateToken };

@@ -9,6 +9,7 @@ const app = express();
 app.use(express.json());
 app.use('/api/posts', require('./routes/post-routes'));
 app.use('/api/users', require('./routes/user-routes'));
+app.use('/api/admin', require('./routes/admin-routes'));
 app.use(errorHandler);
 
 
