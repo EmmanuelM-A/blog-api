@@ -2,9 +2,11 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user-schema");
 const { status } = require("../utils/status");
 const { validateUsername, validatePassword, validateEmail } = require("../utils/input-validator");
-const { hashPassword, comparePassword } = require("../utils/helpers");
+const { hashPassword, comparePassword, generateToken } = require("../utils/helpers");
 const logger = require("../utils/logger");
-const jwt = require('jsonwebtoken')
+
+// TODO: Create UNIT TESTS for loginUser and currentUser
+// TODO: ADD RBAC - ADD ROLES TO USER
 
 /**
  * @description Register a new user.
@@ -111,8 +113,8 @@ const loginUser = asyncHandler( async (request, response) => {
 
         logger.info(`Login successful: ${email}`);
     } else {
-        logger.error(`Invalid login: ${email}`);
-        res.status(status.UNAUTHORIZED);
+        logger.error(`Login unsuccessful: ${email}`);
+        response.status(status.UNAUTHORIZED);
         throw new Error("Invalid credentials");
     }
 });
@@ -127,10 +129,4 @@ const currentUser = asyncHandler( async (request, response) => {
 });
 
 
-const generateToken = (userId) => {
-    return jwt.sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "5m"
-    });
-};
-
-module.exports = { registerUser, loginUser, currentUser};
+module.exports = { registerUser, loginUser, currentUser };
