@@ -126,6 +126,8 @@ const loginUser = asyncHandler( async (request, response) => {
  */
 const currentUser = asyncHandler( async (request, response) => {
     response.status(status.OK).json(request.user);
+
+    logger.info(`Fetched current user: ${request.user.email || "unknown email"}`);
 });
 
 
