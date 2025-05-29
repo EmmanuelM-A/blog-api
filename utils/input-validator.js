@@ -1,5 +1,7 @@
 const validator = require('validator');
+const { body } = require('express-validator');
 const restrictedUsernames = require('../config/restricted-usernames.json');
+const { constants } = require('./constants');
 
 /**
  * Validates the username.
@@ -45,6 +47,33 @@ const validateEmail = (input) => {
         validator.isEmail(input)
     );
 };
+
+const validatePostTitle = (input) => {
+    return (
+        typeof input === "string" &&
+        !validator.isEmpty(input) &&
+        input.length <= constants.MAX_POST_TITLE_LENGTH
+    );
+}
+
+const validatePostContent = (input) => {
+    return (
+        typeof input === "string" &&
+        !validator.isEmpty(input) &&
+        input.length <= constants.MAX_POST_CONTENT_LENGTH
+    );
+}
+
+const validatePostRoute = [
+    body('title')
+        .isString()
+        .isLength({ max: constants.MAX_POST_TITLE_LENGTH })
+        .withMessage("Title must be under 100 characters."),
+    body('content')
+        .isString()
+        .isLength({ max: constants.MAX_POST_CONTENT_LENGTH })
+        .withMessage('Content must be under 5000 characters.'),
+];
 
 module.exports = {
     validateUsername,
