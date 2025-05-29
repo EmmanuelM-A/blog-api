@@ -56,7 +56,7 @@ const updateUserRole = asyncHandler( async (request, response) => {
     if (!validRoles.includes(role)) {
         logger.warn(`Role update failed: Invalid role "${role}" provided for user id ${request.params.id}.`);
         response.status(status.VALIDATION_ERROR);
-        throw new Error(`Invalid role. Valid roles are: ${validRoles.join(', ')}`);
+        throw new Error(`Invalid role. Valid roles are: ${validRoles.join(', ')}.`);
     }
 
     const user = await User.findById(request.params.id);
