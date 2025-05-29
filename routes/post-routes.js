@@ -7,7 +7,9 @@ const {
     editPost, 
     deletePost, 
     commentOnPost, 
-    likePost 
+    likePost,
+    getCommentsForPost,
+    getLikesForPost 
 } = require("../controllers/post-controller");
 
 const { authRouteProtection } = require('../middleware/auth-middleware');
@@ -19,7 +21,11 @@ router.route('/').get(getPosts);
 
 router.route('/:id').get(getPost);
 
-router.post('/:id/comments', authRouteProtection, commentOnPost);
+router.get('/:id/comments', getCommentsForPost);
+
+router.get('/:id/likes', getLikesForPost);
+
+router.post('/:id/comment', authRouteProtection, commentOnPost);
 
 router.post('/:id/like', authRouteProtection, likePost);
 

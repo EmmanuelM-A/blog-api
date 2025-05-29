@@ -78,5 +78,8 @@ const validatePostRoute = [
 module.exports = {
     validateUsername,
     validatePassword,
-    validateEmail
+    validateEmail,
+    validatePostTitle,
+    validatePostContent,
+    validatePostRoute
 };

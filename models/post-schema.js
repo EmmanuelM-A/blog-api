@@ -10,10 +10,12 @@ const postSchema = new mongoose.Schema({
     title: {
         type: String,
         required: [true, "All posts must have a title!"],
+        maxlength: 100,
     },
     content: {
         type: String,
         required: [true, "All posts must have content!"],
+        maxlength: 5000,
     },
     author_id: {
         type: mongoose.Schema.Types.ObjectId,
