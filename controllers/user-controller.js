@@ -2,10 +2,8 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user-schema");
 const { status } = require("../utils/status");
 const { validateUsername, validatePassword, validateEmail } = require("../utils/input-validator");
-const { hashPassword, comparePassword, generateToken } = require("../utils/helpers");
+const { hashPassword, comparePassword, generateRefreshToken, generateAccessToken } = require("../utils/helpers");
 const logger = require("../utils/logger");
-
-// TODO: ADD RBAC - ADD ROLES TO USER
 
 /**
  * @description Register a new user.
@@ -102,21 +100,35 @@ const loginUser = asyncHandler( async (request, response) => {
     // Find user in DB using the inputted email
     const userDB = await User.findOne({ email });
 
-    if(userDB && (await comparePassword(password, userDB.password))) {
-        response.status(status.OK).json({
-            _id: userDB.id,
-            username: userDB.username,
-            email: userDB.email,
-            role: userDB.role,
-            token: generateToken(userDB.id)
-        });
-
-        logger.info(`Login successful: ${email}`);
-    } else {
+    if(!userDB && !(await comparePassword(password, userDB.password))) {
         logger.error(`Login unsuccessful: ${email}`);
         response.status(status.UNAUTHORIZED);
         throw new Error("Invalid credentials");
     }
+
+    const accessToken = generateAccessToken(userDB.id);
+    const refreshToken = generateRefreshToken(userDB.id);
+
+    // Save refresh token in DB
+    userDB.refreshToken = refreshToken;
+    await userDB.save();
+
+    response.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    response.status(status.OK).json({
+        _id: userDB.id,
+        username: userDB.username,
+        email: userDB.email,
+        role: userDB.role,
+        token: generateToken(userDB.id)
+    });
+
+    logger.info(`Login successful: ${email}`);
 });
 
 /**
