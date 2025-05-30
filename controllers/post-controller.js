@@ -1,53 +1,64 @@
 const asyncHandler = require("express-async-handler");
 const { status } = require("../utils/status");
-const Post = require("../models/post-schema"); 
-const { validatePostTitle } = require("../utils/input-validator");
+const Post = require("../models/post-schema");
+const User = require("../models/user-schema"); 
 const logger = require("../utils/logger");
+const { constants } = require("../utils/constants");
 
 
 
 /**
- * @description Creates a new post.
+ * @description Creates a new blog post.
  * @route POST api/posts
  * @access private
  */
 const createPost = asyncHandler( async (request, response) => {
     const { title, content } = request.body;
+    const authorID = request.params?.id;
 
-    const authorID = request.user?.id;
-
-    if (typeof title !== "string" || typeof content !== "string" || !title.trim() || !content.trim()) {
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Title and content are required and must be non-empty strings.");
+    if (!authorID) {
+        logger.warn("Unauthorized post creation attempt.");
+        response.status(status.UNAUTHORIZED);
+        throw new Error("Authentication required to create a post.");
     }
 
-    if (title.length > constants.MAX_POST_TITLE_LENGTH) {
+    if (typeof title !== "string" || typeof content !== "string") {
+        logger.error("Invalid input types for post creation.");
+        response.status(status.VALIDATION_ERROR);
+        throw new Error("Title and content must be strings.");
+    }
+
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+
+    if (!trimmedTitle || !trimmedContent) {
+        logger.error("Empty title or content in post creation.");
+        response.status(status.VALIDATION_ERROR);
+        throw new Error("Title and content must not be empty.");
+    }
+
+    if (trimmedTitle.length > constants.MAX_POST_TITLE_LENGTH) {
+        logger.error(`Post title exceeds ${constants.MAX_POST_TITLE_LENGTH} characters.`);
         response.status(status.VALIDATION_ERROR);
         throw new Error(`Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`);
     }
 
-    if (content.length > constants.MAX_POST_CONTENT_LENGTH) {
+    if (trimmedContent.length > constants.MAX_POST_CONTENT_LENGTH) {
+        logger.error(`Post content exceeds ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
         response.status(status.VALIDATION_ERROR);
         throw new Error(`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
     }
 
-    if (!authorID) {
-        response.status(status.UNAUTHORIZED);
-        throw new Error("You must be logged in to create a post.");
-    }
-
-    // Create and save the post
     const post = await Post.create({
-        title: title.trim(),
-        content: content.trim(),
+        title: trimmedTitle,
+        content: trimmedContent,
         authorID
     });
 
-    response.status(status.CREATED).json({post});
+    logger.info(`New post created by user ${authorID} with ID: ${post.id}`);
 
-    logger.info(`The author: ${authorID} posted a new post: ${post.id}`);
+    response.status(status.CREATED).json({ post });
 });
-
 
 
 /**
@@ -83,40 +94,39 @@ const getAllPosts = asyncHandler( async (request, response) => {
  * @route GET /api/posts/user/:username
  * @access Public
  */
-const getAllUserPosts = asyncHandler(async (request, response) => {
+const getAllPostsByUser = asyncHandler(async (request, response) => {
     const { username } = request.params;
     const page = parseInt(request.query.page) || 1;
-    const LIMIT = 10;
-    const skip = (page - 1) * LIMIT;
 
-    logger.debug(`Fetching posts for user: ${username} (page ${page})`);
+    // TODO: VALIDATE username
 
-    // Step 1: Find the user by username
-    const user = await User.findOne({ username });
+    const skip = (page - 1) * constants.POSTS_PER_PAGE_LIMIT;
 
-    if (!user) {
+    logger.debug(`Fetching the posts for the user: ${username} (page ${page})`);
+
+    const userDB = await User.findOne({ username });
+
+    if (!userDB) {
         logger.warn(`User not found: ${username}`);
-        return response.status(status.NOT_FOUND).json({
-            message: "User not found"
-        });
+        response.status(status.NOT_FOUND);
+        throw new Error("User does not exist!");
     }
 
-    logger.info(`Found user ${username} with ID: ${user._id}`);
+    logger.info(`Found the user ${username} with ID: ${userDB.id}`);
 
-    // Step 2: Find posts by user ID
-    const userPosts = await Post.find({ author_id: user._id })
+    const userPosts = await Post.find({ author_id: userDB.id })
         .skip(skip)
-        .limit(LIMIT)
+        .limit(constants.POSTS_PER_PAGE_LIMIT)
         .sort({ createdAt: -1 });
 
-    const totalPosts = await Post.countDocuments({ author_id: user._id });
+    const totalPosts = await Post.countDocuments({ author_id: userDB._id });
 
     logger.info(`Fetched ${userPosts.length} posts for user ${username}`);
 
     response.status(status.OK).json({
         userPosts,
         page,
-        totalPages: Math.ceil(totalPosts / LIMIT),
+        totalPages: Math.ceil(totalPosts / constants.POSTS_PER_PAGE_LIMIT),
         totalPosts
     });
 });
@@ -176,4 +186,4 @@ const getLikesForPost = asyncHandler( async (request, response) => {
     response.status(status.OK).json({ message: "Get likes for post" });
 });
 
-module.exports = { getPosts, getPost, createPost, editPost, deletePost, commentOnPost, likePost, getCommentsForPost, getLikesForPost };
+module.exports = { getAllPosts, getAllPostsByUser, createPost, editPost, deletePost, commentOnPost, likePost, getCommentsForPost, getLikesForPost };
