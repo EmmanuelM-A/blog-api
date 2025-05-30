@@ -4,6 +4,7 @@ const Post = require("../models/post-schema");
 const User = require("../models/user-schema"); 
 const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
+const { validateUsername } = require("../utils/input-validator");
 
 
 
@@ -98,7 +99,17 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
     const { username } = request.params;
     const page = parseInt(request.query.page) || 1;
 
-    // TODO: VALIDATE username
+    if(!username) {
+        logger.error("Missing username field");
+        response.status(status.VALIDATION_ERROR);
+        throw new Error("Username must present!");
+    }
+
+    if(!validateUsername(username)) {
+        logger.error("Invalid input");
+        response.status(status.VALIDATION_ERROR);
+        throw new Error("Invalid username!");
+    }
 
     const skip = (page - 1) * constants.POSTS_PER_PAGE_LIMIT;
 
