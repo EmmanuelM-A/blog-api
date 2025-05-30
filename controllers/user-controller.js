@@ -125,7 +125,7 @@ const loginUser = asyncHandler( async (request, response) => {
         username: userDB.username,
         email: userDB.email,
         role: userDB.role,
-        token: generateToken(userDB.id)
+        token: accessToken
     });
 
     logger.info(`Login successful: ${email}`);
@@ -142,5 +142,58 @@ const currentUser = asyncHandler( async (request, response) => {
     logger.info(`Fetched current user: ${request.user?.email || "unknown email"}`);
 });
 
+/**
+ * @route POST /api/users/refresh-token
+ */
+const refreshAccessToken = asyncHandler(async (request, response) => {
+    const token = request.cookies.refreshToken;
 
-module.exports = { registerUser, loginUser, currentUser };
+    if (!token) {
+        response.status(status.UNAUTHORIZED);
+        throw new Error("Refresh token not provided");
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+        const userDB = await User.findById(decoded.id);
+
+        if (!userDB || userDB.refreshToken !== token) {
+            res.status(status.FORBIDDEN);
+            throw new Error("Invalid refresh token");
+        }
+
+        const newAccessToken = generateAccessToken(userDB.id);
+        res.status(status.OK).json({ accessToken: newAccessToken });
+
+    } catch (err) {
+        res.status(status.FORBIDDEN);
+        throw new Error("Invalid or expired refresh token");
+    }
+});
+
+/**
+ * @route POST /api/users/logout
+ */
+const logoutUser = asyncHandler(async (request, response) => {
+    const token = request.cookies.refreshToken;
+
+    if (token) {
+        const user = await User.findOne({ refreshToken: token });
+        if (user) {
+            user.refreshToken = null;
+            await user.save();
+        }
+
+        response.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict"
+        });
+    }
+
+    response.status(status.OK).json({ message: "Logged out successfully" });
+});
+
+
+
+module.exports = { registerUser, loginUser, currentUser, refreshAccessToken, logoutUser };
