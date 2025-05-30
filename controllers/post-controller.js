@@ -70,14 +70,12 @@ const createPost = asyncHandler( async (request, response) => {
 const getAllPosts = asyncHandler( async (request, response) => {
     const page = parseInt(request.query.page) || 1;
 
-    const LIMIT = 10;
-
-    const skip = (page - 1) * LIMIT;
+    const skip = (page - 1) * constants.POSTS_PER_PAGE_LIMIT;
 
     // Get all posts within range
     const allPosts = await Post.find()
         .skip(skip).
-        limit(LIMIT).
+        limit(constants.POSTS_PER_PAGE_LIMIT).
         sort({ createdAt: -1 });
 
     const total = await Post.countDocuments();
@@ -85,7 +83,7 @@ const getAllPosts = asyncHandler( async (request, response) => {
     response.status(status.OK).json({
         allPosts,
         page,
-        totalPages: Math.ceil(total / LIMIT),
+        totalPages: Math.ceil(total / constants.POSTS_PER_PAGE_LIMIT),
         totalPosts: total
     });
 });
@@ -148,7 +146,66 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
  * @access private
  */
 const editPost = asyncHandler( async (request, response) => {
-    response.status(status.OK).json({ message: "Edit Post" });
+    const { title, content } = request.body;
+    const postID = request.params.id;
+    const userID = request.params?.id;
+
+    if (!userID) {
+        logger.warn("Unauthorized attempt to edit post.");
+        response.status(status.UNAUTHORIZED);
+        throw new Error("Authentication required to edit a post.");
+    }
+
+    if (typeof title !== "string" || typeof content !== "string") {
+        logger.error("Invalid input types for post creation.");
+        response.status(status.VALIDATION_ERROR);
+        throw new Error("Title and content must be strings.");
+    }
+
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+
+    if (!trimmedTitle || !trimmedContent) {
+        logger.error("Empty title or content in post creation.");
+        response.status(status.VALIDATION_ERROR);
+        throw new Error("Title and content must not be empty.");
+    }
+
+    if (trimmedTitle.length > constants.MAX_POST_TITLE_LENGTH) {
+        logger.error(`Post title exceeds ${constants.MAX_POST_TITLE_LENGTH} characters.`);
+        response.status(status.VALIDATION_ERROR);
+        throw new Error(`Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`);
+    }
+
+    if (trimmedContent.length > constants.MAX_POST_CONTENT_LENGTH) {
+        logger.error(`Post content exceeds ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
+        response.status(status.VALIDATION_ERROR);
+        throw new Error(`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
+    }
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+        logger.warn(`Edit failed: Post with id ${postId} not found.`);
+        response.status(status.NOT_FOUND);
+        throw new Error("Post not found.");
+    }
+
+    if (String(post.authorID) !== String(userId)) {
+        logger.warn(`User ${userId} attempted to edit post ${postId} without permission.`);
+        response.status(status.FORBIDDEN);
+        throw new Error("You do not have permission to edit this post.");
+    }
+
+    post.title = trimmedTitle;
+    post.content = trimmedContent;
+    await post.save();
+
+    logger.info(`Post ${postId} edited by user ${userId}.`);
+    response.status(status.OK).json({ 
+        message: "Post updated successfully.", 
+        post 
+    });
 });
 
 /**
@@ -157,44 +214,35 @@ const editPost = asyncHandler( async (request, response) => {
  * @access private
  */
 const deletePost = asyncHandler( async (request, response) => {
-    response.status(status.OK).json({ message: "Delete Post" });
+    const postId = request.params.id;
+    const userId = request.user?.id;
+
+    if (!userId) {
+        logger.warn("Unauthorized attempt to delete post.");
+        response.status(status.UNAUTHORIZED);
+        throw new Error("Authentication required to delete a post.");
+    }
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+        logger.warn(`Delete failed: Post with id ${postId} not found.`);
+        response.status(status.NOT_FOUND);
+        throw new Error("Post not found.");
+    }
+
+    if (String(post.author_id) !== String(userId)) {
+        logger.warn(`User ${userId} attempted to delete post ${postId} without permission.`);
+        response.status(status.FORBIDDEN);
+        throw new Error("You do not have permission to delete this post.");
+    }
+
+    await post.deleteOne();
+
+    logger.info(`Post ${postId} deleted by user ${userId}.`);
+    response.status(status.OK).json({ 
+        message: "Post deleted successfully." 
+    });
 });
 
-/**
- * @description Comment on a post.
- * @route POST api/posts/:id/comment
- * @access public
- */
-const commentOnPost = asyncHandler( async (request, response) => {
-    response.status(status.OK).json({ message: "Commnet On Post" });
-});
-
-
-/**
- * @description Like/Unlike a post.
- * @route POST api/posts/:id/like
- * @access public
- */
-const likePost = asyncHandler( async (request, response) => {
-    response.status(status.OK).json({ message: "Like Post" });
-});
-
-/**
- * @description Get the comments assocaited with a post.
- * @route GET api/posts/:id/like
- * @access public
- */
-const getCommentsForPost = asyncHandler( async (request, response) => {
-    response.status(status.OK).json({ message: "Get comments for posts" });
-});
-
-/**
- * @description Get the comments assocaite with a post.
- * @route GET api/posts/:id/like
- * @access public
- */
-const getLikesForPost = asyncHandler( async (request, response) => {
-    response.status(status.OK).json({ message: "Get likes for post" });
-});
-
-module.exports = { getAllPosts, getAllPostsByUser, createPost, editPost, deletePost, commentOnPost, likePost, getCommentsForPost, getLikesForPost };
+module.exports = { getAllPosts, getAllPostsByUser, createPost, editPost, deletePost };
