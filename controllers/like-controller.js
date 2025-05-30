@@ -1,4 +1,9 @@
-
+const asyncHandler = require("express-async-handler");
+const { status } = require("../utils/status");
+const Post = require("../models/post-schema");
+const User = require("../models/user-schema"); 
+const logger = require("../utils/logger");
+const { constants } = require("../utils/constants");
 
 
 /**
@@ -18,3 +23,8 @@ const likePost = asyncHandler( async (request, response) => {
 const getLikesForPost = asyncHandler( async (request, response) => {
     response.status(status.OK).json({ message: "Get likes for post" });
 });
+
+module.exports = {
+    likePost,
+    getLikesForPost
+}

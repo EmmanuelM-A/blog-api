@@ -1,4 +1,9 @@
-
+const asyncHandler = require("express-async-handler");
+const { status } = require("../utils/status");
+const Post = require("../models/post-schema");
+const User = require("../models/user-schema"); 
+const logger = require("../utils/logger");
+const { constants } = require("../utils/constants");
 
 /**
  * @description Comment on a post.
@@ -47,3 +52,8 @@ const commentOnPost = asyncHandler( async (request, response) => {
 const getCommentsForPost = asyncHandler( async (request, response) => {
     response.status(status.OK).json({ message: "Get comments for posts" });
 });
+
+module.exports = { 
+    commentOnPost,
+    getCommentsForPost
+};

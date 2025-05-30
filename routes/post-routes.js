@@ -1,25 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const { 
-    getPosts, 
-    getPost, 
+    getAllPosts, 
+    getAllPostsByUser, 
     createPost, 
     editPost, 
-    deletePost, 
-    commentOnPost, 
-    likePost,
-    getCommentsForPost,
-    getLikesForPost 
+    deletePost,
 } = require("../controllers/post-controller");
+
+const { 
+    commentOnPost,
+    getCommentsForPost
+} = require("../controllers/comment-controller");
 
 const { authRouteProtection } = require('../middleware/auth-middleware');
 const { authorizeRoles } = require('../middleware/role-middleware');
+const { getLikesForPost, likePost } = require('../controllers/like-controller');
 
 
 // Public routes
-router.route('/').get(getPosts);
+router.route('/').get(getAllPosts);
 
-router.route('/:id').get(getPost);
+router.route('/:id').get(getAllPostsByUser);
 
 router.get('/:id/comments', getCommentsForPost);
 
