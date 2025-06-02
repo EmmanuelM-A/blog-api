@@ -39,7 +39,7 @@ const deleteUser = asyncHandler( async (request, response) => {
 
 /**
  * @description Update a user's role.
- * @route PUT api/admin/users/:id/role
+ * @route PATCH api/admin/users/:id/role
  * @access private
  */
 const updateUserRole = asyncHandler( async (request, response) => {

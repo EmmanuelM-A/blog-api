@@ -4,6 +4,7 @@ const { status } = require("../utils/status");
 const { validateUsername, validatePassword, validateEmail } = require("../utils/input-validator");
 const { hashPassword, comparePassword, generateRefreshToken, generateAccessToken } = require("../utils/helpers");
 const logger = require("../utils/logger");
+const jwt = require("jsonwebtoken");
 
 /**
  * @description Register a new user.
@@ -100,7 +101,7 @@ const loginUser = asyncHandler( async (request, response) => {
     // Find user in DB using the inputted email
     const userDB = await User.findOne({ email });
 
-    if(!userDB && !(await comparePassword(password, userDB.password))) {
+    if(!userDB || !(await comparePassword(password, userDB.password))) {
         logger.error(`Login unsuccessful: ${email}`);
         response.status(status.UNAUTHORIZED);
         throw new Error("Invalid credentials");
@@ -143,30 +144,47 @@ const currentUser = asyncHandler( async (request, response) => {
 });
 
 /**
+ * @description Refreshes the access token using a valid refresh token cookie.
  * @route POST /api/users/refresh-token
+ * @access Public
  */
 const refreshAccessToken = asyncHandler(async (request, response) => {
+    logger.info("Refresh token request received.");
+
     const token = request.cookies.refreshToken;
 
     if (!token) {
+        logger.warn("Refresh token not provided in cookies.");
         response.status(status.UNAUTHORIZED);
         throw new Error("Refresh token not provided");
     }
 
     try {
+        logger.info("Verifying refresh token...");
         const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+        logger.info(`Refresh token verified for user ID: ${decoded.id}`);
+
         const userDB = await User.findById(decoded.id);
 
-        if (!userDB || userDB.refreshToken !== token) {
-            res.status(status.FORBIDDEN);
+        if (!userDB) {
+            logger.warn(`User not found for ID: ${decoded.id}`);
+            response.status(status.FORBIDDEN);
+            throw new Error("Invalid refresh token");
+        }
+
+        if (userDB.refreshToken !== token) {
+            logger.warn("Refresh token does not match the one stored in DB.");
+            response.status(status.FORBIDDEN);
             throw new Error("Invalid refresh token");
         }
 
         const newAccessToken = generateAccessToken(userDB.id);
-        res.status(status.OK).json({ accessToken: newAccessToken });
+        logger.info(`New access token generated for user ID: ${userDB.id}`);
+        response.status(status.OK).json({ accessToken: newAccessToken });
 
     } catch (err) {
-        res.status(status.FORBIDDEN);
+        logger.error(`Refresh token verification failed: ${err.message}`);
+        response.status(status.FORBIDDEN);
         throw new Error("Invalid or expired refresh token");
     }
 });
