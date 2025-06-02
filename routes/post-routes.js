@@ -21,7 +21,7 @@ const { getLikesForPost, likePost } = require('../controllers/like-controller');
 // Public routes
 router.route('/').get(getAllPosts);
 
-router.route('/:id').get(getAllPostsByUser);
+router.route('/user/:username').get(getAllPostsByUser);
 
 router.get('/:id/comments', getCommentsForPost);
 
@@ -34,7 +34,7 @@ router.post('/:id/like', authRouteProtection, likePost);
 // Protected routes for authors/admins
 router.post('/', authRouteProtection, authorizeRoles('author', 'admin'), createPost);
 
-router.put('/:id', authRouteProtection, authorizeRoles('author', 'admin'), editPost);
+router.patch('/:id', authRouteProtection, authorizeRoles('author', 'admin'), editPost);
 
 router.delete('/:id', authRouteProtection, authorizeRoles('author', 'admin'), deletePost);
 

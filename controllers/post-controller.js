@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
 const { status } = require("../utils/status");
 const Post = require("../models/post-schema");
@@ -6,21 +7,28 @@ const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
 const { validateUsername } = require("../utils/input-validator");
 
-
+// TODO: RUN UAT TESTS FOR THIS FILES AND ANY ASSOCAITED FILES.
 
 /**
  * @description Creates a new blog post.
  * @route POST api/posts
- * @access private
+ * @access privateí
  */
 const createPost = asyncHandler( async (request, response) => {
     const { title, content } = request.body;
-    const authorID = request.params?.id;
+    const author_id = request.query.author_id
 
-    if (!authorID) {
+    if (!author_id) {
         logger.warn("Unauthorized post creation attempt.");
         response.status(status.UNAUTHORIZED);
         throw new Error("Authentication required to create a post.");
+    }
+
+    const user = await User.findById(author_id);
+    if (!user) {
+        logger.error(`User not found for ${author_id}.`);
+        response.status(status.NOT_FOUND);
+        throw new Error("User not found.");
     }
 
     if (typeof title !== "string" || typeof content !== "string") {
@@ -50,13 +58,15 @@ const createPost = asyncHandler( async (request, response) => {
         throw new Error(`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
     }
 
+    logger.info(`Post creation attempt by the user: ${author_id}`);
+
     const post = await Post.create({
         title: trimmedTitle,
         content: trimmedContent,
-        authorID
+        author_id: author_id,
     });
 
-    logger.info(`New post created by user ${authorID} with ID: ${post.id}`);
+    logger.info(`New post created by user ${author_id} with ID: ${post.id}`);
 
     response.status(status.CREATED).json({ post });
 });
@@ -79,6 +89,8 @@ const getAllPosts = asyncHandler( async (request, response) => {
         sort({ createdAt: -1 });
 
     const total = await Post.countDocuments();
+
+    logger.info("Fetched the user posts");
 
     response.status(status.OK).json({
         allPosts,
@@ -111,7 +123,7 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
 
     const skip = (page - 1) * constants.POSTS_PER_PAGE_LIMIT;
 
-    logger.debug(`Fetching the posts for the user: ${username} (page ${page})`);
+    logger.info(`Fetching the posts for the user: ${username} (page ${page})`);
 
     const userDB = await User.findOne({ username });
 
@@ -147,10 +159,10 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
  */
 const editPost = asyncHandler( async (request, response) => {
     const { title, content } = request.body;
-    const postID = request.params.id;
-    const userID = request.params?.id;
+    const postId = request.params.id;
+    const userId = request.params?.id;
 
-    if (!userID) {
+    if (!userId) {
         logger.warn("Unauthorized attempt to edit post.");
         response.status(status.UNAUTHORIZED);
         throw new Error("Authentication required to edit a post.");
@@ -191,7 +203,7 @@ const editPost = asyncHandler( async (request, response) => {
         throw new Error("Post not found.");
     }
 
-    if (String(post.authorID) !== String(userId)) {
+    if (String(post.author_id) !== String(userId)) {
         logger.warn(`User ${userId} attempted to edit post ${postId} without permission.`);
         response.status(status.FORBIDDEN);
         throw new Error("You do not have permission to edit this post.");
@@ -202,6 +214,7 @@ const editPost = asyncHandler( async (request, response) => {
     await post.save();
 
     logger.info(`Post ${postId} edited by user ${userId}.`);
+
     response.status(status.OK).json({ 
         message: "Post updated successfully.", 
         post 
