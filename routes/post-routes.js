@@ -23,19 +23,19 @@ router.route('/').get(getAllPosts);
 
 router.route('/user/:username').get(getAllPostsByUser);
 
-router.get('/:id/comments', getCommentsForPost);
+router.get('/:postId/comments', getCommentsForPost);
 
-router.get('/:id/likes', getLikesForPost);
+router.get('/:postId/likes', getLikesForPost);
 
-router.post('/:id/comment', authRouteProtection, commentOnPost);
+router.post('/:postId/comment', authRouteProtection, commentOnPost);
 
-router.post('/:id/like', authRouteProtection, likePost);
+router.post('/:postId/like', authRouteProtection, likePost);
 
 // Protected routes for authors/admins
 router.post('/', authRouteProtection, authorizeRoles('author', 'admin'), createPost);
 
-router.patch('/:id', authRouteProtection, authorizeRoles('author', 'admin'), editPost);
+router.patch('/:postId', authRouteProtection, authorizeRoles('author', 'admin'), editPost);
 
-router.delete('/:id', authRouteProtection, authorizeRoles('author', 'admin'), deletePost);
+router.delete('/:postId', authRouteProtection, authorizeRoles('author', 'admin'), deletePost);
 
 module.exports = router;

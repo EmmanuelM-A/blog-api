@@ -7,8 +7,6 @@ const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
 const { validateUsername } = require("../utils/input-validator");
 
-// TODO: RUN UAT TESTS FOR THIS FILES AND ANY ASSOCAITED FILES.
-
 /**
  * @description Creates a new blog post.
  * @route POST api/posts
@@ -16,7 +14,7 @@ const { validateUsername } = require("../utils/input-validator");
  */
 const createPost = asyncHandler( async (request, response) => {
     const { title, content } = request.body;
-    const author_id = request.query.author_id
+    const author_id = request.query.author_id;
 
     if (!author_id) {
         logger.warn("Unauthorized post creation attempt.");
@@ -154,13 +152,13 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
 
 /**
  * @description Edit a post
- * @route PUT api/posts/:id
+ * @route PATCH api/posts/:id
  * @access private
  */
 const editPost = asyncHandler( async (request, response) => {
     const { title, content } = request.body;
-    const postId = request.params.id;
-    const userId = request.params?.id;
+    const { postId } = request.params;
+    const userId = request.user?.id;
 
     if (!userId) {
         logger.warn("Unauthorized attempt to edit post.");
@@ -223,11 +221,11 @@ const editPost = asyncHandler( async (request, response) => {
 
 /**
  * @description Delete a post
- * @route DELETE api/posts/:id
+ * @route DELETE api/posts/:postId
  * @access private
  */
 const deletePost = asyncHandler( async (request, response) => {
-    const postId = request.params.id;
+    const { postId } = request.params;
     const userId = request.user?.id;
 
     if (!userId) {
