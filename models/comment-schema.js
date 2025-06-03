@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
+const { constants } = require('../utils/constants');
 
 const commentSchema = new mongoose.Schema({
     _id: {
@@ -9,7 +10,8 @@ const commentSchema = new mongoose.Schema({
     },
     content: {
         type: String,
-        required: [true, "Content is required!"]
+        required: [true, "Content is required!"],
+        maxLength: constants.MAX_CHAR_COMMENT_LENGTH
     },
     post_id: {
         type: String,

@@ -6,6 +6,8 @@ const Comment = require("../models/comment-schema");
 const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
 
+// TODO: CHECK INPUT VALIDATION FOR METHODS
+
 /**
  * @description Comment on a post.
  * @route POST api/posts/comment/:postId
@@ -26,6 +28,14 @@ const commentOnPost = asyncHandler( async (request, response) => {
         logger.error("Invalid or empty comment.");
         response.status(status.VALIDATION_ERROR);
         throw new Error("Comment must be a non-empty string.");
+    }
+
+    const trimmedComment = comment.trim();
+
+    if(trimmedComment > constants.MAX_CHAR_COMMENT_LENGTH) {
+        logger.error(`Comment exceeds ${constants.MAX_CHAR_COMMENT_LENGTH} characters`);
+        response.status(status.VALIDATION_ERROR);
+        throw new Error(`Comment exceeds ${constants.MAX_CHAR_COMMENT_LENGTH} characters`);
     }
 
     const post = await Post.findById(postId);
