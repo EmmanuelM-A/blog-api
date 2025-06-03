@@ -23,11 +23,11 @@ router.route('/').get(getAllPosts);
 
 router.route('/user/:username').get(getAllPostsByUser);
 
-router.get('/:postId/comments', getCommentsForPost);
+router.get('/comments/:postId', getCommentsForPost);
 
 router.get('/:postId/likes', getLikesForPost);
 
-router.post('/:postId/comment', authRouteProtection, commentOnPost);
+router.post('/comment/:postId', authRouteProtection, commentOnPost);
 
 router.post('/:postId/like', authRouteProtection, likePost);
 

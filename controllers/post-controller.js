@@ -69,6 +69,7 @@ const createPost = asyncHandler( async (request, response) => {
     response.status(status.CREATED).json({ post });
 });
 
+// TODO: Use the populate() for posts that require the username to be returned in the API call.
 
 /**
  * @description Gets all posts posted.

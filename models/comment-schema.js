@@ -12,12 +12,12 @@ const commentSchema = new mongoose.Schema({
         required: [true, "Content is required!"]
     },
     post_id: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         required: true,
         ref: "Post"
     },
     user_id: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         required: true,
         ref: "User"
     }
