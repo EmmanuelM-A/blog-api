@@ -13,23 +13,23 @@ const {
     getCommentsForPost
 } = require("../controllers/comment-controller");
 
+const { 
+    getLikesForPost, 
+    likePost 
+} = require('../controllers/like-controller');
+
 const { authRouteProtection } = require('../middleware/auth-middleware');
 const { authorizeRoles } = require('../middleware/role-middleware');
-const { getLikesForPost, likePost } = require('../controllers/like-controller');
 
 
 // Public routes
-router.route('/').get(getAllPosts);
+router.get('/', getAllPosts);
 
-router.route('/user/:username').get(getAllPostsByUser);
+router.get('/user/:username', getAllPostsByUser);
 
 router.get('/comments/:postId', getCommentsForPost);
 
-router.get('/:postId/likes', getLikesForPost);
-
-router.post('/comment/:postId', authRouteProtection, commentOnPost);
-
-router.post('/:postId/like', authRouteProtection, likePost);
+router.get('/likes/:postId', getLikesForPost);
 
 // Protected routes for authors/admins
 router.post('/', authRouteProtection, authorizeRoles('author', 'admin'), createPost);
@@ -37,5 +37,9 @@ router.post('/', authRouteProtection, authorizeRoles('author', 'admin'), createP
 router.patch('/:postId', authRouteProtection, authorizeRoles('author', 'admin'), editPost);
 
 router.delete('/:postId', authRouteProtection, authorizeRoles('author', 'admin'), deletePost);
+
+router.post('/comment/:postId', authRouteProtection, commentOnPost);
+
+router.post('/like/:postId', authRouteProtection, likePost);
 
 module.exports = router;
