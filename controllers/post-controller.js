@@ -69,8 +69,6 @@ const createPost = asyncHandler( async (request, response) => {
     response.status(status.CREATED).json({ post });
 });
 
-// TODO: Use the populate() for posts that require the username to be returned in the API call.
-
 /**
  * @description Gets all posts posted.
  * @route GET api/posts
@@ -83,9 +81,10 @@ const getAllPosts = asyncHandler( async (request, response) => {
 
     // Get all posts within range
     const allPosts = await Post.find()
-        .skip(skip).
-        limit(constants.POSTS_PER_PAGE_LIMIT).
-        sort({ createdAt: -1 });
+        .skip(skip)
+        .limit(constants.POSTS_PER_PAGE_LIMIT)
+        .sort({ createdAt: -1 })
+        .populate("user_id", "username");
 
     const total = await Post.countDocuments();
 

@@ -6,8 +6,6 @@ const Comment = require("../models/comment-schema");
 const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
 
-// TODO: CHECK INPUT VALIDATION FOR METHODS
-
 /**
  * @description Comment on a post.
  * @route POST api/posts/comment/:postId
