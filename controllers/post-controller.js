@@ -93,33 +93,43 @@ const getAllPosts = asyncHandler( async (request, response) => {
 
     // Try to fetch from cache
     const cached = await redisClient.get(cacheKey);
+    logger.debug("Completed Redis GET operation!");
 
     if (cached) {
         logger.debug(`Cache hit for ${cacheKey}`);
         logger.info("Fetched the user posts");
-        return res.status(status.OK).json(JSON.parse(cached));
+        return response.status(status.OK).json(JSON.parse(cached));
     }
 
+    logger.debug(`Cache miss for ${cacheKey}. Proceeding to fetch from database.`);
+
+
     // Get all posts within range
+    logger.debug("Attempting MongoDB Post.find() operation...");
     const allPosts = await Post.find()
         .skip(skip)
         .limit(constants.POSTS_PER_PAGE_LIMIT)
         .sort({ createdAt: -1 })
-        .populate("user_id", "username");
+        .populate("author_id", "username");
+    logger.debug("Completed MongoDB Post.find() operation.");
 
+    logger.debug("Attempting MongoDB Post.countDocuments() operation...");
     const total = await Post.countDocuments();
+    logger.debug("Completed MongoDB Post.countDocuments() operation.");
 
     const responseData = {
         allPosts,
         page,
-        totalPages: Math.ceil(total / LIMIT),
+        totalPages: Math.ceil(total / constants.POSTS_PER_PAGE_LIMIT),
         totalPosts: total
     };
 
     logger.info("Fetched the user posts");
 
     // Cache the response
+    logger.debug(`Attempting to set Redis cache for key: ${cacheKey}`);
     await redisClient.setEx(cacheKey, 3600, JSON.stringify(responseData)); // Cache for 1 hour
+    logger.debug("Completed Redis SETEX operation.");
 
     logger.debug(`Cache set for ${cacheKey}`);
 
