@@ -1,8 +1,9 @@
+require('dotenv').config();
+
 const express = require('express');
 const connectToDatabase = require('./config/db-connection');
 const errorHandler = require('./middleware/error-handler');
 const cookieParser = require('cookie-parser');
-require('dotenv').config();
 
 connectToDatabase();
 const app = express();

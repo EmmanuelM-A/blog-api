@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
 const { status } = require("../utils/status");
 const Post = require("../models/post-schema");
@@ -6,6 +5,10 @@ const User = require("../models/user-schema");
 const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
 const { validateUsername } = require("../utils/input-validator");
+const redisClient = require("../config/redis-client");
+const { clearPostCache } = require("../utils/cache-utils");
+
+// TODO: SETUP REDIS CACHE AND TEST CACHING
 
 /**
  * @description Creates a new blog post.
@@ -56,6 +59,11 @@ const createPost = asyncHandler( async (request, response) => {
         throw new Error(`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
     }
 
+    // Clear cache
+    logger.info("Cache cleared on post creation!");
+
+    await clearPostCache();
+
     logger.info(`Post creation attempt by the user: ${author_id}`);
 
     const post = await Post.create({
@@ -70,7 +78,7 @@ const createPost = asyncHandler( async (request, response) => {
 });
 
 /**
- * @description Gets all posts posted.
+ * @description Gets all posts with pagination. Uses Redis cache
  * @route GET api/posts
  * @access public
  */
@@ -78,6 +86,19 @@ const getAllPosts = asyncHandler( async (request, response) => {
     const page = parseInt(request.query.page) || 1;
 
     const skip = (page - 1) * constants.POSTS_PER_PAGE_LIMIT;
+
+    const cacheKey = `posts:page:${page}`;
+
+    logger.debug("Get all posts request sent!");
+
+    // Try to fetch from cache
+    const cached = await redisClient.get(cacheKey);
+
+    if (cached) {
+        logger.debug(`Cache hit for ${cacheKey}`);
+        logger.info("Fetched the user posts");
+        return res.status(status.OK).json(JSON.parse(cached));
+    }
 
     // Get all posts within range
     const allPosts = await Post.find()
@@ -88,14 +109,21 @@ const getAllPosts = asyncHandler( async (request, response) => {
 
     const total = await Post.countDocuments();
 
-    logger.info("Fetched the user posts");
-
-    response.status(status.OK).json({
+    const responseData = {
         allPosts,
         page,
-        totalPages: Math.ceil(total / constants.POSTS_PER_PAGE_LIMIT),
+        totalPages: Math.ceil(total / LIMIT),
         totalPosts: total
-    });
+    };
+
+    logger.info("Fetched the user posts");
+
+    // Cache the response
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(responseData)); // Cache for 1 hour
+
+    logger.debug(`Cache set for ${cacheKey}`);
+
+    response.status(status.OK).json(responseData);
 });
 
 /**
@@ -207,6 +235,10 @@ const editPost = asyncHandler( async (request, response) => {
         throw new Error("You do not have permission to edit this post.");
     }
 
+    // Clear cache
+    logger.info("Cache cleared on post editing!");
+    await clearPostCache();
+
     post.title = trimmedTitle;
     post.content = trimmedContent;
     await post.save();
@@ -247,6 +279,10 @@ const deletePost = asyncHandler( async (request, response) => {
         response.status(status.FORBIDDEN);
         throw new Error("You do not have permission to delete this post.");
     }
+
+    // Clear cache
+    logger.info("Cache cleared on post deletion!");
+    await clearPostCache();
 
     await post.deleteOne();
 

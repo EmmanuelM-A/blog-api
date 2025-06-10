@@ -9,7 +9,7 @@ const customFormat = printf(({ level, message, timestamp, stack }) => {
 });
 
 const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL || 'info',
+    level: process.env.LOG_LEVEL || 'debug',
     format: combine(
         errors({ stack: true }),
         timestamp(),
