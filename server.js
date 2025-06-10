@@ -1,7 +1,74 @@
+require('dotenv').config();
+
 const app = require('./app');
+const connectToDatabase = require("../blog-api/config/db-connection");
+const logger = require('./utils/logger');
+const redisClient = require('./config/redis-client');
 
 
 const PORT = process.env.PORT || 5000;
 
+// --------------------- Application Startup Logic ---------------------
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}.`));
+async function startServer() {
+    try {
+        // Connect to Database
+        await connectToDatabase();
+        logger.info("Database connected!");
+
+        // Connect to Redis
+        await redisClient.connect();
+        logger.info('Redis Client Connected!');
+
+        // Start the Express server
+        app.listen(PORT, () => {
+            logger.info(`Server running on port ${PORT}`);
+        });
+
+    } catch (error) {
+        logger.error('Failed to start application:', error);
+        process.exit(1);
+    }
+}
+
+startServer();
+
+// --------------------- Graceful Shutdown ---------------------
+
+/**
+ * This ensures that when the server is stopped (e.g., by Ctrl+C or a SIGTERM signal from Docker), it gracefully closes connections to 
+ * Redis and potentially your database.
+ */
+
+process.on('SIGINT', async () => {
+    logger.info('SIGINT signal received. Shutting down gracefully...');
+    await shutdown();
+});
+
+process.on('SIGTERM', async () => {
+    logger.info('SIGTERM signal received. Shutting down gracefully...');
+    await shutdown();
+});
+
+async function shutdown() {
+    try {
+        // Close Redis connection
+        if (redisClient.isReady) { // Only quit if it's connected
+            await redisClient.quit();
+            logger.info('Redis connection closed.');
+        }
+
+        // Close database connectio
+        const mongoose = require('mongoose');
+        if (mongoose.connection.readyState === 1) {
+            await mongoose.connection.close();
+            logger.info('Database connection closed.');
+        }
+
+        logger.info('Application shut down.');
+        process.exit(0);
+    } catch (err) {
+        logger.error('Error during graceful shutdown:', err);
+        process.exit(1);
+    }
+}

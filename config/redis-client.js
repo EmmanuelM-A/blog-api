@@ -6,13 +6,15 @@ const redisClient = redis.createClient({
 });
 
 redisClient.on('connect', () => {
-    logger.info('Connected to Redis!');
+    logger.info('Redis client attempting connection...');
+});
+
+redisClient.on('ready', () => {
+    logger.info('Redis client is ready to use!');
 });
 
 redisClient.on('error', (err) => {
-  logger.error('Redis error: ', err);
+    logger.error('Redis connection error: ', err);
 });
-
-await redisClient.connect();
 
 module.exports = redisClient; 
