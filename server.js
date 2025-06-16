@@ -4,9 +4,10 @@ const app = require('./app');
 const connectToDatabase = require("../blog-api/config/db-connection");
 const logger = require('./utils/logger');
 const redisClient = require('./config/redis-client');
+const setupSwagger = require('./config/swagger');
+const { constants } = require('./utils/constants');
 
-
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || constants.DEFAULT_PORT;
 
 // --------------------- Application Startup Logic ---------------------
 
@@ -19,6 +20,9 @@ async function startServer() {
         // Connect to Redis
         await redisClient.connect();
         logger.info('Redis Client Connected!');
+
+        // Mount Swagger at /api-docs
+        setupSwagger(app);
 
         // Start the Express server
         app.listen(PORT, () => {
