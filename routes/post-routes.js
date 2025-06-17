@@ -22,7 +22,8 @@ const { authRouteProtection } = require('../middleware/auth-middleware');
 const { authorizeRoles } = require('../middleware/role-middleware');
 
 
-// Public routes
+///////////////////////////////////////////// PUBLIC ROUTES /////////////////////////////////////////////
+
 router.get('/', getAllPosts);
 
 router.get('/user/:username', getAllPostsByUser);

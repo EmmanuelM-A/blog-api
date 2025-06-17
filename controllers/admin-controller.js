@@ -9,7 +9,7 @@ const logger = require("../utils/logger");
  * @access private
  */
 const getAllUsers = asyncHandler( async (request, response) => {
-    const users = await User.find().select('-password');
+    const users = await User.find().select('-password -refreshToken -__v');
 
     response.status(status.OK).json(users);
 

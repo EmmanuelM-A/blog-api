@@ -10,6 +10,7 @@ const jwt = require("jsonwebtoken");
  * @description Register a new user.
  * @route POST api/users/register
  * @access public
+ * 
  */
 const registerUser = asyncHandler( async (request, response) => {
     const { username, email, password } = request.body;

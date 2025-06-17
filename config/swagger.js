@@ -1,11 +1,11 @@
-const YAML = require('yamljs');
-const swaggerUI = require("swagger-ui-express");
+const swaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
 const logger = require("../utils/logger");
 
-const swaggerDocument = YAML.load("docs/swagger.yaml");
+async function setupSwagger(app) {
+    const swaggerDocument = YAML.load("docs/swagger.yaml");
 
-function setupSwagger(app) {
-    app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     logger.info("Swagger API setup!");
 }
 

@@ -22,7 +22,7 @@ async function startServer() {
         logger.info('Redis Client Connected!');
 
         // Mount Swagger at /api-docs
-        setupSwagger(app);
+        await setupSwagger(app);
 
         // Start the Express server
         app.listen(PORT, () => {
