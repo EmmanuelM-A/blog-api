@@ -285,7 +285,7 @@ const currentUser = asyncHandler( async (request, response) => {
  * This function retrieves the refresh token from HTTP cookies, verifies its authenticity and
  * validity against stored records, and if successful, issues a new access token.
  *
- * @route GET api/users/refresh-token
+ * @route POST api/users/refresh-token
  * @access Public (Requires refresh token in cookie)
  *
  * @param {import('express').Request} request - Express request object.
