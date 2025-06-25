@@ -55,7 +55,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#components/schema/BaseUser'
+                  $ref: '#components/schemas/BaseUser'
         401:
           description: The user is not authenticated.
         403:

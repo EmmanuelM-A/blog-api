@@ -8,7 +8,6 @@ const { validateUsername } = require("../utils/input-validator");
 const redisClient = require("../config/redis-client");
 const { clearPostCache } = require("../utils/cache-utils");
 
-// TODO: SETUP REDIS CACHE AND TEST CACHING
 
 /**
  * @description Creates a new blog post.
