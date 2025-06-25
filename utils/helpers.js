@@ -23,4 +23,29 @@ const generateRefreshToken = (userID) => {
     });
 }
 
-module.exports = { hashPassword, comparePassword, generateAccessToken, generateRefreshToken };
+const sendResponse = (res, statusCode, message, data = null) => {
+  res.status(statusCode).json({
+    success: true,
+    message,
+    ...(data && { data }),
+  });
+};
+
+const sendError = (res, statusCode, message, code = null, details = null) => {
+  res.status(statusCode).json({
+    success: false,
+    message,
+    ...(code && { code }),
+    ...(details && { details })
+  });
+};
+
+
+module.exports = { 
+    hashPassword, 
+    comparePassword, 
+    generateAccessToken, 
+    generateRefreshToken,
+    sendResponse,
+    sendError 
+};
