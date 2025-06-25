@@ -47,7 +47,7 @@ router.get('/users', getAllUsers);
 
 /**
  * @swagger
- * /users/{id}:
+ * /users/{userId}:
  *  delete:
  *      summary: Delete a user by their id.
  *      description: This api deletes a given user by their id.
@@ -71,9 +71,9 @@ router.get('/users', getAllUsers);
  *                                  example: "User JohnD deleted successfully."
  *                          
  */
-router.delete('/users/:id', deleteUser);
+router.delete('/users/:userId', deleteUser);
 
 
-router.patch('/users/:id/role', updateUserRole);
+router.patch('/users/:userId/role', updateUserRole);
 
 module.exports = router;

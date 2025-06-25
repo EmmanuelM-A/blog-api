@@ -32,7 +32,8 @@ router.get('/comments/:postId', getCommentsForPost);
 
 router.get('/likes/:postId', getLikesForPost);
 
-// Protected routes for authors/admins
+///////////////////////////////////////////// PROTECTED ROUTES FOR AUTHORS AND ADMINS /////////////////////////////////////////////
+
 router.post('/', authRouteProtection, authorizeRoles('author', 'admin'), createPost);
 
 router.patch('/:postId', authRouteProtection, authorizeRoles('author', 'admin'), editPost);
