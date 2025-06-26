@@ -1,4 +1,5 @@
 const { COMMON_ERRORS_MAP } = require("../utils/constants");
+const { sendErrorResponse } = require("../utils/helpers");
 const logger = require("../utils/logger");
 const { status } = require("../utils/status");
 const express = import('express');
@@ -55,7 +56,7 @@ const errorHandler = (error, request, response, next) => {
         logger.error("Production Error:", error);
     }
 
-    response.json(responseBody);
+    sendErrorResponse(response, statusCode, responseBody.message, responseBody.error.code, responseBody.error.details, responseBody.stackTrace);
 };
 
 module.exports = errorHandler;
