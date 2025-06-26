@@ -3,6 +3,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user-schema");
 const { status } = require("../utils/status");
 const logger = require("../utils/logger");
+const ApiError = require("../utils/ApiError");
 
 const authRouteProtection = asyncHandler(async (request, response, next) => {
     let token;
@@ -28,15 +29,23 @@ const authRouteProtection = asyncHandler(async (request, response, next) => {
             next();
         } catch (error) {
             logger.error(`Token verification failed: ${error.message}`);
-            response.status(status.UNAUTHORIZED);
-            throw new Error("Not authorized: token failed");
+
+            throw new ApiError(
+                "Not authorized: token verification failed",
+                status.UNAUTHORIZED,
+                "TOKEN_VERIFICATION_FAILED"
+            );
         }
     }
 
     if (!token) {
         logger.warn("No authorization token provided.");
-        response.status(status.UNAUTHORIZED);
-        throw new Error("Not authorized: no token");
+
+        throw new ApiError(
+            "Not authorized: no token provided",
+            status.UNAUTHORIZED,
+            "NO_TOKEN_PROVIDED"
+        );
     }
 });
 

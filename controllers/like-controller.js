@@ -5,6 +5,8 @@ const User = require("../models/user-schema");
 const Like = require("../models/like-schema"); 
 const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
+const ApiError = require("../utils/ApiError");
+const { sendSuccessResponse } = require("../utils/helpers");
 
 /**
  * @function likePost
@@ -36,6 +38,7 @@ const { constants } = require("../utils/constants");
  * { "message": "Post unliked." }
  */
 const likePost = asyncHandler(async (request, response) => {
+    // Extract postId from request parameters and user ID from the request object
     const { postId } = request.params;
     const userId = request.user?.id;
 
@@ -46,8 +49,12 @@ const likePost = asyncHandler(async (request, response) => {
     const post = await Post.findById(postId);
     if (!post) {
         logger.warn(`Post with id ${postId} not found for like/unlike.`);
-        response.status(status.NOT_FOUND);
-        throw new Error("Post not found.");
+
+        throw new ApiError(
+            `Post with id ${postId} not found.`,
+            status.NOT_FOUND,
+            "POST_NOT_FOUND"
+        );
     }
 
     // Check if the user already liked this post
@@ -57,12 +64,14 @@ const likePost = asyncHandler(async (request, response) => {
         // If like exists, remove it (unlike action)
         await existingLike.deleteOne();
         logger.info(`User ${userId} unliked post ${postId}`);
-        return response.status(status.OK).json({ message: "Post unliked." });
+
+        sendSuccessResponse(response, status.OK, "Post unliked.");
     } else {
         // If like doesn't exist, create a new like
         await Like.create({ post_id: postId, user_id: userId });
         logger.info(`User ${userId} liked post ${postId}`);
-        return response.status(status.OK).json({ message: "Post liked." });
+
+        sendSuccessResponse(response, status.OK, "Post liked.");
     }
 });
 
@@ -98,6 +107,7 @@ const likePost = asyncHandler(async (request, response) => {
  * }
  */
 const getLikesForPost = asyncHandler(async (request, response) => {
+    // Extract postId from request parameters
     const { postId } = request.params;
 
     // Log the retrieval attempt
@@ -107,21 +117,29 @@ const getLikesForPost = asyncHandler(async (request, response) => {
     const post = await Post.findById(postId);
     if (!post) {
         logger.warn(`Post with id ${postId} not found when fetching likes.`);
-        response.status(status.NOT_FOUND);
-        throw new Error("Post not found.");
+
+        throw new ApiError(
+            `Post with id ${postId} not found.`,
+            status.NOT_FOUND,
+            "POST_NOT_FOUND"
+        );
     }
 
     // Retrieve all like documents associated with the post
     const likes = await Like.find({ post_id: postId });
 
-    logger.info(`Fetched ${likes.length} likes for post: ${postId}`);
+    sendSuccessResponse(
+        response, 
+        status.OK, 
+        "Likes fetched successfully!", 
+        {
+            postId,
+            likesCount: likes.length,
+            likes
+        }
+    );
 
-    // Return the post ID, number of likes, and detailed like records
-    response.status(status.OK).json({
-        postId,
-        likesCount: likes.length,
-        likes
-    });
+    logger.info(`Fetched ${likes.length} likes for post: ${postId}`);
 });
 
 module.exports = {

@@ -2,9 +2,10 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user-schema");
 const { status } = require("../utils/status");
 const { validateUsername, validatePassword, validateEmail } = require("../utils/input-validator");
-const { hashPassword, comparePassword, generateRefreshToken, generateAccessToken } = require("../utils/helpers");
+const { hashPassword, comparePassword, generateRefreshToken, generateAccessToken, sendSuccessResponse } = require("../utils/helpers");
 const logger = require("../utils/logger");
 const jwt = require("jsonwebtoken");
+const ApiError = require("../utils/ApiError");
 
 /**
  * @function registerUser
@@ -66,13 +67,23 @@ const registerUser = asyncHandler(async (request, response) => {
     for (const { check, validateFunc, error } of validations) {
         if (!check) {
             logger.error("Registration failed: Missing fields detected.");
-            response.status(status.VALIDATION_ERROR);
-            throw new Error("All fields must be filled!");
+
+            throw new ApiError(
+                "All fields must be filled!",
+                status.VALIDATION_ERROR,
+                "MISSING_FIELDS",
+                "Username, email, and password are required for registration."
+            );
         }
+
         if (!validateFunc) {
             logger.error("Registration failed: Invalid input!");
-            response.status(status.VALIDATION_ERROR);
-            throw new Error(`Registration failed: ${error}`);
+
+            throw new ApiError(
+                `Registration failed: ${error}`,
+                status.VALIDATION_ERROR,
+                "INVALID_INPUT",
+            );
         }
     }
 
@@ -81,8 +92,12 @@ const registerUser = asyncHandler(async (request, response) => {
 
     if (isUserAvailable) {
         logger.error(`Registration failed: A user with the username: ${username} or email: ${email} already exists!`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Unable to register with the provided credentials");
+
+        throw new ApiError(
+            "Unable to register with the provided credentials",
+            status.VALIDATION_ERROR,
+            "USER_ALREADY_EXISTS",
+        );
     }
 
     // Hash the user's password before storing it securely.
@@ -101,17 +116,26 @@ const registerUser = asyncHandler(async (request, response) => {
     // If user creation failed, throw an error.
     if (!user) {
         logger.error(`User registration failed for the user: ${email}`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("An error occured during user registration!");
+
+        throw new ApiError(
+            "An error occurred during user registration!",
+            status.VALIDATION_ERROR,
+            "REGISTRATION_ERROR",
+            "Please ensure all fields are valid and try again."
+        );
     }
 
-    // Send a success response with the new user's public details.
-    response.status(status.CREATED).json({
-        _id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-    });
+    sendSuccessResponse(
+        response, 
+        status.CREATED, 
+        "User registered successfully.", 
+        {
+            userId: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+        }
+    );
 
     logger.info(`Registration successful for the user: ${email}.`);
 });
@@ -180,13 +204,23 @@ const loginUser = asyncHandler(async (request, response) => {
     for (const { check, validateFunc, error } of validations) {
         if (!check) {
             logger.error("Login failed: Missing fields detected.");
-            response.status(status.VALIDATION_ERROR);
-            throw new Error("All fields must be filled!");
+            throw new ApiError(
+                "All fields must be filled!",
+                status.VALIDATION_ERROR,
+                "MISSING_FIELDS",
+                "Email and password are required for login."
+            );
         }
+
         if (!validateFunc) {
             logger.error("Login failed: Invalid input!");
-            response.status(status.VALIDATION_ERROR);
-            throw new Error(`Login failed: ${error}`);
+
+            throw new ApiError(
+                `Login failed: ${error}`,
+                status.VALIDATION_ERROR,
+                "INVALID_INPUT",
+                "Please ensure the email or password meet the required formats."
+            );
         }
     }
 
@@ -196,8 +230,13 @@ const loginUser = asyncHandler(async (request, response) => {
     // Check if the user exists and if the provided password matches the stored hashed password.
     if (!userDB || !(await comparePassword(password, userDB.password))) {
         logger.error(`Login unsuccessful: ${email}`);
-        response.status(status.UNAUTHORIZED);
-        throw new Error("Invalid credentials");
+
+        throw new ApiError(
+            "Invalid credentials",
+            status.UNAUTHORIZED,
+            "INVALID_CREDENTIALS",
+            "The email or password provided is incorrect. Please try again."
+        );
     }
 
     // Generate both an access token (short-lived) and a refresh token (long-lived) for the user.
@@ -216,14 +255,18 @@ const loginUser = asyncHandler(async (request, response) => {
         maxAge: 7 * 24 * 60 * 60 * 1000 // Cookie expiration in 7 days.
     });
 
-    // Send a successful HTTP response (200 OK) with the user's public details and access token.
-    response.status(status.OK).json({
-        _id: userDB.id,
-        username: userDB.username,
-        email: userDB.email,
-        role: userDB.role,
-        token: accessToken // The access token for subsequent authenticated requests.
-    });
+    sendSuccessResponse(
+        response,
+        status.OK,
+        "User logged in successfully.",
+        {
+            userId: userDB.id,
+            username: userDB.username,
+            email: userDB.email,
+            role: userDB.role,
+            token: accessToken // Include the access token in the response.
+        }
+    );
 
     logger.info(`Login successful: ${email}`);
 });
@@ -273,7 +316,14 @@ const loginUser = asyncHandler(async (request, response) => {
  * // "Not authorized, no token" or similar.
  */
 const currentUser = asyncHandler( async (request, response) => {
-    response.status(status.OK).json(request.user);
+    sendSuccessResponse(
+        response,
+        status.OK,
+        "Current user fetched successfully.",
+        {
+            user: request.user
+        }
+    );
 
     logger.info(`Fetched current user: ${request.user?.email || "unknown email"}`);
 });
@@ -324,8 +374,11 @@ const refreshAccessToken = asyncHandler(async (request, response) => {
 
     if (!token) {
         logger.warn("Refresh token not provided in cookies.");
-        response.status(status.UNAUTHORIZED);
-        throw new Error("Refresh token not provided");
+        throw new ApiError(
+            "Refresh token not provided",
+            status.UNAUTHORIZED,
+            "MISSING_REFRESH_TOKEN",
+        );
     }
 
     try {
@@ -337,24 +390,42 @@ const refreshAccessToken = asyncHandler(async (request, response) => {
 
         if (!userDB) {
             logger.warn(`User not found for ID: ${decoded.id}`);
-            response.status(status.FORBIDDEN);
-            throw new Error("Invalid refresh token");
+            throw new ApiError(
+                "User not found",
+                status.FORBIDDEN,
+                "USER_NOT_FOUND",
+            );
         }
 
         if (userDB.refreshToken !== token) {
             logger.warn("Refresh token does not match the one stored in DB.");
-            response.status(status.FORBIDDEN);
-            throw new Error("Invalid refresh token");
+
+            throw new ApiError(
+                "Invalid refresh token",
+                status.FORBIDDEN,
+                "INVALID_REFRESH_TOKEN"
+            );
         }
 
         const newAccessToken = generateAccessToken(userDB.id);
         logger.info(`New access token generated for user ID: ${userDB.id}`);
-        response.status(status.OK).json({ accessToken: newAccessToken });
+
+        sendSuccessResponse(
+            response,
+            status.OK,
+            "Access token refreshed successfully.",
+            { accessToken: newAccessToken }
+        );
 
     } catch (err) {
         logger.error(`Refresh token verification failed: ${err.message}`);
-        response.status(status.FORBIDDEN);
-        throw new Error("Invalid or expired refresh token");
+
+        throw new ApiError(
+            "Invalid or expired refresh token",
+            status.FORBIDDEN,
+            "INVALID_OR_EXPIRED_REFRESH_TOKEN",
+            "The provided refresh token is either invalid or has expired."
+        );
     }
 });
 
@@ -400,12 +471,21 @@ const logoutUser = asyncHandler(async (request, response) => {
     if (token) {
         // Attempt to find a user in the database with the extracted refresh token.
         const user = await User.findOne({ refreshToken: token });
+
+        if (!user) {
+            // If no user is found with the provided refresh token, log this event.
+            logger.warn("Logout attempt with an invalid or expired refresh token.");
+
+            throw new ApiError(
+                "Invalid or expired refresh token",
+                status.FORBIDDEN,
+                "INVALID_REFRESH_TOKEN"
+            );
+        }
         
         // If a user is found, clear their refresh token in the database to invalidate it.
-        if (user) {
-            user.refreshToken = null; // Set the refresh token to null to invalidate it.
-            await user.save(); // Save the updated user document.
-        }
+        user.refreshToken = null; // Set the refresh token to null to invalidate it.
+        await user.save(); // Save the updated user document.
 
         // Clear the 'refreshToken' cookie from the client's browser.
         // The options must match those used when setting the cookie during login.
@@ -416,8 +496,13 @@ const logoutUser = asyncHandler(async (request, response) => {
         });
     }
 
-    // Send a 200 OK response indicating successful logout, regardless of whether a token was present or found.
-    response.status(status.OK).json({ message: "Logged out successfully" });
+    sendSuccessResponse(
+        response,
+        status.OK,
+        "Logged out successfully."
+    );
+    
+    logger.info("User logged out successfully, refresh token cleared.");
 });
 
 module.exports = { registerUser, loginUser, currentUser, refreshAccessToken, logoutUser };

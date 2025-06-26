@@ -7,6 +7,8 @@ const { constants } = require("../utils/constants");
 const { validateUsername } = require("../utils/input-validator");
 const redisClient = require("../config/redis-client");
 const { clearPostCache } = require("../utils/cache-utils");
+const ApiError = require("../utils/ApiError");
+const { sendSuccessResponse } = require("../utils/helpers");
 
 
 /**
@@ -61,23 +63,35 @@ const createPost = asyncHandler(async (request, response) => {
     // Check if author_id is provided
     if (!author_id) {
         logger.warn("Unauthorized post creation attempt: no author_id provided.");
-        response.status(status.UNAUTHORIZED);
-        throw new Error("Authentication required to create a post.");
+
+        throw new ApiError(
+            "Authentication required to create a post.",
+            status.UNAUTHORIZED,
+            "UNAUTHORIZED_AUTHOR_ID",
+        );
     }
 
     // Verify the user exists in the database
     const user = await User.findById(author_id);
     if (!user) {
         logger.error(`User not found for author_id: ${author_id}`);
-        response.status(status.NOT_FOUND);
-        throw new Error("User not found.");
+
+        throw new ApiError(
+            `No user found with the id: ${author_id}.`,
+            status.NOT_FOUND,
+            "USER_NOT_FOUND",
+        );
     }
 
     // Validate input types
     if (typeof title !== "string" || typeof content !== "string") {
         logger.error("Invalid input types for post creation. Title and content must be strings.");
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Title and content must be strings.");
+
+        throw new ApiError(
+            "Title and content must be strings.",
+            status.VALIDATION_ERROR,
+            "INVALID_INPUT_TYPE",
+        );
     }
 
     // Trim whitespace from title and content
@@ -87,21 +101,33 @@ const createPost = asyncHandler(async (request, response) => {
     // Validate that neither title nor content is empty after trimming
     if (!trimmedTitle || !trimmedContent) {
         logger.error("Empty title or content in post creation.");
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Title and content must not be empty.");
+
+        throw new ApiError(
+            "Title and content must not be empty.",
+            status.VALIDATION_ERROR,
+            "EMPTY_TITLE_OR_CONTENT",
+        );
     }
 
     // Enforce max length constraints for title and content
     if (trimmedTitle.length > constants.MAX_POST_TITLE_LENGTH) {
         logger.error(`Post title exceeds maximum length of ${constants.MAX_POST_TITLE_LENGTH} characters.`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error(`Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`);
+
+        throw new ApiError(
+            `Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`,   
+            status.VALIDATION_ERROR,
+            "TITLE_TOO_LONG",
+        );
     }
 
     if (trimmedContent.length > constants.MAX_POST_CONTENT_LENGTH) {
         logger.error(`Post content exceeds maximum length of ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error(`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
+
+        throw new ApiError(
+            `Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`,
+            status.VALIDATION_ERROR,
+            "CONTENT_TOO_LONG",
+        );
     }
 
     // Clear any cached post data to maintain cache consistency after creation
@@ -118,10 +144,15 @@ const createPost = asyncHandler(async (request, response) => {
         author_id: author_id,
     });
 
+    sendSuccessResponse(
+        response,
+        status.CREATED,
+        "Post created successfully.",
+        { post }
+    );
+
     // Log success and respond with the created post object
     logger.info(`New post created by user ${author_id} with ID: ${post.id}`);
-
-    response.status(status.CREATED).json({ post });
 });
 
 
@@ -168,7 +199,13 @@ const getAllPosts = asyncHandler(async (request, response) => {
     if (cached) {
         logger.debug(`Cache hit for key: ${cacheKey}`);
         logger.info(`Returning cached posts for page ${page}.`);
-        return response.status(status.OK).json(JSON.parse(cached));
+
+        return sendSuccessResponse(
+            response,
+            status.OK,
+            "Posts fetched successfully from cache.",
+            JSON.parse(cached)
+        );
     }
 
     // Fetch posts with pagination and populate author username
@@ -196,8 +233,12 @@ const getAllPosts = asyncHandler(async (request, response) => {
 
     logger.info(`Cache set successfully for key: ${cacheKey}`);
 
-    // Send response to client
-    response.status(status.OK).json(responseData);
+    sendSuccessResponse(
+        response,
+        status.OK,
+        "Posts fetched successfully.",
+        responseData
+    );
 });
 
 
@@ -220,15 +261,23 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
     // Validate presence of username
     if (!username) {
         logger.error("Missing username field in request params.");
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Username must be provided.");
+
+        throw new ApiError(
+            "Username must be provided.",
+            status.VALIDATION_ERROR,
+            "USERNAME_REQUIRED"
+        );
     }
 
     // Validate username format
     if (!validateUsername(username)) {
         logger.error(`Invalid username format: ${username}`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Invalid username.");
+
+        throw new ApiError(
+            "Invalid username format.",
+            status.VALIDATION_ERROR,
+            "INVALID_USERNAME_FORMAT"
+        );
     }
 
     const cacheKey = `posts:user:${username}:page:${page}`;
@@ -238,7 +287,13 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
 
     if (cachedData) {
         logger.info(`Cache hit for user ${username} (page ${page})`);
-        return response.status(status.OK).json(JSON.parse(cachedData));
+
+        return sendSuccessResponse(
+            response,
+            status.OK,
+            `Posts for user ${username} on page ${page} fetched from cache.`,
+            JSON.parse(cachedData)
+        );
     }
 
     logger.info(`Cache miss for user ${username} (page ${page}), querying database...`);
@@ -250,8 +305,12 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
 
     if (!userDB) {
         logger.warn(`User not found: ${username}`);
-        response.status(status.NOT_FOUND);
-        throw new Error("User does not exist.");
+
+        throw new ApiError(
+            `User with username ${username} not found.`,
+            status.NOT_FOUND,
+            "USER_NOT_FOUND"
+        );
     }
 
     logger.info(`User found: ${username} with ID: ${userDB._id}`);
@@ -276,6 +335,13 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
     logger.info(`Cached result for ${cacheKey}`);
 
     response.status(status.OK).json(responseData);
+
+    sendSuccessResponse(
+        response,
+        status.OK,
+        `Posts for user ${username} on page ${page} fetched successfully!`,
+        responseData
+    );
 });
 
 /**
@@ -319,18 +385,28 @@ const getAllPostsByUser = asyncHandler(async (request, response) => {
 const editPost = asyncHandler(async (request, response) => {
     const { title, content } = request.body;
     const { postId } = request.params;
-    const userId = request.user?.id;
+    const user = request.user;
+
+    const userId = user?.id;
 
     if (!userId) {
         logger.warn("Unauthorized attempt to edit post.");
-        response.status(status.UNAUTHORIZED);
-        throw new Error("Authentication required to edit a post.");
+
+        throw new ApiError(
+            "Authentication required to edit a post.",
+            status.UNAUTHORIZED,
+            "UNAUTHORIZED_EDIT"
+        );
     }
 
     if (typeof title !== "string" || typeof content !== "string") {
         logger.error("Invalid input types for post editing.");
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Title and content must be strings.");
+
+        throw new ApiError(
+            "Title and content must be strings.",
+            status.VALIDATION_ERROR,
+            "INVALID_INPUT_TYPE"
+        );
     }
 
     const trimmedTitle = title.trim();
@@ -338,34 +414,53 @@ const editPost = asyncHandler(async (request, response) => {
 
     if (!trimmedTitle || !trimmedContent) {
         logger.error("Empty title or content in post editing.");
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Title and content must not be empty.");
+
+        throw new ApiError(
+            "Title and content must not be empty.",
+            status.VALIDATION_ERROR,
+            "EMPTY_TITLE_OR_CONTENT"
+        );
     }
 
     if (trimmedTitle.length > constants.MAX_POST_TITLE_LENGTH) {
         logger.error(`Post title exceeds ${constants.MAX_POST_TITLE_LENGTH} characters.`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error(`Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`);
+
+        throw new ApiError(
+            `Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`,
+            status.VALIDATION_ERROR,
+            "TITLE_TOO_LONG"
+        );
     }
 
     if (trimmedContent.length > constants.MAX_POST_CONTENT_LENGTH) {
         logger.error(`Post content exceeds ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error(`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
+
+        throw new ApiError(
+            `Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`,
+            status.VALIDATION_ERROR,
+            "CONTENT_TOO_LONG"
+        );
     }
 
     const post = await Post.findById(postId);
 
     if (!post) {
         logger.warn(`Edit failed: Post with id ${postId} not found.`);
-        response.status(status.NOT_FOUND);
-        throw new Error("Post not found.");
+
+        throw new ApiError(
+            `Post with id ${postId} not found.`,
+            status.NOT_FOUND,
+            "POST_NOT_FOUND"
+        );
     }
 
     if (String(post.author_id) !== String(userId)) {
         logger.warn(`User ${userId} attempted to edit post ${postId} without permission.`);
-        response.status(status.FORBIDDEN);
-        throw new Error("You do not have permission to edit this post.");
+        throw new ApiError(
+            `The user ${user.username} does not have the permissions to edit this post.`,
+            status.FORBIDDEN,
+            "FORBIDDEN_EDIT"
+        );
     }
 
     // Clear cache
@@ -376,12 +471,14 @@ const editPost = asyncHandler(async (request, response) => {
     post.content = trimmedContent;
     await post.save();
 
-    logger.info(`Post ${postId} edited by user ${userId}.`);
+    sendSuccessResponse(
+        response,
+        status.OK,
+        "Post updated successfully.",
+        { post }
+    );
 
-    response.status(status.OK).json({ 
-        message: "Post updated successfully.", 
-        post 
-    });
+    logger.info(`Post ${postId} edited by user ${userId}.`);
 });
 
 
@@ -422,22 +519,34 @@ const deletePost = asyncHandler( async (request, response) => {
 
     if (!userId) {
         logger.warn("Unauthorized attempt to delete post.");
-        response.status(status.UNAUTHORIZED);
-        throw new Error("Authentication required to delete a post.");
+
+        throw new ApiError(
+            "Authentication required to delete a post.",
+            status.UNAUTHORIZED,
+            "UNAUTHORIZED_DELETE"
+        );
     }
 
     const post = await Post.findById(postId);
 
     if (!post) {
         logger.warn(`Delete failed: Post with id ${postId} not found.`);
-        response.status(status.NOT_FOUND);
-        throw new Error("Post not found.");
+
+        throw new ApiError(
+            `Post with id ${postId} not found.`,
+            status.NOT_FOUND,
+            "POST_NOT_FOUND"
+        );
     }
 
     if (String(post.author_id) !== String(userId)) {
         logger.warn(`User ${userId} attempted to delete post ${postId} without permission.`);
-        response.status(status.FORBIDDEN);
-        throw new Error("You do not have permission to delete this post.");
+
+        throw new ApiError(
+            `The user ${request.user.username} does not have the permissions to delete this post.`,
+            status.FORBIDDEN,
+            "FORBIDDEN_DELETE"
+        );
     }
 
     // Clear cache
@@ -445,11 +554,14 @@ const deletePost = asyncHandler( async (request, response) => {
     await clearPostCache();
 
     await post.deleteOne();
+    
+    sendSuccessResponse(
+        response,
+        status.OK,
+        "Post deleted successfully."
+    );
 
     logger.info(`Post ${postId} deleted by user ${userId}.`);
-    response.status(status.OK).json({ 
-        message: "Post deleted successfully." 
-    });
 });
 
 module.exports = { getAllPosts, getAllPostsByUser, createPost, editPost, deletePost };

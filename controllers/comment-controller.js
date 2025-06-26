@@ -1,10 +1,11 @@
 const asyncHandler = require("express-async-handler");
 const { status } = require("../utils/status");
 const Post = require("../models/post-schema");
-const User = require("../models/user-schema"); 
 const Comment = require("../models/comment-schema");
 const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
+const ApiError = require("../utils/ApiError");
+const { sendSuccessResponse } = require("../utils/helpers");
 
 /**
  * @function commentOnPost
@@ -27,6 +28,7 @@ const { constants } = require("../utils/constants");
  * @throws {Error} - Throws detailed errors for validation, authentication, and missing post cases, handled by global error middleware.
  */
 const commentOnPost = asyncHandler(async (request, response) => {
+    // Extract all the details needed for commenting
     const { postId } = request.params;
     const userId = request.user?.id;
     const { comment } = request.body;
@@ -34,32 +36,62 @@ const commentOnPost = asyncHandler(async (request, response) => {
     // Check if the user is authenticated
     if (!userId) {
         logger.warn("Unauthorized attempt to comment on post.");
-        response.status(status.UNAUTHORIZED);
-        throw new Error("Authentication required to comment on a post.");
+
+        throw new ApiError(
+            "Authentication required to comment on a post.",
+            status.UNAUTHORIZED,
+            "UNAUTHORIZED"
+        );
     }
 
     // Validate comment: must be a non-empty string
     if (typeof comment !== "string" || !comment.trim()) {
         logger.error("Invalid or empty comment.");
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Comment must be a non-empty string.");
+
+        throw new ApiError(
+            "Comment must be a non-empty string.",
+            status.VALIDATION_ERROR,
+            "INVALID_COMMENT"
+        );
     }
 
+    // Trim whitespace from the comment.
     const trimmedComment = comment.trim();
+
+    // If the comment is empty after trimming, it is considered invalid.
+    if (trimmedComment.length === 0) {
+        logger.error("Comment is empty after trimming.");
+        
+        throw new ApiError(
+            "Comment cannot be empty!",
+            status.VALIDATION_ERROR,
+            "EMPTY_COMMENT"
+        );
+    }
 
     // Enforce max character limit on comment
     if (trimmedComment.length > constants.MAX_CHAR_COMMENT_LENGTH) {
         logger.error(`Comment exceeds ${constants.MAX_CHAR_COMMENT_LENGTH} characters.`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error(`Comment exceeds ${constants.MAX_CHAR_COMMENT_LENGTH} characters.`);
+
+        throw new ApiError(
+            `Comment exceeds the maximum allowed length of ${constants.MAX_CHAR_COMMENT_LENGTH} characters.`,
+            status.VALIDATION_ERROR,
+            "COMMENT_TOO_LONG",
+        );
     }
 
     // Retrieve the post from the database
     const post = await Post.findById(postId);
+
+    // Check if the post exists
     if (!post) {
         logger.warn(`Comment failed: Post with id ${postId} not found.`);
-        response.status(status.NOT_FOUND);
-        throw new Error("Post not found.");
+
+        throw new ApiError(
+            "Comment failed: Post with id ${postId} not found.",
+            status.NOT_FOUND,
+            "POST_NOT_FOUND"
+        );
     }
 
     // Log the commenting attempt
@@ -72,11 +104,14 @@ const commentOnPost = asyncHandler(async (request, response) => {
         user_id: userId
     });
 
+    sendSuccessResponse(
+        response,
+        status.CREATED,
+        "Comment added successfully.",
+    );
+
     // Log successful comment creation
     logger.info(`The comment with the comment_id: ${commentForPost.id} created successfully by the user: ${request.user.username} (${userId})`);
-
-    // Send success response
-    response.status(status.OK).json({ message: "Comment added successfully." });
 });
 
 /**
@@ -117,6 +152,7 @@ const commentOnPost = asyncHandler(async (request, response) => {
  * }
  */
 const getCommentsForPost = asyncHandler(async (request, response) => {
+    // Extract the postId from the request parameters
     const { postId } = request.params;
 
     // Log the request attempt
@@ -126,8 +162,11 @@ const getCommentsForPost = asyncHandler(async (request, response) => {
     const post = await Post.findById(postId);
     if (!post) {
         logger.warn(`Post with id ${postId} not found when fetching comments.`);
-        response.status(status.NOT_FOUND);
-        throw new Error("Post not found.");
+        throw new ApiError(
+            `Post with id ${postId} not found.`,
+            status.NOT_FOUND,
+            "POST_NOT_FOUND"
+        );
     }
 
     // Fetch comments associated with the post
@@ -135,14 +174,14 @@ const getCommentsForPost = asyncHandler(async (request, response) => {
         .sort({ createdAt: -1 }) // Sort newest to oldest
         .populate("user_id", "username"); // Include only the username of the commenter
 
-    // Log successful fetch
-    logger.info(`Fetched ${comments.length} comments for post: ${postId}`);
+    sendSuccessResponse(
+        response,
+        status.OK,
+        "Comments fetched successfully.",
+        { postId, comments }
+    );
 
-    // Return the comments in the response
-    response.status(status.OK).json({
-        postId,
-        comments
-    });
+    logger.info(`Fetched ${comments.length} comments for post: ${postId}`);
 });
 
 module.exports = { 

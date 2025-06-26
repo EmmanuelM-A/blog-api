@@ -50,10 +50,14 @@ const errorHandler = (error, request, response, next) => {
         responseBody.stackTrace = error.stack;
     } else {
         // In production, log the full error for server-side debugging, but don't send to client.
-        logger.error("Production Error:", error);
+        logger.error("Production Error:", {
+            message: error.message,
+            stack: error.stack,
+            url: request.originalUrl,
+            method: request.method,
+            // Add any other relevant request info here
+        });
     }
-
-    // TODO: Log the error details for debugging purposes
 
     sendErrorResponse(response, statusCode, responseBody.message, responseBody.error.code, responseBody.error.details, responseBody.stackTrace);
 };
