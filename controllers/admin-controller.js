@@ -2,8 +2,8 @@ const asyncHandler = require("express-async-handler");
 const { status } = require("../utils/status");
 const User = require('../models/user-schema');
 const logger = require("../utils/logger");
-const express = require('express');
 const { constants } = require("../utils/constants");
+const { sendSuccessResponse, sendErrorResponse } = require("../utils/helpers");
 
 /**
  * @function getAllUsers
@@ -42,7 +42,7 @@ const getAllUsers = asyncHandler(async (request, response) => {
     const users = await User.find().select('-password -refreshToken -__v');
 
     // Send a successful HTTP 200 response with the filtered user list.
-    response.status(status.OK).json(users);
+    sendSuccessResponse(response, status.OK, "Registered users fetched successfully.", users);
 
     // Log a success message for monitoring or audit purposes.
     logger.info("Registered users fetched successfully.");
@@ -73,17 +73,16 @@ const deleteUser = asyncHandler(async (request, response) => {
     // If user doesn't exist, log a warning and return a 404 error
     if (!userDB) {
         logger.warn(`Delete failed: User with id ${request.params.userId} not found.`);
-        response.status(status.NOT_FOUND);
-        throw new Error('User not found'); // Error will be caught by global error handler
+
+        // Error will be caught by global error handler
+        throw new Error(`No user with the id: ${request.params.userId} found!`);
     }
 
     // If user is found, delete the user from the database
     await userDB.deleteOne();
 
     // Respond to client with a success message
-    response.status(status.OK).json({
-        message: `User ${userDB.username} deleted successfully.`
-    });
+    sendSuccessResponse(response, status.OK, `User ${userDB.username} deleted successfully.`);
 
     // Log the deletion event for audit or debugging purposes
     logger.info(`User ${userDB.username} (id: ${userDB.id}) deleted successfully.`);
@@ -109,20 +108,19 @@ const deleteUser = asyncHandler(async (request, response) => {
  * @throws {Error} - Throws an error on validation failure or user not found. These are handled by the global error handler.
  */
 const updateUserRole = asyncHandler(async (request, response) => {
+    // Extract the role from the request body
     const { role } = request.body;
 
     // Check if a role was provided in the request body
     if (!role) {
-        logger.warn(`Role update failed: No role provided for user id ${request.params.userId}.`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error("Role is required");
+        logger.warn(`Role update failed: No role provided for the user id ${request.params.userId}.`);
+        throw new Error("Role is required for the operation!");
     }
 
     // If the provided role is not valid, log and throw an error
     if (!constants.VALID_ROLES.includes(role)) {
         logger.warn(`Role update failed: Invalid role "${role}" provided for user id ${request.params.userId}.`);
-        response.status(status.VALIDATION_ERROR);
-        throw new Error(`Invalid role. Valid roles are: ${constants.VALID_ROLES.join(', ')}.`);
+        throw new Error(`Invalid role detected! The valid roles are: ${constants.VALID_ROLES.join(', ')}.`);
     }
 
     // Attempt to find the user in the database
@@ -131,8 +129,7 @@ const updateUserRole = asyncHandler(async (request, response) => {
     // If user is not found, log and throw a 404 error
     if (!user) {
         logger.warn(`Role update failed: User with id ${request.params.userId} not found.`);
-        response.status(status.NOT_FOUND);
-        throw new Error('User not found');
+        throw new Error(`No user with the id: ${request.params.userId} found!`);
     }
 
     // Store the user's old role before updating
@@ -145,7 +142,7 @@ const updateUserRole = asyncHandler(async (request, response) => {
     await user.save();
 
     // Send a success response to the client
-    response.status(status.OK).json({ message: `User ${user.username}'s role updated to ${role}` });
+    sendSuccessResponse(response, status.OK, `User ${user.username}'s role updated successfully.`, { userId: user.id, oldRole, newRole: role });
 
     // Log the successful role change
     logger.info(`User ${user.username} (id: ${user.id}) role updated from ${oldRole} to ${role}.`);
