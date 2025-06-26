@@ -31,20 +31,17 @@ const express = import('express');
  */
 const errorHandler = (error, request, response, next) => {
     // Ensure response status is an error, defaulting to 500
-    const statusCode = response.statusCode >= 400 && response.statusCode < 500 ? response.statusCode: 500;
-
-    response.status(statusCode);
+    const statusCode = error.status >= 400 && error.status < 500 ? error.status: 500;
 
     // Get specific error details from the map, or use default server error
     const errorDetails = COMMON_ERRORS_MAP[statusCode] || COMMON_ERRORS_MAP[status.SERVER_ERROR];
 
     // Build the response body
     let responseBody = {
-        success: false,
         message: error.message || errorDetails.message, // Prioritize error.message if available
         error: {
-            code: errorDetails.code,
-            details: errorDetails.details,
+            code: error.code || errorDetails.code,
+            details: error.details || errorDetails.details,
         },
     };
 
@@ -55,6 +52,8 @@ const errorHandler = (error, request, response, next) => {
         // In production, log the full error for server-side debugging, but don't send to client.
         logger.error("Production Error:", error);
     }
+
+    // TODO: Log the error details for debugging purposes
 
     sendErrorResponse(response, statusCode, responseBody.message, responseBody.error.code, responseBody.error.details, responseBody.stackTrace);
 };

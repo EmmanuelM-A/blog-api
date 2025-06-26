@@ -86,6 +86,7 @@ const sendErrorResponse = (response, statusCode, message, code = null, details =
     // Add code and details if they are provided
     if (code) responseBody.error.code = code;
     if (details) responseBody.error.details = details;
+	
 	if( process.env.NODE_ENV === 'development') {
 		// In development, include the stack trace for debugging
 		responseBody.stackTrace = stackTrace;
