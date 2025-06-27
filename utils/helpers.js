@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const express = require("express");
 
 async function hashPassword(password) {
     const saltRounds = 10;
@@ -26,10 +27,10 @@ const generateRefreshToken = (userID) => {
 /**
  * Sends a standardized success response.
  * @function sendSuccessResponse
- * @param {*} response The Express response object.
- * @param {*} statusCode The HTTP status code for the response.
- * @param {*} message The success message to include in the response.
- * @param {*} data The data to include in the response (optional).
+ * @param {express.Response} response The Express response object.
+ * @param {number} statusCode The HTTP status code for the response.
+ * @param {string} message The success message to include in the response.
+ * @param {object} data The data to include in the response (optional).
  * @returns {void}
  * 
  * @example
@@ -52,27 +53,16 @@ const sendSuccessResponse = (response, statusCode, message, data = null) => {
 };
 
 /**
- * Sends a standardized error response.
+ * Sends a standardized error response. 
  * @function sendErrorResponse
- * @param {*} response The Express response object.
- * @param {*} statusCode The HTTP status code for the response.
- * @param {*} message The error message to include in the response.
- * @param {*} code The error code to include in the response (optional).
- * @param {*} details The error details to include in the response (optional).
+ * @param {express.Response} response The Express response object.
+ * @param {number} statusCode The HTTP status code for the response.
+ * @param {string} message The error message to include in the response.
+ * @param {string} code The error code to include in the response (optional).
+ * @param {string} details The error details to include in the response (optional).
+ * @param {string} stackTrace The stack trace to include in the response (optional, useful for debugging in development).
  * @returns {void}
  * 
- * @example
- * sendErrorResponse(response, 400, "Invalid input data.", "VALIDATION_FAILED", { field: "email", error: "Email is required." });
- * 
- * // Sample response object returned:
- *	{
- *		"success": false,
- *		"message": "Invalid input data.",
- *		"code": "VALIDATION_FAILED",
- *		"details": { "field": "email", "error": "Email is required." }
- *	}
-
- TODO: CHANGE DOCUMENTATION HERE
  * 
  */
 const sendErrorResponse = (response, statusCode, message, code = null, details = null, stackTrace = null) => {

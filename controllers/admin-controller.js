@@ -22,31 +22,67 @@ const ApiError = require("../utils/ApiError");
  * @returns {express.Response} 500 - If there is a server/database error, an appropriate error response is automatically handled by asyncHandler.
  *
  * @throws {Error} - Any uncaught database or operational error will be passed to the error-handling middleware.
- *
- * @example
- * // Sample request from client (Admin only):
- * GET /api/admin/users
- * 
- * // Sample successful response:
- * [
- *   {
- *     "_id": "609d6c9b3f1d2b001f89f100",
- *     "name": "John Doe",
- *     "email": "john@example.com",
- *     "role": "user"
- *   },
- *   ...
- * ]
+ * @throws {ApiError} - If the page or limit parameters are invalid, an ApiError is thrown with a specific message and status code.
  */
 const getAllUsers = asyncHandler(async (request, response) => {
-    // TODO: Implement pagination
+    // Extract page and lmit from query parameters
+    const page = parseInt(request.query.page) || 1;
+    const limit = parseInt(request.query.limit) || constants.DEFAULT_PAGE_LIMIT;
 
-    // Query the User collection to fetch all users, excluding sensitive fields like password, refreshToken, and __v (version key).
-    const users = await User.find().select('-password -refreshToken -__v');
+    // Validate the page and limit values
+    if (page < 1 || isNaN(page)) {
+        logger.warn("Invalid page number provided. Page must be a positive integer.");
+        throw new ApiError(
+            "Invalid page number provided. Page must be a positive integer.",
+            status.BAD_REQUEST,
+            "INVALID_PAG_NUMBER"
+        );
+    }
+    if (limit < 1 || isNaN(limit)) {
+        logger.warn("Invalid limit value provided. Limit must be a positive integer.");
+        throw new ApiError(
+            "Invalid limit value provided. Limit must be a positive integer.",
+            status.BAD_REQUEST,
+            "INVALID_LIMIT_VALUE"
+        );
+    }
 
-    sendSuccessResponse(response, status.OK, "Registered users fetched successfully.", users);
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * limit;
 
-    logger.info("Registered users fetched successfully.");
+    // Get the total count of users for pagination metadata
+    const totalUsers = await User.countDocuments();
+
+    // Query the User collection to fetch all users, excluding sensitive fields. 
+    const users = await User.find()
+        .select('-password -refreshToken -__v')
+        .skip(skip)
+        .limit(limit);
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalUsers / limit);
+    const hasNextPage = page < totalPages;
+
+    // Construct the pagination object
+    const pagination = {
+        totalUsers,
+        currentPage: page,
+        totalPages,
+        limit,
+        hasNextPage,
+    };
+
+    sendSuccessResponse(
+        response, 
+        status.OK, 
+        "Registered users fetched successfully.", 
+        {
+            users,
+            pagination
+        }
+    );
+
+    logger.info(`Registered users fetched successfully (page: ${page}, limit: ${limit}).`);
 });
 
 /**
@@ -159,7 +195,15 @@ const updateUserRole = asyncHandler(async (request, response) => {
     // Update the user's role
     user.role = role;
 
-    // TODO: Consider adding a check to prevent unnecessary updates if the role is the same
+    // Check if the user's role is already the same as the new role
+    if (oldRole === user.role) {
+        logger.info(`User ${user.username} (id: ${user.id}) already has the role ${role}. No update needed.`);
+        return sendSuccessResponse(
+            response, 
+            status.OK, 
+            `User ${user.username} already has the role ${role}. No update needed.`
+        );
+    }
 
     // Save the updated user document to the database
     await user.save();
