@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 
+require('dotenv').config(); // Load environment variables from .env file
+
 /**
  * @function connectToDatabase
  * @description
@@ -21,7 +23,7 @@ const logger = require('../utils/logger');
 const connectToDatabase = async () => {
     try {
         // Attempt to connect to MongoDB using the connection string from environment variables.
-        await mongoose.connect(process.env.CONNECTION_STRING);
+        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/blogDB');
     } catch (error) {
         // If connection fails:
         

@@ -72,7 +72,7 @@ if (isProduction || process.env.LOG_TO_FILES === 'true') {
             format: combine( // All file logs are in JSON format for machine readability and parsing.
                 timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
                 errors({ stack: true }),
-                json()
+                //json()
             )
         })
     );
@@ -85,7 +85,7 @@ if (isProduction || process.env.LOG_TO_FILES === 'true') {
             format: combine( // JSON format for consistency with other file logs.
                 timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
                 errors({ stack: true }),
-                json()
+                //json()
             )
         })
     );
@@ -115,7 +115,7 @@ const logger = winston.createLogger({
             format: combine(
                 timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
                 errors({ stack: true }),
-                json()
+                //json()
             )
         })
     ],
@@ -130,7 +130,7 @@ const logger = winston.createLogger({
             format: combine(
                 timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
                 errors({ stack: true }),
-                json()
+                //json()
             )
         })
     ]
