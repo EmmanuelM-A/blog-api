@@ -1,0 +1,15 @@
+# This file is used to validate Swagger/OpenAPI definitions in the project.
+
+name: Swagger/OpenAPI Lint
+
+on: [push, pull_request]
+
+jobs:
+  validate-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swagger Validator
+        uses: char0n/swagger-editor-validate@v1
+        with:
+          definition-file: docs/swagger.yaml
