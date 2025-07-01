@@ -25,8 +25,8 @@ async function startServer() {
         await setupSwagger(app);
 
         // Start the Express server
-        app.listen(PORT, () => {
-            logger.info(`Server running on port ${PORT}`);
+        app.listen(PORT, "0.0.0.0", () => {
+            logger.info(`Server running on port ${PORT} - http://localhost:${POST}`);
         });
 
     } catch (error) {

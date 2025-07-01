@@ -1,19 +1,19 @@
-version: "3.9"
+# docker-compose.yaml
 
 services:
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: blog-api
-    restart: unless-stopped
     ports:
       - "5000:5000"
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/blogDB
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=production
     depends_on:
       - mongo
       - redis
+    env_file:
+      - .env
+    restart: always
 
   mongo:
     image: mongo:6
