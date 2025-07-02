@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const errorHandler = require('./middleware/error-handler');
 const cookieParser = require('cookie-parser');
+const limiter = require("/config/api-rate-limiter");
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Route setup
+app.use('/api/', limiter);
 app.use('/api/posts', require('./routes/post-routes'));
 app.use('/api/users', require('./routes/user-routes'));
 app.use('/api/admin', require('./routes/admin-routes'));

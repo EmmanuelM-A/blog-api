@@ -6,6 +6,7 @@ const logger = require('../../utils/logger');
 jest.mock('../../models/user-schema.js'); 
 jest.mock('../../utils/logger');
 
+// NOTE TESTS HAVE NOT BEEN UPDATED SO WILL NOT WORK!!! DO NOT REFER TO THEM FOR GUIDANCE OF FUNCTIONALITY
 
 describe("Admin Controller", () => {
     let request, response;
