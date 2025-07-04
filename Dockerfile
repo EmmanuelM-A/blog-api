@@ -1,12 +1,12 @@
 # Use official Node.js LTS image
-FROM node:18.20-alpine3.19
+FROM node:alpine
 
 # Set working directory
 WORKDIR /app
 
 # Copy package files and install only production dependencies
 COPY package*.json .
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy the rest of the app
 COPY . .
