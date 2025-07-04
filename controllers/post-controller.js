@@ -6,7 +6,7 @@ const logger = require("../utils/logger");
 const { constants } = require("../utils/constants");
 const { validateUsername } = require("../utils/input-validator");
 const redisClient = require("../config/redis-client");
-const { clearPostCache } = require("../utils/cache-utils");
+const { clearCacheForKey } = require("../utils/cache-utils");
 const ApiError = require("../utils/ApiError");
 const { sendSuccessResponse } = require("../utils/helpers");
 
@@ -131,8 +131,7 @@ const createPost = asyncHandler(async (request, response) => {
     }
 
     // Clear any cached post data to maintain cache consistency after creation
-    logger.info("Cache cleared on post creation.");
-    await clearPostCache();
+    await clearCacheForKey('posts:page:*');
 
     // Log the creation attempt
     logger.info(`Post creation attempt by the user: ${author_id}`);
@@ -465,7 +464,7 @@ const editPost = asyncHandler(async (request, response) => {
 
     // Clear cache
     logger.info("Cache cleared on post editing!");
-    await clearPostCache();
+    await clearCacheForKey("posts:page:*");
 
     post.title = trimmedTitle;
     post.content = trimmedContent;
@@ -551,7 +550,7 @@ const deletePost = asyncHandler( async (request, response) => {
 
     // Clear cache
     logger.info("Cache cleared on post deletion!");
-    await clearPostCache();
+    await clearCacheForKey('posts:page:*');
 
     await post.deleteOne();
     
