@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const app = require('./app');
-const connectToDatabase = require("../blog-api/config/db-connection");
+const connectToDatabase = require("./config/db-connection");
 const logger = require('./utils/logger');
 const redisClient = require('./config/redis-client');
 const setupSwagger = require('./config/swagger');
@@ -14,20 +14,17 @@ const PORT = process.env.PORT || constants.DEFAULT_PORT;
 async function startServer() {
     try {
         // Connect to Database
-        //await connectToDatabase(process.env.CONNECTION_STRING);
-        await connectToDatabase(process.env.MONGO_URI);
-        logger.info("Database connected!");
+        await connectToDatabase();
 
         // Connect to Redis
         await redisClient.connect();
-        logger.info('Redis Client Connected!');
 
         // Mount Swagger at /api-docs
         await setupSwagger(app);
 
         // Start the Express server
         app.listen(PORT, "0.0.0.0", () => {
-            logger.info(`Server running on port ${PORT} at http://localhost:${POST}`);
+            logger.info(`Server running on port ${PORT} at http://localhost:${PORT}`);
         });
 
     } catch (error) {

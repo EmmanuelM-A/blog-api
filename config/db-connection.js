@@ -7,7 +7,7 @@ require('dotenv').config(); // Load environment variables from .env file
  * @function connectToDatabase
  * @description
  * Asynchronously establishes a connection to a MongoDB database using Mongoose. 
- * It uses the connection string defined in the environment variable `CONNECTION_STRING`.
+ * It uses the connection string defined in the environment variable.
  *
  * If the connection attempt fails, it logs the error, closes any open Mongoose connections,
  * and terminates the Node.js process to prevent the application from running in a broken state.
@@ -20,13 +20,12 @@ require('dotenv').config(); // Load environment variables from .env file
  * @returns {Promise<void>} Resolves when the database connection is successfully established.
  * @see {@link https://mongoosejs.com/docs/connections.html Mongoose Connection Docs}
  */
-const connectToDatabase = async connectionString => {
+const connectToDatabase = async () => {
     try {
         // Attempt to connect to MongoDB using the connection string from environment variables.
-        await mongoose.connect(connectionString, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(process.env.CONNECTION_STRING);
+
+        logger.info("Database connected!");
     } catch (error) {
         // If connection fails:
         

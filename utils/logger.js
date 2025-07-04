@@ -60,7 +60,7 @@ transports.push(
 
 
 // We check if it's production or if 'LOG_TO_FILES' environment variable is explicitly 'true'.
-if (isProduction || process.env.LOG_TO_FILES === 'true') {
+/*if (isProduction || process.env.LOG_TO_FILES === 'true') {
     // Define the directory where log files will be stored.
     const logDir = path.join(__dirname, constants.LOGS_DIRECTORY);
 
@@ -89,7 +89,7 @@ if (isProduction || process.env.LOG_TO_FILES === 'true') {
             )
         })
     );
-}
+}*/
 
 
 // --------------------- Logger Configuration ---------------------
@@ -109,7 +109,7 @@ const logger = winston.createLogger({
      * Exception Handling:
      * The logger will catch uncaught exceptions, preventing the application from crashing.
      */
-    exceptionHandlers: [
+    /*exceptionHandlers: [
         new winston.transports.File({
             filename: path.join(__dirname, constants.LOGS_DIRECTORY, 'exceptions.log'),
             format: combine(
@@ -124,7 +124,7 @@ const logger = winston.createLogger({
      * Rejection Handling:
      * Similar to exception handlers, this catches unhandled promise rejections, it ensures no errors are silently dropped.
      */
-    rejectionHandlers: [
+    /*rejectionHandlers: [
         new winston.transports.File({
             filename: path.join(__dirname, constants.LOGS_DIRECTORY, 'rejections.log'),
             format: combine(
@@ -133,7 +133,7 @@ const logger = winston.createLogger({
                 //json()
             )
         })
-    ]
+    ]*/
 });
 
 module.exports = logger;

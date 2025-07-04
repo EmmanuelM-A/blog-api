@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const errorHandler = require('./middleware/error-handler');
 const cookieParser = require('cookie-parser');
-const limiter = require("/config/api-rate-limiter");
+const limiter = require("./config/api-rate-limiter");
 
 const app = express();
 
