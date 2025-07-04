@@ -14,7 +14,8 @@ const PORT = process.env.PORT || constants.DEFAULT_PORT;
 async function startServer() {
     try {
         // Connect to Database
-        await connectToDatabase();
+        //await connectToDatabase(process.env.CONNECTION_STRING);
+        await connectToDatabase(process.env.MONGO_URI);
         logger.info("Database connected!");
 
         // Connect to Redis
@@ -26,7 +27,7 @@ async function startServer() {
 
         // Start the Express server
         app.listen(PORT, "0.0.0.0", () => {
-            logger.info(`Server running on port ${PORT} - http://localhost:${POST}`);
+            logger.info(`Server running on port ${PORT} at http://localhost:${POST}`);
         });
 
     } catch (error) {

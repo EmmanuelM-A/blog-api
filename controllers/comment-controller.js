@@ -88,7 +88,7 @@ const commentOnPost = asyncHandler(async (request, response) => {
         logger.warn(`Comment failed: Post with id ${postId} not found.`);
 
         throw new ApiError(
-            "Comment failed: Post with id ${postId} not found.",
+            `Comment failed: Post with id ${postId} not found.`,
             status.NOT_FOUND,
             "POST_NOT_FOUND"
         );
@@ -154,9 +154,9 @@ const commentOnPost = asyncHandler(async (request, response) => {
 const getCommentsForPost = asyncHandler(async (request, response) => {
     // Extract the postId from the request parameters
     const { postId } = request.params;
-
-    // Log the request attempt
-    logger.info(`Fetching comments for post: ${postId}`);
+    const page = parseInt(request.query.page, 10) || 1;
+    const limit = parseInt(request.query.limit, 10) || constants.POST_PER_PAGE_LIMIT; 
+    const skip = (page - 1) * limit;
 
     // Check if the post exists before fetching comments
     const post = await Post.findById(postId);
@@ -169,16 +169,27 @@ const getCommentsForPost = asyncHandler(async (request, response) => {
         );
     }
 
-    // Fetch comments associated with the post
-    const comments = await Comment.find({ post_id: postId })
-        .sort({ createdAt: -1 }) // Sort newest to oldest
-        .populate("user_id", "username"); // Include only the username of the commenter
+    // Fetch paginated comments
+    const [comments, totalComments] = await Promise.all([
+        Comment.find({ post_id: postId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("user_id", "username"),
+        Comment.countDocuments({ post_id: postId })
+    ]);
 
     sendSuccessResponse(
         response,
         status.OK,
         "Comments fetched successfully.",
-        { postId, comments }
+        {
+            postId,
+            comments,
+            page,
+            totalPages: Math.ceil(totalComments / limit),
+            totalComments
+        }
     );
 
     logger.info(`Fetched ${comments.length} comments for post: ${postId}`);

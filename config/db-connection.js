@@ -20,10 +20,10 @@ require('dotenv').config(); // Load environment variables from .env file
  * @returns {Promise<void>} Resolves when the database connection is successfully established.
  * @see {@link https://mongoosejs.com/docs/connections.html Mongoose Connection Docs}
  */
-const connectToDatabase = async () => {
+const connectToDatabase = async connectionString => {
     try {
         // Attempt to connect to MongoDB using the connection string from environment variables.
-        await mongoose.connect(process.env.MONGO_URI, {
+        await mongoose.connect(connectionString, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
