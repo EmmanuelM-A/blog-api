@@ -514,7 +514,8 @@ const editPost = asyncHandler(async (request, response) => {
  */
 const deletePost = asyncHandler( async (request, response) => {
     const { postId } = request.params;
-    const userId = request.user?.id;
+    const user = request.user;
+    const userId = user?.id;
 
     if (!userId) {
         logger.warn("Unauthorized attempt to delete post.");
@@ -538,7 +539,7 @@ const deletePost = asyncHandler( async (request, response) => {
         );
     }
 
-    if (String(post.author_id) !== String(userId)) {
+    if (String(post.author_id) !== String(userId) && user.role !== "admin") {
         logger.warn(`User ${userId} attempted to delete post ${postId} without permission.`);
 
         throw new ApiError(

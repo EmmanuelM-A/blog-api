@@ -27,7 +27,7 @@ const ApiError = require("../utils/ApiError");
 const getAllUsers = asyncHandler(async (request, response) => {
     // Extract page and lmit from query parameters
     const page = parseInt(request.query.page) || 1;
-    const limit = parseInt(request.query.limit) || constants.DEFAULT_PAGE_LIMIT;
+    const limit = parseInt(request.query.limit) || 10;
 
     // Validate the page and limit values
     if (page < 1 || isNaN(page)) {
