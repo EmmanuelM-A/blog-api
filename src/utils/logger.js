@@ -1,6 +1,6 @@
 const winston = require('winston');
 const path = require('path');
-const { constants } = require('./constants');
+const { constants } = require('../config');
 
 const { combine, timestamp, printf, colorize, errors, json } = winston.format;
 

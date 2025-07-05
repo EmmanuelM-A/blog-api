@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
-const { constants } = require('../utils/constants');
+const { constants } = require('../../utils/constants');
 
 const commentSchema = new mongoose.Schema({
     _id: {

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const User = require("./models/user-schema");
-const { hashPassword } = require("./utils/helpers");
+const { hashPassword } = require("./helpers");
 require('dotenv').config();
 
 const seedAdmin = async () => {

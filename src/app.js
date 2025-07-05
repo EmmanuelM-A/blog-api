@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const errorHandler = require('./middleware/error-handler');
 const cookieParser = require('cookie-parser');
-const limiter = require("./config/api-rate-limiter");
+const limiter = require("./middleware/apiRateLimiter");
 
 const app = express();
 
@@ -28,8 +28,6 @@ module.exports = app;
 Integrate a logging library (e.g., winston, pino) for structured logs.
 Add request logging (e.g., morgan).
 Set up monitoring/alerting (e.g., Prometheus, Grafana, Sentry for error tracking).
-2. API Versioning
-Implement API versioning (e.g., /api/v1/posts) to support future changes without breaking clients.
 3. Rate Limiting and Security Headers
 Ensure robust rate limiting is in place.
 Add security headers using helmet.

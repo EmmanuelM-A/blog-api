@@ -12,7 +12,7 @@
  * 
  */
 
-const { status } = require("./status");
+const { status } = require("./utils/status");
 
 /** @type {AppConstants} */
 exports.constants = {

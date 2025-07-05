@@ -1,4 +1,4 @@
-const { COMMON_ERRORS_MAP } = require("../utils/constants");
+const { COMMON_ERRORS_MAP } = require("../config");
 const { sendErrorResponse } = require("../utils/helpers");
 const logger = require("../utils/logger");
 const { status } = require("../utils/status");
