@@ -13,9 +13,9 @@ app.use(express.json());
 
 // Route setup
 app.use('/api/', limiter);
-app.use('/api/posts', require('./routes/post-routes'));
-app.use('/api/users', require('./routes/user-routes'));
-app.use('/api/admin', require('./routes/admin-routes'));
+app.use('/api/v1/posts', require('./api/v1/routes/posts'));
+app.use('/api/v1/users', require('./api/v1/routes/users'));
+app.use('/api/v1/admin', require('./api/v1/routes/admin'));
 
 // Error handling middleware
 app.use(errorHandler);

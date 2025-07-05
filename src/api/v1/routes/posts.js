@@ -6,17 +6,17 @@ const {
     createPost, 
     editPost, 
     deletePost,
-} = require("../controllers/post-controller");
+} = require("../controllers/postController");
 
 const { 
     commentOnPost,
     getCommentsForPost
-} = require("../controllers/comment-controller");
+} = require("../controllers/commentController");
 
 const { 
     getLikesForPost, 
     likePost 
-} = require('../controllers/like-controller');
+} = require('../controllers/likeController');
 
 const { authRouteProtection } = require('../middleware/auth-middleware');
 const { authorizeRoles } = require('../middleware/role-middleware');

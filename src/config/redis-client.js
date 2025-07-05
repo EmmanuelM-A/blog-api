@@ -16,7 +16,7 @@ const logger = require("../utils/logger");
  * @requires logger
  */
 const redisClient = redis.createClient({
-    url: process.env.DEV_REDIS_URL, // Redis connection URL
+    url: process.env.REDIS_URL, // Redis connection URL
 });
 
 // Event: Fired when the client is initiating a connection to Redis.
