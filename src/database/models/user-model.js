@@ -1,0 +1,87 @@
+const User = require("../schemas/user");
+
+/**
+ * Create a new user with the given user data.
+ * 
+ * @param {Object} userData The required data to create a new user.
+ * 
+ * @returns {Promise<Object>} The created user document
+ */
+async function createUser(userData) {
+    return User.create({
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        role: userData.role || "user"
+    });
+}
+
+/**
+ * Delete a user by their MongoDB _id.
+ * @param {string} userId
+ * @returns {Promise<Object|null>} The deleted user document or null if not found
+ */
+async function deleteUserById(userId) {
+    return User.findByIdAndDelete(userId);
+}
+
+/**
+ * Delete a user by their username.
+ * @param {string} username
+ * @returns {Promise<Object|null>} The deleted user document or null if not found
+ */
+async function deleteUserByUsername(username) {
+    return User.findOneAndDelete({ username });
+}
+
+/**
+ * Find a user by their MongoDB _id.
+ * @param {string} userId
+ * @returns {Promise<Object|null>} The user document or null if not found
+ */
+async function findUserById(userId) {
+    return User.findById(userId);
+}
+
+/**
+ * Find a user by email.
+ * @param {string} email
+ * @returns {Promise<Object|null>} The user document or null if not found
+ */
+async function findUserByEmail(email) {
+    return User.findOne({ email });
+}
+
+/**
+ * Find a user by username.
+ * @param {string} username
+ * @returns {Promise<Object|null>} The user document or null if not found
+ */
+async function findUserByUsername(username) {
+    return User.findOne({ username });
+}
+
+async function findUserByCriteria(criteria) {
+    return User.findOne(criteria);
+}
+
+/**
+ * Update a user by their MongoDB _id.
+ * @param {string} userId
+ * @param {Object} updateData
+ * @returns {Promise<Object|null>} The updated user document or null if not found
+ */
+async function updateUser(userId, updateData) {
+    return User.findByIdAndUpdate(userId, updateData, { new: true });
+}
+
+/**
+ * Update a specific detail for a user.
+ * @param {string} userId
+ * @param {string} detailKey
+ * @param {*} detailValue
+ * @returns {Promise<Object|null>} The updated user document or null if not found
+ */
+async function updateUserDetail(userId, detailKey, detailValue) {
+    return User.findByIdAndUpdate(userId, { [detailKey]: detailValue }, { new: true });
+}

@@ -1,7 +1,7 @@
 const validator = require('validator');
 const { body } = require('express-validator');
-const restrictedUsernames = require('../../config/restricted-usernames.json');
-const { constants } = require('../../utils/constants');
+const restrictedUsernames = require('../users/restricted-usernames.json');
+const { constants } = require('../../config');
 
 /**
  * Validates the username.
@@ -48,6 +48,24 @@ const validateEmail = (input) => {
     );
 };
 
+/**
+ * Creates a validation object list of validators to validate user credentials.
+ * 
+ * @param {string} username The user's username.
+ * @param {string} email The user's email.
+ * @param {string} password The user's password.
+ * 
+ * @returns A list of validators. 
+ */
+const userValidation = (username, email, password) => {
+    return [
+        { check: username, validateFunc: validateUsername(username), errorMsg: "Invalid username provided!" },
+        { check: email, validateFunc: validateEmail(email), errorMsg: "Invalid email provided!" },
+        { check: password, validateFunc: validatePassword(password), errorMsg: "Invalid password provided!" }
+    ]
+}
+
+
 const validatePostTitle = (input) => {
     return (
         typeof input === "string" &&
@@ -64,22 +82,11 @@ const validatePostContent = (input) => {
     );
 }
 
-const validatePostRoute = [
-    body('title')
-        .isString()
-        .isLength({ max: constants.MAX_POST_TITLE_LENGTH })
-        .withMessage("Title must be under 100 characters."),
-    body('content')
-        .isString()
-        .isLength({ max: constants.MAX_POST_CONTENT_LENGTH })
-        .withMessage('Content must be under 5000 characters.'),
-];
-
 module.exports = {
     validateUsername,
     validatePassword,
     validateEmail,
     validatePostTitle,
     validatePostContent,
-    validatePostRoute
+    userValidation
 };
