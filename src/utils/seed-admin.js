@@ -1,20 +1,29 @@
-const mongoose = require("mongoose");
-const User = require("./models/user-schema");
-const { hashPassword } = require("./helpers");
 require('dotenv').config();
 
+const mongoose = require("mongoose");
+const { hashPassword } = require("./helpers");
+const { findUserByCriteria, updateUserDetail } = require('../database/models/user-model');
+
+/**
+ * Setups the admin and save its details to the database.
+ */
 const seedAdmin = async () => {
+    const adminDetails = {
+        username: "TopDog",
+        email: "topdog@example.com",
+        password: "TheTopD0g!"
+    };
+
     try {
         await mongoose.connect(process.env.CONNECTION_STRING);
 
-        const email = "admin@example.com";
+        const isUserAvaiable = await findUserByCriteria({ $or: [{ username: adminDetails.username }, { email: adminDetails.email }] });
 
-        const existingAdmin = await User.findOne({ email });
-
-        if (existingAdmin) {
+        if (isUserAvaiable) {
             console.log("Admin already exists.");
         } else {
-            const hashedPassword = await hashPassword("Admin@123");
+            const hashedPassword = await hashPassword(adminDetails.password);
+
             const admin = await User.create({
                 username: "admin",
                 email,

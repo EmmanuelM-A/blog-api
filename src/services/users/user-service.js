@@ -1,7 +1,6 @@
-const ApiError = require("../../utils/ApiError");
+const ApiError = require("../../utils/api-error");
 const { validateUsername, validateEmail, validatePassword } = require("../validation/input-validator");
 const { findUserById, findUserByCriteria, createUser } = require("../../database/models/user-model");
-
 const { StatusCodes } = require('http-status-codes');
 const { hashPassword, comparePassword, generateAccessToken, generateRefreshToken } = require("../../utils/helpers");
 const logger = require("../../utils/logger");

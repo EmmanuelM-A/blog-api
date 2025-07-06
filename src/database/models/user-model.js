@@ -1,4 +1,4 @@
-const User = require("../schemas/user");
+const User = require("../schemas/user-schema");
 
 /**
  * Create a new user with the given user data.

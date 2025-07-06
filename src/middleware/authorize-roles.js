@@ -1,10 +1,17 @@
-const asyncHandler = require('express-async-handler');
-const { status } = require('../utils/status');
 const logger = require('../utils/logger');
-const ApiError = require('../utils/ApiError');
+const ApiError = require('../utils/api-error');
+const expressAsyncHandler = require('express-async-handler');
+const { StatusCodes } = require('http-status-codes');
 
+/**
+ * Restricts access to certain routes based on the allowed roles a user must have.
+ * 
+ * @param  {...any} allowedRoles The list of roles a user must be assigned to.
+ * 
+ * @returns A function that checks if a user is authorized to access a route.
+ */
 const authorizeRoles = (...allowedRoles) => {
-    return asyncHandler((request, response, next) => {
+    return expressAsyncHandler((request, response, next) => {
         const user = request.user;
         if (!user || !allowedRoles.includes(user.role)) {
             logger.warn(
@@ -13,7 +20,7 @@ const authorizeRoles = (...allowedRoles) => {
 
             throw new ApiError(
                 `The user ${user?.username || "unknown"} does not have the permissions to perform this action!`,
-                status.FORBIDDEN,
+                StatusCodes.FORBIDDEN,
                 "PERMISSION_DENIED",
                 `User role '${user?.role || "none"}' is not allowed to access this resource. Allowed roles are: [${allowedRoles.join(', ')}].`
             );

@@ -12,8 +12,6 @@
  * 
  */
 
-const { StatusCodes } = require('http-status-codes');
-
 /** @type {AppConstants} */
 exports.constants = {
     MAX_POST_TITLE_LENGTH: 100,

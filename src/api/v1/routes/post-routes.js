@@ -1,22 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { 
-    getAllPosts, 
-    getAllPostsByUser, 
-    createPost, 
-    editPost, 
-    deletePost,
-} = require("../controllers/postController");
+const { getAllPosts, getAllPostsByUser, createPost, editPost, deletePost } = require("../controllers/postController");
 
-const { 
-    commentOnPost,
-    getCommentsForPost
-} = require("../controllers/commentController");
+const { commentOnPost, getCommentsForPost } = require("../controllers/commentController");
 
-const { 
-    getLikesForPost, 
-    likePost 
-} = require('../controllers/likeController');
+const { getLikesForPost, likePost } = require('../controllers/likeController');
 
 const { authorizeRoles } = require("../../../middleware/authorize-roles");
 const { authRouteProtection } = require('../../../middleware/authorize-routes');

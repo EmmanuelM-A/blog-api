@@ -1,11 +1,14 @@
 const jwt = require("jsonwebtoken");
-const asyncHandler = require("express-async-handler");
-const User = require("../models/user-schema");
-const { status } = require("../utils/status");
 const logger = require("../utils/logger");
-const ApiError = require("../utils/ApiError");
+const ApiError = require("../utils/api-error");
+const expressAsyncHandler = require("express-async-handler");
+const { StatusCodes } = require("http-status-codes");
+const { findUserById } = require("../database/models/user-model");
 
-const authRouteProtection = asyncHandler(async (request, response, next) => {
+/**
+ * Checks if a request has a valid authorization header and verifies its value (the acess token).
+ */
+const authRouteProtection = expressAsyncHandler(async (request, response, next) => {
     let token;
 
     if (request.headers.authorization && request.headers.authorization.startsWith("Bearer")) {
@@ -19,12 +22,19 @@ const authRouteProtection = asyncHandler(async (request, response, next) => {
             logger.info(`Token verified for user ID: ${decoded.id}`);
 
             // Get user from token without password
-            request.user = await User.findById(decoded.id).select("-password");
+            request.user = await findUserById(decoded.id).select("-password");
+
             if (!request.user) {
-                logger.warn(`User not found for ID: ${decoded.id}`);
-            } else {
-                logger.info(`User authenticated: ${request.user.username} (${request.user.id})`);
+                logger.error(`User not found for with the id: ${decoded.id}`);
+
+                throw new ApiError(
+                    `The use with the id ${decoded.id} does not exist!`,
+                    StatusCodes.NOT_FOUND,
+                    "USER_NOT_FOUND"
+                );
             }
+
+            logger.info(`User authenticated: ${request.user.username} (${request.user.id})`);
 
             next();
         } catch (error) {
@@ -32,7 +42,7 @@ const authRouteProtection = asyncHandler(async (request, response, next) => {
 
             throw new ApiError(
                 "Not authorized: token verification failed",
-                status.UNAUTHORIZED,
+                StatusCodes.UNAUTHORIZED,
                 "TOKEN_VERIFICATION_FAILED"
             );
         }
@@ -43,7 +53,7 @@ const authRouteProtection = asyncHandler(async (request, response, next) => {
 
         throw new ApiError(
             "Not authorized: no token provided",
-            status.UNAUTHORIZED,
+            StatusCodes.UNAUTHORIZED,
             "NO_TOKEN_PROVIDED"
         );
     }

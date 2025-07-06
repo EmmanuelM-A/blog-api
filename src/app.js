@@ -15,9 +15,9 @@ app.use(express.json());
 
 // Route setup
 app.use('/api/', limiter);
-app.use('/api/v1/posts', require('./api/v1/routes/posts'));
+app.use('/api/v1/posts', require('./api/v1/routes/post-routes'));
 app.use('/api/v1/users', require('./api/v1/routes/user-routes'));
-app.use('/api/v1/admin', require('./api/v1/routes/admin'));
+app.use('/api/v1/admin', require('./api/v1/routes/admin-routes'));
 
 // Error handling middleware
 app.use(errorHandler);
@@ -26,12 +26,6 @@ app.use(errorHandler);
 module.exports = app;
 
 /**
- * Add Logging and Monitoring
-Integrate a logging library (e.g., winston, pino) for structured logs.
-Add request logging (e.g., morgan).
-Set up monitoring/alerting (e.g., Prometheus, Grafana, Sentry for error tracking).
-3. Rate Limiting and Security Headers
-Ensure robust rate limiting is in place.
 Add security headers using helmet.
 4. CORS Configuration
 Fine-tune CORS settings to only allow trusted origins.

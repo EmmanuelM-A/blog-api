@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const app = require('./app');
-const connectToDatabase = require("./database/databaseConnection");
+const connectToDatabase = require("./database/database-connection");
 const logger = require('./utils/logger');
 const redisClient = require('./services/caching/redis-client');
 const setupSwagger = require('./docs/swagger');
