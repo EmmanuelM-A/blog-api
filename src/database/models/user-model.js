@@ -44,23 +44,12 @@ async function findUserById(userId) {
 }
 
 /**
- * Find a user by email.
- * @param {string} email
+ * Find a user by the provided criteria.
+ * 
+ * @param {Object} criteria The criteria to search for.
+ * 
  * @returns {Promise<Object|null>} The user document or null if not found
  */
-async function findUserByEmail(email) {
-    return User.findOne({ email });
-}
-
-/**
- * Find a user by username.
- * @param {string} username
- * @returns {Promise<Object|null>} The user document or null if not found
- */
-async function findUserByUsername(username) {
-    return User.findOne({ username });
-}
-
 async function findUserByCriteria(criteria) {
     return User.findOne(criteria);
 }
@@ -85,3 +74,13 @@ async function updateUser(userId, updateData) {
 async function updateUserDetail(userId, detailKey, detailValue) {
     return User.findByIdAndUpdate(userId, { [detailKey]: detailValue }, { new: true });
 }
+
+module.exports = {
+    createUser,
+    deleteUserById,
+    deleteUserByUsername,
+    findUserById,
+    findUserByCriteria,
+    updateUser,
+    updateUserDetail
+};

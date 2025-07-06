@@ -5,8 +5,8 @@ const {
     currentUser, 
     logoutUser, 
     refreshAccessToken, 
-} = require("../controllers/userController");
-const { authRouteProtection } = require("../middleware/auth-middleware");
+} = require("../controllers/user-controller");
+const { authRouteProtection } = require('../../../middleware/authorize-routes');
 const router = express.Router();
 
 

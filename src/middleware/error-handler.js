@@ -1,7 +1,6 @@
-const { COMMON_ERRORS_MAP } = require("../config");
 const { sendErrorResponse } = require("../utils/helpers");
 const logger = require("../utils/logger");
-const { status } = require("../utils/status");
+const { StatusCodes } = require('http-status-codes');
 const express = import('express');
 
 /**
@@ -13,6 +12,35 @@ const express = import('express');
  * @property {string} [error.details] - More specific details about the error. (could be an array for validation)
  * @property {string} [stackTrace] - The stack trace of the error (typically only in development).
  */
+
+/** @type {CommonErrorsMap} */
+const COMMON_ERRORS_MAP = {
+    [StatusCodes.BAD_REQUEST]: {
+        message: "Validation failed.",
+        code: "VALIDATION_ERROR",
+        details: "One or more input fields are invalid."
+    },
+    [StatusCodes.NOT_FOUND]: {
+        message: "Resource not found.",
+        code: "NOT_FOUND",
+        details: "The requested resource could not be found."
+    },
+    [StatusCodes.UNAUTHORIZED]: {
+        message: "Authentication required or invalid credentials.",
+        code: "UNAUTHORIZED",
+        details: "You are not authorized to access this resource."
+    },
+    [StatusCodes.FORBIDDEN]: {
+        message: "Access denied.",
+        code: "FORBIDDEN",
+        details: "You do not have permission to perform this action."
+    },
+    [StatusCodes.INTERNAL_SERVER_ERROR]: { // Generic 500 for explicit SERVER_ERROR or uncaught errors
+        message: "An internal server error occurred.",
+        code: "INTERNAL_SERVER_ERROR",
+        details: "Something went wrong on our server."
+    },
+};
 
 /**
  * @function errorHandler
@@ -34,7 +62,7 @@ const errorHandler = (error, request, response, next) => {
     const statusCode = error.status >= 400 && error.status < 500 ? error.status: 500;
 
     // Get specific error details from the map, or use default server error
-    const errorDetails = COMMON_ERRORS_MAP[statusCode] || COMMON_ERRORS_MAP[status.SERVER_ERROR];
+    const errorDetails = COMMON_ERRORS_MAP[statusCode] || COMMON_ERRORS_MAP[StatusCodes.INTERNAL_SERVER_ERROR];
 
     // Build the response body
     let responseBody = {

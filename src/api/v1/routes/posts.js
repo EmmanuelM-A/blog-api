@@ -18,8 +18,8 @@ const {
     likePost 
 } = require('../controllers/likeController');
 
-const { authRouteProtection } = require('../middleware/auth-middleware');
-const { authorizeRoles } = require('../middleware/role-middleware');
+const { authorizeRoles } = require("../../../middleware/authorize-roles");
+const { authRouteProtection } = require('../../../middleware/authorize-routes');
 
 
 ///////////////////////////////////////////// PUBLIC ROUTES /////////////////////////////////////////////

@@ -2,18 +2,8 @@ const redis = require('redis');
 const logger = require("../utils/logger");
 
 /**
- * @constant {RedisClientType}
- * @description
  * Initializes and exports a Redis client configured to connect using a URL defined
- * in the environment variable `REDIS_URL`. This client uses event listeners to log
- * the lifecycle of the Redis connection: when it's attempting to connect, ready for use,
- * or when errors occur.
- *
- * This client should be imported and used across the application for caching,
- * session storage, rate limiting, or other Redis-based features.
- *
- * @requires redis
- * @requires logger
+ * in the environment variable `REDIS_URL`.
  */
 const redisClient = redis.createClient({
     url: process.env.REDIS_URL, // Redis connection URL

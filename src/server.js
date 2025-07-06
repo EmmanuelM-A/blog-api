@@ -3,8 +3,8 @@ require('dotenv').config();
 const app = require('./app');
 const connectToDatabase = require("./database/databaseConnection");
 const logger = require('./utils/logger');
-const redisClient = require('./config.js/redis-client');
-const setupSwagger = require('./config.js/swagger');
+const redisClient = require('./services/caching/redis-client');
+const setupSwagger = require('./docs/swagger');
 const { constants } = require('./config');
 
 const PORT = process.env.PORT || constants.DEFAULT_PORT;

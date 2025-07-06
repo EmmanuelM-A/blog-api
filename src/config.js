@@ -12,7 +12,7 @@
  * 
  */
 
-const { status } = require("./utils/status");
+const { StatusCodes } = require('http-status-codes');
 
 /** @type {AppConstants} */
 exports.constants = {
@@ -23,33 +23,4 @@ exports.constants = {
     DEFAULT_PORT: 5000,
     VALID_ROLES: ['user', 'author', 'admin'],
     LOGS_DIRECTORY: "../logs"
-};
-
-/** @type {CommonErrorsMap} */
-exports.COMMON_ERRORS_MAP = {
-    [status.VALIDATION_ERROR]: {
-        message: "Validation failed.",
-        code: "VALIDATION_ERROR",
-        details: "One or more input fields are invalid."
-    },
-    [status.NOT_FOUND]: {
-        message: "Resource not found.",
-        code: "NOT_FOUND",
-        details: "The requested resource could not be found."
-    },
-    [status.UNAUTHORIZED]: {
-        message: "Authentication required or invalid credentials.",
-        code: "UNAUTHORIZED",
-        details: "You are not authorized to access this resource."
-    },
-    [status.FORBIDDEN]: {
-        message: "Access denied.",
-        code: "FORBIDDEN",
-        details: "You do not have permission to perform this action."
-    },
-    [status.SERVER_ERROR]: { // Generic 500 for explicit SERVER_ERROR or uncaught errors
-        message: "An internal server error occurred.",
-        code: "INTERNAL_SERVER_ERROR",
-        details: "Something went wrong on our server."
-    },
 };
