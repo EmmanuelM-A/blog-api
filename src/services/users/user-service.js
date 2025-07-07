@@ -14,7 +14,7 @@ const logger = require("../../utils/logger");
  */
 async function registerUserService(userData) {
     // Extract user credentials from the request body.
-    const { username, email, password } = request.body;
+    const { username, email, password } = userData;
 
 	// Define validation checks for username, email, and password.
 	const validations = [
@@ -64,14 +64,14 @@ async function registerUserService(userData) {
 	const hashedPassword = await hashPassword(password);
 
 	// Create the user object.
-	const userData = {
+	const userObj = {
 		username,
 		email,
 		password: hashedPassword,
 		role: "role"
 	}
 	
-	const userDB = await createUser(userData);
+	const userDB = await createUser(userObj);
 
 	// If user creation failed, throw an error.
 	if (!userDB) {

@@ -46,7 +46,18 @@ async function findComments(criteria = {}, options = {}) {
     if (options.sort) query.sort(options.sort);
     if (options.skip) query.skip(options.skip);
     if (options.limit) query.limit(options.limit);
-    return query.exec();
+    return query;
+}
+
+/**
+ * Counts all the comments the match the criteria.
+ * 
+ * @param {Object} criteria Determines which comments are counted in the query.
+ * 
+ * @returns The total number of comments that match that criteria.
+ */
+async function countComments(criteria = {}) {
+    return Comment.countDocuments(criteria);
 }
 
 /**
@@ -105,4 +116,5 @@ module.exports = {
     updateCommentDetail,
     deleteCommentById,
     deleteCommentsByCriteria,
+    countComments
 };
