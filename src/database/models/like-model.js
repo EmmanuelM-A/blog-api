@@ -25,7 +25,8 @@ async function findLikeById(likeId) {
 /**
  * Find a like by criteria.
  * 
- * @param {Object} criteria 
+ * @param {Object} criteria Determines which likes are returned.
+ * 
  * @returns {Promise<Object|null>} The like document or null if not found
  */
 async function findLikeByCriteria(criteria) {
@@ -34,8 +35,10 @@ async function findLikeByCriteria(criteria) {
 
 /**
  * Find multiple likes by criteria (with optional pagination).
- * @param {Object} criteria - Mongoose query object
- * @param {Object} [options] - { skip, limit, sort }
+ * 
+ * @param {Object} criteria Mongoose query object
+ * @param {Object} [options] Determines how the like documents are returned. Options = { skip, limit, sort }
+ * 
  * @returns {Promise<Array>} Array of like documents
  */
 async function findLikes(criteria = {}, options = {}) {
@@ -48,7 +51,9 @@ async function findLikes(criteria = {}, options = {}) {
 
 /**
  * Delete a like by its MongoDB _id.
- * @param {string} likeId
+ * 
+ * @param {string} likeId The id assigned to the like.
+ * 
  * @returns {Promise<Object|null>} The deleted like document or null if not found
  */
 async function deleteLikeById(likeId) {
@@ -57,7 +62,9 @@ async function deleteLikeById(likeId) {
 
 /**
  * Delete likes by criteria.
- * @param {Object} criteria - Mongoose query object
+ * 
+ * @param {Object} criteria Determines which likes are deleted.
+ * 
  * @returns {Promise<{ deletedCount: number }>} Result of deletion
  */
 async function deleteLikesByCriteria(criteria) {
