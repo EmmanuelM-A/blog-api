@@ -75,6 +75,17 @@ async function updatePostDetail(postId, detailKey, detailValue) {
 }
 
 /**
+ * Returns the number of posts that meet a specific criteria. 
+ * 
+ * @param {Object} criteria Determines which posts are counted. Acts as a filter.
+ * 
+ * @returns {Number} The number of posts that meet the provided criteria.
+ */
+async function countPostsByCriteria(criteria) {
+    return Post.countDocuments(criteria);
+}
+
+/**
  * Delete a post by its MongoDB _id.
  * 
  * @param {string} postId The id assigned to the post.
@@ -105,4 +116,5 @@ module.exports = {
     updatePostDetail,
     deletePostById,
     deletePostsByCriteria,
+    countPostsByCriteria
 };

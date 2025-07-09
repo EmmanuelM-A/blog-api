@@ -55,9 +55,27 @@ async function findUserByCriteria(criteria) {
 }
 
 /**
+ * Find multiple users by criteria (with optional pagination).
+ * 
+ * @param {Object} criteria Determines which users are returned.
+ * @param {Object} [options] Determines how the users are returned. Options = { skip, limit, sort }
+ * 
+ * @returns {Promise<Array>} Array of user documents
+ */
+async function findUsers(criteria = {}, options = {}) {
+    const query = User.find(criteria);
+    if (options.sort) query.sort(options.sort);
+    if (options.skip) query.skip(options.skip);
+    if (options.limit) query.limit(options.limit);
+    return query;
+}
+
+/**
  * Update a user by their MongoDB _id.
+ * 
  * @param {string} userId
  * @param {Object} updateData
+ * 
  * @returns {Promise<Object|null>} The updated user document or null if not found
  */
 async function updateUser(userId, updateData) {
@@ -66,13 +84,26 @@ async function updateUser(userId, updateData) {
 
 /**
  * Update a specific detail for a user.
- * @param {string} userId
- * @param {string} detailKey
- * @param {*} detailValue
+ * 
+ * @param {string} userId The id assigned to the user.
+ * @param {string} detailKey The field to update.
+ * @param {any} detailValue The new value to assign to the field to update.
+ * 
  * @returns {Promise<Object|null>} The updated user document or null if not found
  */
 async function updateUserDetail(userId, detailKey, detailValue) {
     return User.findByIdAndUpdate(userId, { [detailKey]: detailValue }, { new: true });
+}
+
+/**
+ * Returns the number of users that meet a specific criteria. 
+ * 
+ * @param {Object} criteria Determines which users are counted. Acts as a filter.
+ * 
+ * @returns {Number} The number of users that meet the provided criteria.
+ */
+async function countUserByCriteria(criteria) {
+    return User.countDocuments(criteria);
 }
 
 module.exports = {
@@ -81,6 +112,8 @@ module.exports = {
     deleteUserByUsername,
     findUserById,
     findUserByCriteria,
+    findUsers,
     updateUser,
-    updateUserDetail
+    updateUserDetail,
+    countUserByCriteria
 };

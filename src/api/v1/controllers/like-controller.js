@@ -1,4 +1,3 @@
-const Like = require("../models/like-schema"); 
 const logger = require("../../../utils/logger");
 const { sendSuccessResponse } = require("../../../utils/helpers");
 const { toggleLikeService, getLikesForPostService } = require("../../../services/likes/like-service");

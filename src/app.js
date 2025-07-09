@@ -26,14 +26,8 @@ app.use(errorHandler);
 module.exports = app;
 
 /**
-Add security headers using helmet.
-4. CORS Configuration
-Fine-tune CORS settings to only allow trusted origins.
 9. Documentation
 Add OpenAPI/Swagger documentation for all endpoints (if not already covered).
-Run the container as a non-root user.
- * TODO: OPTIMIZE CODE FOR PERFORMANCE
- * TODO: ADD TESTS FOR ALL ROUTES + UNIT, INTEGRATION, AND END-TO-END TESTS
  * TODO: DOCUMENT EVERYTHING
  * TODO: REVIEW CODE
  * TODO: ADD AUTHENICATION TO ACCESS THE DATABASE

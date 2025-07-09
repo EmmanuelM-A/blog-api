@@ -1,10 +1,8 @@
 const logger = require("../../../utils/logger");
-const { constants } = require("../../../config");
 const { sendSuccessResponse } = require("../../../utils/helpers");
 const expressAsyncHandler = require("express-async-handler");
 const { commentOnPostService, getCommentsForPostService } = require("../../../services/comments/comment-service");
 const { StatusCodes } = require("http-status-codes");
-const ApiError = require("../../../utils/api-error"); 
 
 /**
  * Handles an HTTP POST request to add a comment to a post.
@@ -16,8 +14,6 @@ const ApiError = require("../../../utils/api-error");
  * @returns {Response} 400 - If the comment is invalid or exceeds character limits.
  * @returns {Response} 401 - If the user is not authenticated.
  * @returns {Response} 404 - If the specified post does not exist.
- *
- * @throws {Error} - Throws detailed errors for validation, authentication, and missing post cases, handled by global error middleware.
  */
 const commentOnPost = expressAsyncHandler(async (request, response) => {
     // Extract all the details needed for commenting
