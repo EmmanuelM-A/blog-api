@@ -1,5 +1,5 @@
 const redis = require('redis');
-const logger = require("../utils/logger");
+const logger = require("../../utils/logger");
 
 /**
  * Initializes and exports a Redis client configured to connect using a URL defined

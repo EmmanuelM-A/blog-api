@@ -6,6 +6,7 @@ const logger = require("../../utils/logger");
 const { constants } = require("../../config");
 const { validateUsername } = require("../validation/input-validator");
 const redisClient = require("../caching/redis-client");
+const { findUserById } = require("../../database/models/user-model");
 
 
 async function getAllPostsService(options) {
@@ -146,12 +147,12 @@ async function getAllPostsByUserService(username, options) {
     return responseData;
 }
 
-async function createPostService(user, postContent) {
+async function createPostService(userDB, postContent) {
     // Extract title and content from the request body
     const { title, content } = postContent;
 
     // Extract author_id from query parameters (used for authentication)
-    const author_id = user._id;
+    const author_id = userDB._id;
 
     // Check if author_id is provided
     if (!author_id) {
@@ -165,7 +166,7 @@ async function createPostService(user, postContent) {
     }
 
     // Verify the user exists in the database
-    const user = await User.findById(author_id);
+    const user = await findUserById(author_id);
     if (!user) {
         logger.error(`User not found for author_id: ${author_id}`);
 

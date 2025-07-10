@@ -23,9 +23,10 @@ const logger = require("../utils/logger");
  *
  * @sideeffect Adds a middleware route `/api-docs` to the provided Express app.
  */
-async function setupSwagger(app) {
+const setupSwaggerDocs = async (app) => {
     // Load the OpenAPI definition from the YAML file.
-    const swaggerDocument = YAML.load("docs/swagger.yaml");
+    const swaggerPath = path.join(__dirname, "swagger.yml");
+    const swaggerDocument = YAML.load('');
 
     // Serve Swagger UI at /api-docs with the loaded document.
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -34,4 +35,4 @@ async function setupSwagger(app) {
     logger.info("Swagger API setup!");
 }
 
-module.exports = setupSwagger;
+module.exports = setupSwaggerDocs;

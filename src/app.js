@@ -14,7 +14,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Route setup
-app.use('/api/', limiter);
+app.use('/api/v1/', limiter);
 app.use('/api/v1/posts', require('./api/v1/routes/post-routes'));
 app.use('/api/v1/users', require('./api/v1/routes/user-routes'));
 app.use('/api/v1/admin', require('./api/v1/routes/admin-routes'));

@@ -1,4 +1,4 @@
-const redisClient = require("../../config/redis-client");
+const redisClient = require("../caching/redis-client");
 const logger = require("../../utils/logger");
 
 
