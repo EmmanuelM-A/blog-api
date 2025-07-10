@@ -67,8 +67,7 @@ async function registerUserService(userData) {
 	const userObj = {
 		username,
 		email,
-		password: hashedPassword,
-		role: "role"
+		password: hashedPassword
 	}
 	
 	const userDB = await createUser(userObj);
@@ -154,17 +153,10 @@ async function loginUserService(userCredentials) {
 	userDB.refreshToken = refreshToken;
     await userDB.save();
 
-	// Set the refresh token as an HTTP-only cookie for secure storage on the client side.
-    response.cookie("refreshToken", refreshToken, {
-        httpOnly: true, // Prevents client-side JavaScript access to the cookie.
-        secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production.
-        sameSite: "strict", // Protects against CSRF attacks.
-        maxAge: 7 * 24 * 60 * 60 * 1000 // Cookie expiration in 7 days.
-    });
-
 	return {
 		userDB,
-		accessToken
+		accessToken,
+		refreshToken
 	}
 }
 
@@ -288,14 +280,6 @@ async function logoutUserService(token) {
 	// If a user is found, clear their refresh token in the database to invalidate it.
 	user.refreshToken = null; // Set the refresh token to null to invalidate it.
 	await user.save(); // Save the updated user document.
-
-	// Clear the 'refreshToken' cookie from the client's browser.
-	// The options must match those used when setting the cookie during login.
-	response.clearCookie("refreshToken", {
-		httpOnly: true, // Must match the `httpOnly` setting used when the cookie was set.
-		secure: process.env.NODE_ENV === "production", // Must match `secure` setting.
-		sameSite: "Strict" // Must match `sameSite` setting.
-	});
 
 	logger.debug(`The refresh token: ${token} has been invalidated.`);
 }

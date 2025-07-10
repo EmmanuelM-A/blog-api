@@ -4,6 +4,7 @@ const ApiError = require("../utils/api-error");
 const expressAsyncHandler = require("express-async-handler");
 const { StatusCodes } = require("http-status-codes");
 const { findUserById } = require("../database/models/user-model");
+const User = require("../database/schemas/user-schema");
 
 /**
  * Checks if a request has a valid authorization header and verifies its value (the acess token).
@@ -22,7 +23,7 @@ const authRouteProtection = expressAsyncHandler(async (request, response, next) 
             logger.info(`Token verified for user ID: ${decoded.id}`);
 
             // Get user from token without password
-            request.user = await findUserById(decoded.id).select("-password");
+            request.user = await User.findById(decoded.id).select("-password");
 
             if (!request.user) {
                 logger.error(`User not found for with the id: ${decoded.id}`);

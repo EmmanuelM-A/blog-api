@@ -2,6 +2,7 @@ const expressAsyncHandler = require("express-async-handler");
 const { sendSuccessResponse } = require("../../../utils/helpers");
 const { registerUserService, loginUserService, getCurrentUserService, refreshAccessTokenService } = require("../../../services/users/user-service");
 const { StatusCodes } = require("http-status-codes");
+const logger = require("../../../utils/logger");
 
 /**
  * Handles an HTTP POST request to register a new user.
@@ -31,11 +32,16 @@ const registerUser = expressAsyncHandler(async (request, response) => {
  * Handles an HTTP POST request to authenticate and log in an existing user.
  */
 const loginUser = expressAsyncHandler(async (request, response) => {
-    // Extract email and password from the request body.
-    const userCredentials = request.body;
-
     // Generate tokens after authentication
-    const { userDB, accessToken } = await loginUserService(userCredentials);
+    const { userDB, accessToken, refreshToken } = await loginUserService(request.body);
+
+    // Set the refresh token as an HTTP-only cookie for secure storage on the client side.
+    response.cookie("refreshToken", refreshToken, {
+        httpOnly: true, // Prevents client-side JavaScript access to the cookie.
+        secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production.
+        sameSite: "strict", // Protects against CSRF attacks.
+        maxAge: 7 * 24 * 60 * 60 * 1000 // Cookie expiration in 7 days.
+    });
 
     sendSuccessResponse(
         response,
@@ -92,6 +98,14 @@ const refreshAccessToken = expressAsyncHandler(async (request, response) => {
 const logoutUser = expressAsyncHandler(async (request, response) => {
     // Invalidate the user's refresh token
     await loginUserService(request.cookies.refreshToken);
+
+    // Clear the 'refreshToken' cookie from the client's browser.
+	// The options must match those used when setting the cookie during login.
+	response.clearCookie("refreshToken", {
+		httpOnly: true, // Must match the `httpOnly` setting used when the cookie was set.
+		secure: process.env.NODE_ENV === "production", // Must match `secure` setting.
+		sameSite: "Strict" // Must match `sameSite` setting.
+	});
 
     sendSuccessResponse(
         response,

@@ -58,6 +58,10 @@ const COMMON_ERRORS_MAP = {
  * @returns {void}
  */
 const errorHandler = (error, request, response, next) => {
+    if (response.headersSent) {
+        return next(error); // Delegate to Express's built-in error handler
+    }
+    
     // Ensure response status is an error, defaulting to 500
     const statusCode = error.status >= 400 && error.status < 500 ? error.status: 500;
 
