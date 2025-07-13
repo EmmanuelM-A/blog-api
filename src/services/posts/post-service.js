@@ -6,7 +6,7 @@ const logger = require("../../utils/logger");
 const { constants } = require("../../config");
 const { validateUsername } = require("../validation/input-validator");
 const redisClient = require("../caching/redis-client");
-const { findUserById } = require("../../database/models/user-model");
+const { findUserById, updateUserDetail } = require("../../database/models/user-model");
 
 
 async function getAllPostsService(options) {
@@ -41,7 +41,7 @@ async function getAllPostsService(options) {
         findPosts(
             {},
             { sort: { createdAt: -1 }, skip, limit }
-        ).populate("author_id", "username").exec(),
+        ).populate("userId", "username").exec(),
         countPostsByCriteria(),
     ]);
 
@@ -127,10 +127,10 @@ async function getAllPostsByUserService(username, options) {
     // Query user's posts
     const [userPosts, totalPosts] = await Promise.all([
         findPosts(
-            { author_id: userDB._id },
+            { userId: userDB._id },
             { sort: { createdAt: -1 }, skip, limit }
         ).exec(),
-        countPostsByCriteria({ author_id: userDB._id }),
+        countPostsByCriteria({ userId: userDB._id }),
     ]);
 
     const responseData = {
@@ -151,31 +151,18 @@ async function createPostService(userDB, postContent) {
     // Extract title and content from the request body
     const { title, content } = postContent;
 
-    // Extract author_id from query parameters (used for authentication)
-    const author_id = userDB._id;
-
-    // Check if author_id is provided
-    if (!author_id) {
-        logger.warn("Unauthorized post creation attempt: no author_id provided.");
+    // Check if user exists or userDB object is set
+    if(!userDB) {
+        logger.warn("Post creation failed: The user does not exist!");
 
         throw new ApiError(
-            "Authentication required to create a post.",
-            StatusCodes.UNAUTHORIZED,
-            "UNAUTHORIZED_AUTHOR_ID",
-        );
-    }
-
-    // Verify the user exists in the database
-    const user = await findUserById(author_id);
-    if (!user) {
-        logger.error(`User not found for author_id: ${author_id}`);
-
-        throw new ApiError(
-            `No user found with the id: ${author_id}.`,
+            "No user found or user is invalid",
             StatusCodes.NOT_FOUND,
-            "USER_NOT_FOUND",
+            "USER_NOT_FOUND"
         );
     }
+
+    const userId = userDB._id;
 
     // Validate input types
     if (typeof title !== "string" || typeof content !== "string") {
@@ -227,14 +214,22 @@ async function createPostService(userDB, postContent) {
     // Clear any cached post data to maintain cache consistency after creation
     await clearCacheForKey('posts:page:*');
 
+    // Get the number of posts user has made
+    const postsByUser = await findPosts({ user_id: userId });
+
+    // Check if its the user's first post, if so update their role to author
+    if(userDB.role === "user" && postsByUser.length === 0) {
+        await updateUserDetail(userId, "role", "author");
+    }
+
     // Log the creation attempt
-    logger.info(`Post creation attempt by the user: ${author_id}`);
+    logger.debug(`Post creation attempt by the user: ${userId}`);
 
     // Create and save the new post document
     const post = await createPost({
         title: trimmedTitle,
         content: trimmedContent,
-        author_id: author_id,
+        userId: userId,
     });
 
     return post;
@@ -310,7 +305,7 @@ async function editPostService(user, postId, newContent) {
         );
     }
 
-    if (String(postDB.author_id) !== String(userId)) {
+    if (String(postDB.userId) !== String(userId)) {
         logger.warn(`User ${userId} attempted to edit post ${postId} without permission.`);
         throw new ApiError(
             `The user ${user.username} does not have the permissions to edit this post.`,
@@ -354,7 +349,7 @@ async function deletePostService(user, postId) {
         );
     }
 
-    if (String(post.author_id) !== String(userId) && user.role !== "admin") {
+    if (String(post.userId) !== String(userId) && user.role !== "admin") {
         logger.warn(`User ${userId} attempted to delete post ${postId} without permission.`);
 
         throw new ApiError(

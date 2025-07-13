@@ -55,7 +55,7 @@ const createPost = expressAsyncHandler(async (request, response) => {
         response,
         StatusCodes.CREATED,
         "Post created successfully.",
-        { createPost }
+        { createdPost }
     );
 
     // Log success and respond with the created post object
