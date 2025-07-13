@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const mongoose = require("mongoose");
 const { hashPassword } = require("./helpers");
-const { findUserByCriteria, updateUserDetail } = require('../database/models/user-model');
+const { findUserByCriteria} = require('../database/models/user-model');
 
 /**
  * Setups the admin and save its details to the database.
@@ -25,7 +25,7 @@ const seedAdmin = async () => {
             const hashedPassword = await hashPassword(adminDetails.password);
 
             const admin = await User.create({
-                username: "admin",
+                username: adminDetails.username,
                 email,
                 password: hashedPassword,
                 role: "admin"

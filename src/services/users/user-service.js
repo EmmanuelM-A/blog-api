@@ -4,6 +4,7 @@ const { findUserById, findUserByCriteria, createUser } = require("../../database
 const { StatusCodes } = require('http-status-codes');
 const { hashPassword, comparePassword, generateAccessToken, generateRefreshToken } = require("../../utils/helpers");
 const logger = require("../../utils/logger");
+const jwt = require("jsonwebtoken");
 
 /**
  * Registers a new user after validating and hashing the password.
