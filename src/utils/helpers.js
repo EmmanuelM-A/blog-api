@@ -53,6 +53,16 @@ const generateRefreshToken = (userID) => {
     });
 }
 
+const sanitizeUser = (user) => {
+    return {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+    }
+};
+
+
 /**
  * Sends a standardized success response.
  * 
@@ -111,5 +121,6 @@ module.exports = {
     generateAccessToken, 
     generateRefreshToken,
     sendSuccessResponse,
-    sendErrorResponse 
+    sendErrorResponse,
+    sanitizeUser
 };

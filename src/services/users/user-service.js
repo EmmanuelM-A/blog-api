@@ -2,7 +2,7 @@ const ApiError = require("../../utils/api-error");
 const { validateUsername, validateEmail, validatePassword } = require("../validation/input-validator");
 const { findUserById, findUserByCriteria, createUser } = require("../../database/models/user-model");
 const { StatusCodes } = require('http-status-codes');
-const { hashPassword, comparePassword, generateAccessToken, generateRefreshToken } = require("../../utils/helpers");
+const { hashPassword, comparePassword, generateAccessToken, generateRefreshToken, sanitizeUser } = require("../../utils/helpers");
 const logger = require("../../utils/logger");
 const jwt = require("jsonwebtoken");
 
@@ -180,7 +180,7 @@ async function getCurrentUserService(userId) {
 		);
 	}
 
-	return userDB;
+	return sanitizeUser(userDB);
 }
 
 /**

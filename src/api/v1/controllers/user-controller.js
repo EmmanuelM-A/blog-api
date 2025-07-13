@@ -1,6 +1,6 @@
 const expressAsyncHandler = require("express-async-handler");
 const { sendSuccessResponse } = require("../../../utils/helpers");
-const { registerUserService, loginUserService, getCurrentUserService, refreshAccessTokenService } = require("../../../services/users/user-service");
+const { registerUserService, loginUserService, getCurrentUserService, refreshAccessTokenService, logoutUserService } = require("../../../services/users/user-service");
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../../../utils/logger");
 
@@ -97,7 +97,7 @@ const refreshAccessToken = expressAsyncHandler(async (request, response) => {
  */
 const logoutUser = expressAsyncHandler(async (request, response) => {
     // Invalidate the user's refresh token
-    await loginUserService(request.cookies.refreshToken);
+    await logoutUserService(request.cookies.refreshToken);
 
     // Clear the 'refreshToken' cookie from the client's browser.
 	// The options must match those used when setting the cookie during login.
