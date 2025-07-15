@@ -22,7 +22,7 @@ router.get('/likes/:postId', getLikesForPost);
 
 ///////////////////////////////////////////// PROTECTED ROUTES FOR AUTHORS AND ADMINS /////////////////////////////////////////////
 
-router.post('/', authRouteProtection, authorizeRoles('author', 'admin'), createPost);
+router.post('/', authRouteProtection, authorizeRoles('user', 'author', 'admin'), createPost);
 
 router.patch('/:postId', authRouteProtection, authorizeRoles('author', 'admin'), editPost);
 

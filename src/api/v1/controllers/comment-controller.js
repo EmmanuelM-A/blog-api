@@ -21,7 +21,7 @@ const commentOnPost = expressAsyncHandler(async (request, response) => {
     const userId = request.user?.id;
     const { comment } = request.body;
 
-    await commentOnPostService(postId, userId, comment);
+    const createdComment = await commentOnPostService(postId, userId, comment);
 
     sendSuccessResponse(
         response,
@@ -29,7 +29,7 @@ const commentOnPost = expressAsyncHandler(async (request, response) => {
         "Comment added successfully.",
     );
 
-    logger.info(`The comment with the comment_id: ${commentForPost.id} created successfully by the user: ${request.user.username} (${userId})`);
+    logger.info(`The comment with the comment_id: ${createdComment.id} created successfully by the user: ${request.user.username} (${userId})`);
 });
 
 /**

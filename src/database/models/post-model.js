@@ -46,7 +46,7 @@ async function findPosts(criteria = {}, options = {}) {
     if (options.sort) query.sort(options.sort);
     if (options.skip) query.skip(options.skip);
     if (options.limit) query.limit(options.limit);
-    return query.exec();
+    return query;
 }
 
 /**

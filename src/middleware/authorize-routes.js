@@ -16,11 +16,11 @@ const authRouteProtection = expressAsyncHandler(async (request, response, next) 
         try {
             // Extract token
             token = request.headers.authorization.split(" ")[1];
-            logger.info("Authorization header found. Token extracted.");
+            logger.debug("Authorization header found. Token extracted.");
 
             // Verify token
             const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-            logger.info(`Token verified for user ID: ${decoded.id}`);
+            logger.debug(`Token verified for user ID: ${decoded.id}`);
 
             // Get user from token without password
             request.user = await User.findById(decoded.id).select("-password");
@@ -35,7 +35,7 @@ const authRouteProtection = expressAsyncHandler(async (request, response, next) 
                 );
             }
 
-            logger.info(`User authenticated: ${request.user.username} (${request.user.id})`);
+            logger.debug(`User authenticated: ${request.user.username} (${request.user.id})`);
 
             next();
         } catch (error) {

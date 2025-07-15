@@ -6,7 +6,8 @@ const logger = require("../../utils/logger");
 const { constants } = require("../../config");
 const { validateUsername } = require("../validation/input-validator");
 const redisClient = require("../caching/redis-client");
-const { findUserById, updateUserDetail } = require("../../database/models/user-model");
+const { findUserById, updateUserDetail, findUserByCriteria } = require("../../database/models/user-model");
+const Post = require("../../database/schemas/post-schema");
 
 
 async function getAllPostsService(options) {
@@ -27,22 +28,19 @@ async function getAllPostsService(options) {
         logger.debug(`Cache hit for key: ${cacheKey}`);
         logger.debug(`Returning cached posts for page ${page}.`);
 
-        return sendSuccessResponse(
-            response,
-            StatusCodes.OK,
-            "Posts fetched successfully from cache.",
-            JSON.parse(cached)
-        );
+        return JSON.parse(cached);
     }
 
     // Fetch posts with pagination and populate author username
     // Get total post count for pagination metadata
     const [allPosts, total] = await Promise.all([
-        findPosts(
-            {},
-            { sort: { createdAt: -1 }, skip, limit }
-        ).populate("userId", "username").exec(),
-        countPostsByCriteria(),
+        Post.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("author_id", "username") // Populate username from related user
+            .exec(),
+        Post.countDocuments()
     ]);
 
     // Construct response payload with pagination info
@@ -97,12 +95,7 @@ async function getAllPostsByUserService(username, options) {
     if (cachedData) {
         logger.debug(`Cache hit for user ${username} (page ${page})`);
 
-        return sendSuccessResponse(
-            response,
-            StatusCodes.OK,
-            `Posts for user ${username} on page ${page} fetched from cache.`,
-            JSON.parse(cachedData)
-        );
+        return JSON.parse(cachedData);
     }
 
     logger.debug(`Cache miss for user ${username} (page ${page}), querying database...`);
@@ -126,17 +119,17 @@ async function getAllPostsByUserService(username, options) {
 
     // Query user's posts
     const [userPosts, totalPosts] = await Promise.all([
-        findPosts(
-            { userId: userDB._id },
-            { sort: { createdAt: -1 }, skip, limit }
-        ).exec(),
-        countPostsByCriteria({ userId: userDB._id }),
+        Post.find({ author_id: userDB.id })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit),
+        Post.countDocuments({ author_id: userDB.id })
     ]);
 
     const responseData = {
         userPosts,
         page,
-        totalPages: Math.ceil(totalPosts / constants.POSTS_PER_PAGE_LIMIT),
+        totalPages: Math.ceil(totalPosts / limit),
         totalPosts
     };
 
@@ -211,8 +204,11 @@ async function createPostService(userDB, postContent) {
         );
     }
 
+    const cacheKey = `posts:user:${userDB.username}:page:${1}`;
+
     // Clear any cached post data to maintain cache consistency after creation
-    await clearCacheForKey('posts:page:*');
+    await clearCacheForKey('posts:user:*');
+    logger.debug("Cache cleared on post creation!");
 
     // Get the number of posts user has made
     const postsByUser = await findPosts({ user_id: userId });
@@ -229,7 +225,7 @@ async function createPostService(userDB, postContent) {
     const post = await createPost({
         title: trimmedTitle,
         content: trimmedContent,
-        userId: userId,
+        author_id: userId,
     });
 
     return post;
@@ -305,7 +301,7 @@ async function editPostService(user, postId, newContent) {
         );
     }
 
-    if (String(postDB.userId) !== String(userId)) {
+    if (String(postDB.author_id) !== String(userId)) {
         logger.warn(`User ${userId} attempted to edit post ${postId} without permission.`);
         throw new ApiError(
             `The user ${user.username} does not have the permissions to edit this post.`,
@@ -315,7 +311,7 @@ async function editPostService(user, postId, newContent) {
     }
 
     // Clear cache
-    logger.info("Cache cleared on post editing!");
+    logger.debug("Cache cleared on post editing!");
     await clearCacheForKey("posts:page:*");
 
     postDB.title = trimmedTitle;
@@ -349,7 +345,10 @@ async function deletePostService(user, postId) {
         );
     }
 
-    if (String(post.userId) !== String(userId) && user.role !== "admin") {
+    const isAdmin = user.role === "admin";
+    const isOwner = String(post.author_id) === String(user._id);
+
+    if (!isAdmin && !isOwner) {
         logger.warn(`User ${userId} attempted to delete post ${postId} without permission.`);
 
         throw new ApiError(

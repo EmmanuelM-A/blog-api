@@ -4,6 +4,7 @@ const { findPostById } = require("../../database/models/post-model");
 const { createComment, findComments, findCommentById, deleteCommentById, updateComment, findCommentByCriteria, deleteCommentsByCriteria, countComments } = require("../../database/models/comment-model");
 const ApiError = require("../../utils/api-error");
 const { constants } = require("../../config");
+const Comment = require("../../database/schemas/comment-schema");
 
 /**
  * Adds a comment to a post after validating the input and post existence.
@@ -121,11 +122,13 @@ async function getCommentsForPostService(postId, options = {}) {
 
     // Fetch paginated comments
     const [comments, totalComments] = await Promise.all([
-        findComments(
-            { post_id: postId },
-            { sort: { createdAt: -1 }, skip, limit }
-        ).populate("user_id", "username").exec(),
-        countComments({ post_id: postId })
+        Comment.find({ post_id: postId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("user_id", "username")
+            .exec(),
+        Comment.countDocuments({ post_id: postId })
     ]);
 
     logger.debug(`Fetched ${comments.length} comments for post: ${postId}`);

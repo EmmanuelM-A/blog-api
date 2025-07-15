@@ -51,6 +51,8 @@ const { countPostsByCriteria, findPostByCriteria, findPosts } = require("../../.
 const createPost = expressAsyncHandler(async (request, response) => {
     const createdPost = await createPostService(request.user, request.body);
 
+    if(request.user.role !== "author") request.user.role = "author";
+
     sendSuccessResponse(
         response,
         StatusCodes.CREATED,
@@ -59,7 +61,7 @@ const createPost = expressAsyncHandler(async (request, response) => {
     );
 
     // Log success and respond with the created post object
-    logger.info(`New post created by user ${request.user.username} with ID: ${post.id}`);
+    logger.info(`New post created by user ${request.user.username} with ID: ${createdPost.id}`);
 });
 
 
@@ -96,6 +98,15 @@ const getAllPosts = expressAsyncHandler(async (request, response) => {
     const limit = request.query.limit;
 
     const responseData = await getAllPostsService({ page, limit });
+
+    if(typeof responseData !== "object") {
+        return sendSuccessResponse(
+            response,
+            StatusCodes.OK,
+            "Posts fetched successfully from cache.",
+            responseData
+        );
+    }
 
     sendSuccessResponse(
         response,
@@ -231,7 +242,7 @@ const deletePost = expressAsyncHandler( async (request, response) => {
         "Post deleted successfully."
     );
 
-    logger.info(`Post ${postId} deleted by user ${userId}.`);
+    logger.info(`Post ${postId} deleted by user ${user.id}.`);
 });
 
 module.exports = { getAllPosts, getAllPostsByUser, createPost, editPost, deletePost };
