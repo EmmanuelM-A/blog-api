@@ -13,8 +13,9 @@ const Post = require("../../database/schemas/post-schema");
 async function getAllPostsService(options) {
     // Parse page query parameter or default to 1
     const page = parseInt(options.page, 10) || 1;
-    const limit = options.limit || constants.POSTS_PER_PAGE_LIMIT;
-
+    const rawLimit = parseInt(options.limit);
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
+    
     // Calculate number of documents to skip for pagination
     const skip = (page - 1) * limit;
 
@@ -63,8 +64,9 @@ async function getAllPostsService(options) {
 
 async function getAllPostsByUserService(username, options) {
     const page = parseInt(options.page, 10) || 1;
-    const limit = parseInt(options.limit, 10) || constants.POSTS_PER_PAGE_LIMIT;
-
+    const rawLimit = parseInt(options.limit);
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
+    
     // Validate presence of username
     if (!username) {
         logger.error("Missing username field in request params.");

@@ -1,8 +1,9 @@
 const { StatusCodes } = require("http-status-codes");
 const { constants } = require("../../config");
 const logger = require("../../utils/logger");
-const { countUserByCriteria, findUserById, deleteUserById } = require("../../database/models/user-model");
+const { countUserByCriteria, findUserById, deleteUserById, findUsers } = require("../../database/models/user-model");
 const ApiError = require("../../utils/api-error");
+const User = require("../../database/schemas/user-schema");
 
 
 /**
@@ -16,8 +17,9 @@ const ApiError = require("../../utils/api-error");
 async function getAllUsersService(filters = {}, options = {}) {
     // Extract page and lmit from query parameters
     const page = parseInt(options.page) || 1;
-    const limit = parseInt(options.limit) || constants.POST_PER_PAGE_LIMIT;
-
+    const rawLimit = parseInt(options.limit) || constants.POST_PER_PAGE_LIMIT;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
+    
     // Validate the page and limit values
     if (page < 1 || isNaN(page)) {
         logger.warn("Invalid page number provided. Page must be a positive integer.");
@@ -42,11 +44,13 @@ async function getAllUsersService(filters = {}, options = {}) {
     // Query the User collection to fetch all users and , excluding sensitive fields. 
     // Get the total count of users for pagination metadata
     const [users, totalUsers] = await Promise.all([
-        findUsers(
-            filters,
-            { sort: { createdAt: -1 }, skip, limit }
-        ).select('-password -refreshToken -__v').exec(),
-        countUserByCriteria(filters)
+        User.find(filters)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .select('-password -refreshToken -__v')
+            .exec(),
+        User.countDocuments(filters)
     ]);
 
     // Calculate pagination metadata
@@ -125,10 +129,11 @@ async function updateUserRoleService(userId, updateData) {
     // Check if the user's role is already the same as the new role
     if (oldRole === userDB.role) {
         logger.info(`User ${userDB.username} (id: ${userDB.id}) already has the role ${role}. No update needed.`);
-        return sendSuccessResponse(
-            response, 
-            StatusCodes.OK, 
-            `User ${userDB.username} already has the role ${role}. No update needed.`
+        
+        throw new ApiError(
+            `User ${userDB.username} (id: ${userDB.id}) already has the role ${role}.`,
+            StatusCodes.CONFLICT,
+            "CURRENT_ROLE_MATCHES_NEW_ROLE"
         );
     }
 

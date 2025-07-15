@@ -1,12 +1,10 @@
-require('dotenv').config();
+require("dotenv").config();
 
 const mongoose = require("mongoose");
 const { hashPassword } = require("./helpers");
-const { findUserByCriteria} = require('../database/models/user-model');
+const { findUserByCriteria, createUser } = require("../database/models/user-model");
+const logger = require("./logger");
 
-/**
- * Setups the admin and save its details to the database.
- */
 const seedAdmin = async () => {
     const adminDetails = {
         username: "TopDog",
@@ -15,28 +13,30 @@ const seedAdmin = async () => {
     };
 
     try {
-        await mongoose.connect(process.env.CONNECTION_STRING);
+        await mongoose.connect(process.env.MONGO_URI);
 
-        const isUserAvaiable = await findUserByCriteria({ $or: [{ username: adminDetails.username }, { email: adminDetails.email }] });
+        const isUserAvailable = await findUserByCriteria({
+            $or: [{ username: adminDetails.username }, { email: adminDetails.email }]
+        });
 
-        if (isUserAvaiable) {
-            console.log("Admin already exists.");
+        if (isUserAvailable) {
+            logger.info("Admin already exists.");
         } else {
             const hashedPassword = await hashPassword(adminDetails.password);
 
-            const admin = await User.create({
+            const admin = await createUser({
                 username: adminDetails.username,
-                email,
+                email: adminDetails.email,
                 password: hashedPassword,
                 role: "admin"
             });
 
-            console.log("Admin user created:", admin.email);
+            logger.info("Admin user created:", admin.email);
         }
 
         mongoose.connection.close();
     } catch (err) {
-        console.error("Error seeding admin:", err.message);
+        logger.error("Error seeding admin:", err.message);
         mongoose.connection.close();
         process.exit(1);
     }

@@ -10,6 +10,8 @@ services:
       - redis
     env_file:
       - .env
+    command: >
+      sh -c "node src/utils/seed-admin.js && node src/server.js"
     networks:
       - backend
 
