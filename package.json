@@ -5,9 +5,7 @@
   "scripts": {
     "test": "jest",
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "bundle-swagger": "swagger-cli bundle src/docs/openapi.yaml -o src/docs/swagger-bundled.yaml -t yaml",
-    "start:with-swagger": "npm run bundle-swagger && echo 'Bundling complete' && npm run start"
+    "dev": "nodemon src/server.js"
   },
   "author": "Emmanuel M-A",
   "license": "MIT",

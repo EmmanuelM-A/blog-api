@@ -2,8 +2,6 @@
 
 A full-featured RESTful Blog API built with **Node.js**, **Express**, and **MongoDB**, featuring user authentication, role-based access control, post management, comments, likes, caching with **Redis**, and API documentation using Swagger.
 
----
-
 ## 🚀 Features
 
 - User Registration & Authentication (JWT & Refresh Tokens)
@@ -15,8 +13,6 @@ A full-featured RESTful Blog API built with **Node.js**, **Express**, and **Mong
 - Redis caching for performance
 - Swagger UI for interactive API docs
 - Dockerized for easy deployment
-
----
 
 ## 📁 Project Structure
 
@@ -37,8 +33,6 @@ src/
 ├── docs/
 │   └── swagger.yaml
 ```
-
----
 
 ## Running the Project
 
@@ -66,8 +60,6 @@ npm run dev
 docker-compose up --build
 ```
 
----
-
 ## 🛡️ Authentication
 
 - JWT Access Token in `Authorization: Bearer <token>`.
@@ -78,9 +70,9 @@ docker-compose up --build
 
 ## 🧑‍💻 Roles & Access
 
-user ---> Default registered user
-author ---> Automatically promoted after 1st post
-admin ---> Full access to all user/admin routes
+- user ---> Default registered user
+- author ---> Automatically promoted after 1st post
+- admin ---> Full access to all user/admin routes
 
 ## 📄 API Documentation
 
