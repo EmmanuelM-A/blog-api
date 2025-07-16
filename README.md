@@ -26,13 +26,14 @@ src/
 │   └── v1/
 │       ├── controllers/
 │       ├── routes/
-│       └── middleware/
 ├── config/
+├── middleware/
 ├── services/
 ├── database/
 │   └── models/
+│   └── schemas/
 ├── utils/
-├── tests/
+├── __tests__/
 ├── docs/
 │   └── swagger.yaml
 ```
