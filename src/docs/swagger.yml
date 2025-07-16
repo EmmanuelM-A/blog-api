@@ -111,7 +111,7 @@ components:
 
 paths:
   # ------------------------ ADMIN ENDPOINTS ------------------------
-  /api/admin/users:
+  /api/v1/admin/users:
     get:
       summary: Get all registered users.
       description: Retrieve a list of all registered users in the system. This endpoint requires authentication and admin privileges.
@@ -163,7 +163,7 @@ paths:
               example:
                 message: "Internal server error."
 
-  /api/admin/users/{userId}:
+  /api/v1/admin/users/{userId}:
     delete:
       summary: Delete a user by their ID.
       description: Deletes a user from the system using their unique user ID. This action requires authentication and admin privileges.
@@ -216,7 +216,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/admin/users/{userId}/role:
+  /api/v1/admin/users/{userId}/role:
     patch:
       summary: Update a user's role.
       description: Updates the role of a specific user. This action requires authentication and admin privileges. Valid roles are 'user', 'author', 'admin'.
@@ -301,7 +301,7 @@ paths:
 
   # ------------------------ POST ENDPOINTS ------------------------
 
-  /api/posts: # Get all posts
+  /api/v1/posts: # Get all posts
     get:
       summary: Get all paginated posts.
       description: Retrieve a paginated list of all blog posts, with caching support.
@@ -426,7 +426,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/posts/user/{username}: # Get all posts by a specific user
+  /api/v1/posts/user/{username}: # Get all posts by a specific user
     get:
       summary: Get all posts by a specific user.
       description: Retrieve a paginated list of blog posts authored by a given username.
@@ -498,7 +498,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/posts/{postId}: # Update a post by ID
+  /api/v1/posts/{postId}: # Update a post by ID
     patch:
       summary: Update an existing blog post.
       description: Allows an authenticated author or admin to update their own blog post.
@@ -644,7 +644,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/posts/comment/{postId}: # Add a comment to a post
+  /api/v1/posts/comment/{postId}: # Add a comment to a post
     post:
       summary: Add a comment to a post.
       description: Allows an authenticated user to add a comment to a specific blog post.
@@ -723,7 +723,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/posts/comments/{postId}: # Get all comments for a post
+  /api/v1/posts/comments/{postId}: # Get all comments for a post
     get:
       summary: Get all comments for a specific post.
       description: Retrieves all comments associated with a given post ID.
@@ -775,7 +775,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/posts/like/{postId}: # Like or unlike a Post
+  /api/v1/posts/like/{postId}: # Like or unlike a Post
     post:
       summary: Like or unlike a post.
       description: Toggles a like for a post by an authenticated user. If the user has already liked the post, it will be unliked; otherwise, it will be liked.
@@ -833,7 +833,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/posts/likes/{postId}: # Get all likes for a post
+  /api/v1/posts/likes/{postId}: # Get all likes for a post
     get:
       summary: Get all likes for a specific post.
       description: Retrieves the total count of likes and a list of like records for a given post ID.
@@ -890,7 +890,7 @@ paths:
                 $ref: '#components/schemas/Error'
 
   # ------------------------ USER ENDPOINTS ------------------------
-  /api/users/register:
+  /api/v1/users/register:
     post:
       summary: Register a new user.
       description: Creates a new user account in the system.
@@ -964,7 +964,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/users/login:
+  /api/v1/users/login:
     post:
       summary: Log in a user.
       description: Authenticates a user and issues access and refresh tokens.
@@ -1048,7 +1048,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/users/current:
+  /api/v1/users/current:
     get:
       summary: Get current authenticated user.
       description: Retrieves the profile information of the currently authenticated user.
@@ -1084,7 +1084,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/users/refresh-token: # Updated route for clarity
+  /api/v1/users/refresh-token: # Updated route for clarity
     post:
       summary: Refresh access token.
       description: Obtains a new access token using a valid refresh token stored in cookies.
@@ -1136,7 +1136,7 @@ paths:
               schema:
                 $ref: '#components/schemas/Error'
 
-  /api/users/logout:
+  /api/v1/users/logout:
     post:
       summary: Log out a user.
       description: Invalidates the user's refresh token and clears the refresh token cookie, effectively logging the user out.

@@ -1,8 +1,7 @@
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const logger = require("../utils/logger");
-const swaggerJSDoc = require("swagger-jsdoc");
-const path = require("path");
+
 
 /**
  * @function setupSwagger
@@ -25,9 +24,9 @@ const path = require("path");
  *
  * @sideeffect Adds a middleware route `/api-docs` to the provided Express app.
  */
-/*const setupSwaggerDocs = async (app) => {
+const setupSwaggerDocs = async (app) => {
     // Load the OpenAPI definition from the YAML file.
-    const swaggerDocument = YAML.load('src/docs/v1/openapi.yaml');
+    const swaggerDocument = YAML.load('src/docs/swagger.yml');
 
     // Serve Swagger UI at /api-docs with the loaded document.
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -36,7 +35,7 @@ const path = require("path");
     logger.info("Swagger API setup!");
 }
 
-module.exports = setupSwaggerDocs;*/
+module.exports = setupSwaggerDocs;
 
 /**
  * @function setupSwagger
@@ -48,7 +47,7 @@ module.exports = setupSwaggerDocs;*/
  * @param {import('express').Express} app - The Express application instance
  * @returns {Promise<void>} Resolves once Swagger UI has been successfully set up.
  */
-const setupSwaggerDocs = async (app) => {
+/*const setupSwaggerDocs = async (app) => {
     const options = {
         definition: {
             openapi: '3.0.3',
@@ -65,8 +64,8 @@ const setupSwaggerDocs = async (app) => {
         },
         apis: [
             path.join(__dirname, '../docs/v1/openapi.yaml'),
-            path.join(__dirname, '../docs/v1/routes/**/*.yaml'),
-            path.join(__dirname, '../docs/v1/components/**/*.yaml'),
+            path.join(__dirname, '../docs/v1/routes/.yaml'),
+            path.join(__dirname, '../docs/v1/components.yaml'),
         ],
     };
 
@@ -80,6 +79,19 @@ const setupSwaggerDocs = async (app) => {
     } catch (error) {
         logger.error("Error setting up Swagger:", error);
     }
+};*/
+
+/*const setupSwaggerDocs = async (app) => {
+    try {
+        const openApiPath = path.join(__dirname, './v1/openapi.yaml');
+        const swaggerDocument = YAML.load(fs.readFileSync(openApiPath, 'utf8'));
+
+        app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+        logger.log('Swagger UI loaded at /api-docs');
+    } catch (error) {
+        logger.error('Failed to load Swagger spec:', error.message);
+    }
 };
 
-module.exports = setupSwaggerDocs;
+module.exports = setupSwaggerDocs;*/
