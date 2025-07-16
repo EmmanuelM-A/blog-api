@@ -1,0 +1,25 @@
+type: object
+properties:
+  success:
+    type: boolean
+    example: false
+  message:
+    type: string
+    example: "Invalid request payload"
+  error:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "VALIDATION_ERROR"
+      details:
+        type: string
+        example: "Username field is required"
+  stackTrace:
+    type: string
+    description: "Only included in development mode"
+    example: "Error: Username required at utils/validator.js:22:15"
+required:
+  - success
+  - message
+  - error

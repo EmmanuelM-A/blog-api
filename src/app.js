@@ -28,7 +28,6 @@ module.exports = app;
 /**
 9. Documentation
 Add OpenAPI/Swagger documentation for all endpoints (if not already covered).
- * TODO: DOCUMENT EVERYTHING
  * TODO: ADD AUTHENICATION TO ACCESS THE DATABASE
  * TODO: DEPLOY THE APP
  * TODO: ADD README FILE

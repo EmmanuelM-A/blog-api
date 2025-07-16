@@ -12,21 +12,27 @@ servers:
 
 paths:
   /admin:
-    $ref: './paths/admin.yaml'
-  /users:
-    $ref: './paths/users.yaml'
+    $ref: "./components/schemas/User.yaml"
+  
+  /users/register:
+    $ref: "./routes/users/register.yaml"
+
   /posts:
-    $ref: './paths/posts.yaml'
+    $ref: './paths/Posts.yaml'
 
 components:
   securitySchemes:
     bearerAuth:
-      $ref: './components/security/BearerAuth.yaml'
+      $ref: './components/security/securitySchemes/BearerAuth.yaml'
   schemas:
     User:
       $ref: './components/schemas/User.yaml'
     Post:
       $ref: './components/schemas/Post.yaml'
+    Like:
+      $ref: './components/schemas/Like.yaml'
+    Comment:
+      $ref: './components/schemas/Comment.yaml'
   responses:
     ErrorResponse:
       $ref: './components/responses/ErrorResponse.yaml'

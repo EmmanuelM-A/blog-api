@@ -25,7 +25,7 @@ const logger = require("../utils/logger");
  */
 const setupSwaggerDocs = async (app) => {
     // Load the OpenAPI definition from the YAML file.
-    const swaggerDocument = YAML.load('src/docs/swagger.yml');
+    const swaggerDocument = YAML.load('src/docs/openapi.yaml');
 
     // Serve Swagger UI at /api-docs with the loaded document.
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));

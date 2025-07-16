@@ -1,0 +1,13 @@
+# Schema for a like on a post
+
+type: object
+properties:
+  _id:
+    type: string
+    description: The unique identifier of the like.
+  post_id:
+    type: string
+    description: The ID of the post that was liked.
+  user_id:
+    type: string
+    description: The ID of the user who liked the post.

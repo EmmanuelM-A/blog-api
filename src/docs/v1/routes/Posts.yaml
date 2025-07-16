@@ -1,0 +1,589 @@
+# ------------------------ POST ENDPOINTS ------------------------
+
+/api/posts: # Get all posts
+  get:
+    summary: Get all paginated posts.
+    description: Retrieve a paginated list of all blog posts, with caching support.
+    tags: [Posts]
+    parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+        description: The page number for pagination.
+    responses:
+      200:
+        description: A paginated list of posts, including total pages and total posts count.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                allPosts:
+                  type: array
+                  items:
+                    $ref: '#components/schemas/Post'
+                page:
+                  type: integer
+                totalPages:
+                  type: integer
+                totalPosts:
+                  type: integer
+            example:
+              allPosts:
+                - _id: "60a6b9d4f1e9a21e4cfa1234"
+                  title: "Example Post Title"
+                  content: "This is some content for the example post."
+                  author_id: "609d6c9b3f1d2b001f89f100"
+                  createdAt: "2024-06-25T10:20:30Z"
+                  updatedAt: "2024-06-25T10:20:30Z"
+              page: 1
+              totalPages: 5
+              totalPosts: 50
+      500:
+        description: Internal Server Error - An unexpected error occurred on the server.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+  post:
+    summary: Create a new blog post.
+    description: Creates a new blog post. Requires authentication (author or admin roles).
+    tags: [Posts]
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - title
+              - content
+            properties:
+              title:
+                type: string
+                description: The title of the post.
+                maxLength: 255 # Example max length, adjust as per constants.MAX_POST_TITLE_LENGTH
+              content:
+                type: string
+                description: The content of the post.
+                maxLength: 5000 # Example max length, adjust as per constants.MAX_POST_CONTENT_LENGTH
+          example:
+            title: "My New Blog Post"
+            content: "This is the exciting content of my new post."
+    responses:
+      201:
+        description: Post created successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                post:
+                  $ref: '#components/schemas/Post'
+      400:
+        description: Validation Error - Missing or invalid input fields.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            examples:
+              missingFields:
+                summary: Missing required fields
+                value:
+                  message: "Title and content must not be empty."
+              invalidLength:
+                summary: Content/title too long
+                value:
+                  message: "Content must be under 5000 characters."
+      401:
+        description: Unauthorized - Authentication token is missing or invalid.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+      403:
+        description: Forbidden - User does not have author or admin role.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+      404:
+        description: User Not Found - Author ID associated with token not found.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/posts/user/{username}: # Get all posts by a specific user
+  get:
+    summary: Get all posts by a specific user.
+    description: Retrieve a paginated list of blog posts authored by a given username.
+    tags: [Posts]
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The username of the author.
+        example: "john.doe"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+        description: The page number for pagination.
+    responses:
+      200:
+        description: A paginated list of posts by the specified user.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userPosts:
+                  type: array
+                  items:
+                    $ref: '#components/schemas/Post'
+                page:
+                  type: integer
+                totalPages:
+                  type: integer
+                totalPosts:
+                  type: integer
+            example:
+              userPosts:
+                - _id: "60a6b9d4f1e9a21e4cfa1234"
+                  title: "John's First Post"
+                  content: "Content by John."
+                  author_id: "609d6c9b3f1d2b001f89f100"
+                  createdAt: "2024-06-25T10:20:30Z"
+                  updatedAt: "2024-06-25T10:20:30Z"
+              page: 1
+              totalPages: 2
+              totalPosts: 15
+      400:
+        description: Validation Error - Missing or invalid username.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Username must be provided."
+      404:
+        description: User Not Found - The specified username does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "User does not exist."
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/posts/{postId}: # Update a post by ID
+  patch:
+    summary: Update an existing blog post.
+    description: Allows an authenticated author or admin to update their own blog post.
+    tags: [Posts]
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique ID of the post to update.
+        example: "60a6b9d4f1e9a21e4cfa1234"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: The new title for the post.
+                maxLength: 255
+              content:
+                type: string
+                description: The new content for the post.
+                maxLength: 5000
+            required:
+              - title
+              - content
+          example:
+            title: "My Updated Blog Post Title"
+            content: "This is the updated content for my post."
+    responses:
+      200:
+        description: Post updated successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Post updated successfully."
+                post:
+                  $ref: '#components/schemas/Post'
+      400:
+        description: Validation Error - Invalid input (e.g., empty title/content, length limits exceeded).
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            examples:
+              emptyContent:
+                summary: Empty content
+                value:
+                  message: "Title and content must not be empty."
+              titleTooLong:
+                summary: Title too long
+                value:
+                  message: "Title must be under 255 characters."
+      401:
+        description: Unauthorized - Authentication token is missing or invalid.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+      403:
+        description: Forbidden - User is not the author or an admin.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "You do not have permission to edit this post."
+      404:
+        description: Post Not Found - The specified post ID does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Post not found."
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+  delete:
+    summary: Delete a blog post.
+    description: Allows an authenticated author or admin to delete their own blog post.
+    tags: [Posts]
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique ID of the post to delete.
+        example: "60a6b9d4f1e9a21e4cfa1234"
+    responses:
+      200:
+        description: Post deleted successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Post deleted successfully."
+      401:
+        description: Unauthorized - Authentication token is missing or invalid.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+      403:
+        description: Forbidden - User is not the author or an admin.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "You do not have permission to delete this post."
+      404:
+        description: Post Not Found - The specified post ID does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Post not found."
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/posts/comment/{postId}: # Add a comment to a post
+  post:
+    summary: Add a comment to a post.
+    description: Allows an authenticated user to add a comment to a specific blog post.
+    tags: [Posts]
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique ID of the post to comment on.
+        example: "60a6b9d4f1e9a21e4cfa1234"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              comment:
+                type: string
+                description: The content of the comment.
+                maxLength: 500 # Example max length, adjust as per constants.MAX_CHAR_COMMENT_LENGTH
+            required:
+              - comment
+          example:
+            comment: "This is a great post!"
+    responses:
+      200:
+        description: Comment added successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Comment added successfully."
+      400:
+        description: Validation Error - Comment is empty or exceeds character limits.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            examples:
+              emptyComment:
+                summary: Empty comment
+                value:
+                  message: "Comment must be a non-empty string."
+              commentTooLong:
+                summary: Comment too long
+                value:
+                  message: "Comment exceeds 500 characters."
+      401:
+        description: Unauthorized - Authentication required to comment.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Authentication required to comment on a post."
+      404:
+        description: Post Not Found - The specified post ID does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Post not found."
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/posts/comments/{postId}: # Get all comments for a post
+  get:
+    summary: Get all comments for a specific post.
+    description: Retrieves all comments associated with a given post ID.
+    tags: [Posts]
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique ID of the post to retrieve comments for.
+        example: "60a6b9d4f1e9a21e4cfa1234"
+    responses:
+      200:
+        description: A list of comments for the specified post.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: string
+                comments:
+                  type: array
+                  items:
+                    $ref: '#components/schemas/Comment'
+            example:
+              postId: "60a6b9d4f1e9a21e4cfa1234"
+              comments:
+                - _id: "64a5f10eaa1234567890abc1"
+                  content: "Great post!"
+                  user_id: # Populated user_id with username
+                    _id: "609d6c9b3f1d2b001f89f100"
+                    username: "johndoe"
+                  createdAt: "2025-06-24T10:00:00.000Z"
+                  updatedAt: "2025-06-24T10:00:00Z"
+      404:
+        description: Post Not Found - The specified post ID does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Post not found."
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/posts/like/{postId}: # Like or unlike a Post
+  post:
+    summary: Like or unlike a post.
+    description: Toggles a like for a post by an authenticated user. If the user has already liked the post, it will be unliked; otherwise, it will be liked.
+    tags: [Posts]
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique ID of the post to like/unlike.
+        example: "60a6b9d4f1e9a21e4cfa1234"
+    responses:
+      200:
+        description: Post liked or unliked successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  enum: ["Post liked.", "Post unliked."]
+            examples:
+              liked:
+                summary: Post liked
+                value:
+                  message: "Post liked."
+              unliked:
+                summary: Post unliked
+                value:
+                  message: "Post unliked."
+      401:
+        description: Unauthorized - Authentication required to like/unlike a post.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Authentication required to like a post."
+      404:
+        description: Post Not Found - The specified post ID does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Post not found."
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/posts/likes/{postId}: # Get all likes for a post
+  get:
+    summary: Get all likes for a specific post.
+    description: Retrieves the total count of likes and a list of like records for a given post ID.
+    tags: [Posts]
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique ID of the post to retrieve likes for.
+        example: "60a6b9d4f1e9a21e4cfa1234"
+    responses:
+      200:
+        description: A list of likes for the specified post.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: string
+                likesCount:
+                  type: integer
+                likes:
+                  type: array
+                  items:
+                    $ref: '#components/schemas/Like'
+            example:
+              postId: "60a6b9d4f1e9a21e4cfa1234"
+              likesCount: 3
+              likes:
+                - _id: "60a6b9d4f1e9a21e4cfa1235"
+                  post_id: "60a6b9d4f1e9a21e4cfa1234"
+                  user_id: "609d6c9b3f1d2b001f89f100"
+                  createdAt: "2024-06-25T10:25:00Z"
+                - _id: "60a6b9d4f1e9a21e4cfa1236"
+                  post_id: "60a6b9d4f1e9a21e4cfa1234"
+                  user_id: "609d6c9b3f1d2b001f89f101"
+                  createdAt: "2024-06-25T10:26:00Z"
+      404:
+        description: Post Not Found - The specified post ID does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Post not found."
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'

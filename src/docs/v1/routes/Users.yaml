@@ -1,0 +1,269 @@
+# ------------------------ USER ENDPOINTS ------------------------
+/api/users/register:
+  post:
+    summary: Register a new user.
+    description: Creates a new user account in the system.
+    tags: [Users]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - username
+              - email
+              - password
+            properties:
+              username:
+                type: string
+                description: The desired username.
+              email:
+                type: string
+                format: email
+                description: The user's email address.
+              password:
+                type: string
+                format: password
+                description: The user's password.
+                minLength: 8 # Example, align with validation
+          example:
+            username: "newuser"
+            email: "newuser@example.com"
+            password: "StrongPassword123!"
+    responses:
+      201:
+        description: User registered successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/BaseUser'
+            example:
+              _id: "60a6b9d4f1e9a21e4cfa1234"
+              username: "newuser"
+              email: "newuser@example.com"
+              role: "user"
+      400:
+        description: Validation Error - Missing fields, invalid format, or user already exists.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            examples:
+              missingFields:
+                summary: Missing Fields
+                value:
+                  message: "All fields must be filled!"
+              invalidEmail:
+                summary: Invalid Email Format
+                value:
+                  message: "Registration failed: Invalid email!"
+              userExists:
+                summary: User Already Exists
+                value:
+                  message: "Unable to register with the provided credentials"
+              internalError:
+                summary: Internal Registration Error
+                value:
+                  message: "An error occured during user registration!"
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/users/login:
+  post:
+    summary: Log in a user.
+    description: Authenticates a user and issues access and refresh tokens.
+    tags: [Users]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+                format: email
+                description: The user's email address.
+              password:
+                type: string
+                format: password
+                description: The user's password.
+                minLength: 8 # Example, align with validation
+          example:
+            email: "existinguser@example.com"
+            password: "CorrectPassword123!"
+    responses:
+      200:
+        description: User logged in successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                _id:
+                  type: string
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum: [user, author, admin]
+                token:
+                  type: string
+                  description: The JWT access token.
+            example:
+              _id: "60a6b9d4f1e9a21e4cfa1234"
+              username: "existinguser"
+              email: "existinguser@example.com"
+              role: "user"
+              token: "eyJhbGciOiJIUzI1NiI..."
+      400:
+        description: Validation Error - Missing fields or invalid input.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            examples:
+              missingFields:
+                summary: Missing Fields
+                value:
+                  message: "All fields must be filled!"
+              invalidEmail:
+                summary: Invalid Email Format
+                value:
+                  message: "Login failed: Invalid email!"
+      401:
+        description: Unauthorized - Invalid credentials.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Invalid credentials"
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/users/current:
+  get:
+    summary: Get current authenticated user.
+    description: Retrieves the profile information of the currently authenticated user.
+    tags: [Users]
+    security:
+      - bearerAuth: []
+    responses:
+      200:
+        description: Successfully retrieved current user's profile.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/BaseUser'
+            example:
+              _id: "60a6b9d4f1e9a21e4cfa1234"
+              username: "loggedInUser"
+              email: "loggedin@example.com"
+              role: "user"
+              createdAt: "2024-01-01T10:00:00Z"
+              updatedAt: "2024-01-01T10:00:00Z"
+      401:
+        description: Unauthorized - Authentication token is missing or invalid.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Not authorized: no token"
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/users/refresh-token: # Updated route for clarity
+  post:
+    summary: Refresh access token.
+    description: Obtains a new access token using a valid refresh token stored in cookies.
+    tags: [Users]
+    responses:
+      200:
+        description: New access token successfully issued.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  description: The newly issued JWT access token.
+            example:
+              accessToken: "eyJhbGciOiJIUzI1NiI.newly_generated_token..."
+      401:
+        description: Unauthorized - Refresh token not provided in cookies.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            example:
+              message: "Refresh token not provided"
+      403:
+        description: Forbidden - Invalid or expired refresh token.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+            examples:
+              invalidUser:
+                summary: User not found for token
+                value:
+                  message: "Invalid refresh token"
+              tokenMismatch:
+                summary: Token mismatch in DB
+                value:
+                  message: "Invalid refresh token"
+              expiredToken:
+                summary: Expired token
+                value:
+                  message: "Invalid or expired refresh token"
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
+
+/api/users/logout:
+  post:
+    summary: Log out a user.
+    description: Invalidates the user's refresh token and clears the refresh token cookie, effectively logging the user out.
+    tags: [Users]
+    responses:
+      200:
+        description: User logged out successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Logged out successfully"
+      500:
+        description: Internal Server Error.
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/Error'
