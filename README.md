@@ -83,7 +83,7 @@ admin ---> Full access to all user/admin routes
 
 ## 📄 API Documentation
 
-Swagger UI available at: (API Documentation)[<domain>/api-docs]
+Swagger UI available at: [API Documentation](<domain>/api-docs)
 
 **Live preview of all endpoints, request/response schemas, and error codes.**
 
@@ -93,4 +93,4 @@ Swagger UI available at: (API Documentation)[<domain>/api-docs]
 
 ## 👨‍🏫 Author
 
-(Emmanuel Maduka Agbeze)[https://github.com/EmmanuelM-A]
+[Emmanuel Maduka Agbeze](https://github.com/EmmanuelM-A)
