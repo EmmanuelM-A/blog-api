@@ -1,0 +1,92 @@
+
+summary: Update an existing blog post.
+description: Allows an authenticated author or admin to update their own blog post.
+tags: [Posts]
+security:
+  - bearerAuth: []
+parameters:
+  - name: postId
+    in: path
+    required: true
+    schema:
+      type: string
+    description: The unique ID of the post to update.
+    example: "60a6b9d4f1e9a21e4cfa1234"
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          title:
+            type: string
+            description: The new title for the post.
+            maxLength: 255
+          content:
+            type: string
+            description: The new content for the post.
+            maxLength: 5000
+        required:
+          - title
+          - content
+      example:
+        title: "My Updated Blog Post Title"
+        content: "This is the updated content for my post."
+responses:
+  200:
+    description: Post updated successfully.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Post updated successfully."
+            post:
+              $ref: '#components/schemas/Post'
+  400:
+    description: Validation Error - Invalid input (e.g., empty title/content, length limits exceeded).
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        examples:
+          emptyContent:
+            summary: Empty content
+            value:
+              message: "Title and content must not be empty."
+          titleTooLong:
+            summary: Title too long
+            value:
+              message: "Title must be under 255 characters."
+  401:
+    description: Unauthorized - Authentication token is missing or invalid.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+  403:
+    description: Forbidden - User is not the author or an admin.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "You do not have permission to edit this post."
+  404:
+    description: Post Not Found - The specified post ID does not exist.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Post not found."
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+  

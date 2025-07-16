@@ -2,7 +2,7 @@
 
 type: object
 properties:
-  _id:
+  id:
     type: string
     description: The unique identifier of the user.
   username:

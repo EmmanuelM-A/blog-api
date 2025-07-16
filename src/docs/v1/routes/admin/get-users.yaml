@@ -1,0 +1,50 @@
+
+summary: Get all registered users.
+description: Retrieve a list of all registered users in the system. This endpoint requires authentication and admin privileges.
+tags: [Admin]
+security:
+  - bearerAuth: []
+responses:
+  200:
+    description: A list of user objects, excluding sensitive data like passwords and refresh tokens.
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: "./Users.yaml"
+        examples:
+          success:
+            value:
+              - _id: "609d6c9b3f1d2b001f89f100"
+                username: "john.doe"
+                email: "john@example.com"
+                role: "user"
+              - _id: "609d6c9b3f1d2b001f89f101"
+                username: "jane.smith"
+                email: "jane@example.com"
+                role: "admin"
+  401:
+    description: Unauthorized - Authentication token is missing or invalid.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+        example:
+          message: "Unauthorized - Access token is missing or invalid."
+  403:
+    description: Forbidden - The authenticated user does not have sufficient permissions (e.g., not an admin).
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+        example:
+          message: "Forbidden - Requires admin role."
+  500:
+    description: Internal Server Error - An unexpected error occurred on the server.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+        example:
+          message: "Internal server error."

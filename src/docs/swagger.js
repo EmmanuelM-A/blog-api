@@ -1,6 +1,8 @@
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const logger = require("../utils/logger");
+const swaggerJSDoc = require("swagger-jsdoc");
+const path = require("path");
 
 /**
  * @function setupSwagger
@@ -23,9 +25,9 @@ const logger = require("../utils/logger");
  *
  * @sideeffect Adds a middleware route `/api-docs` to the provided Express app.
  */
-const setupSwaggerDocs = async (app) => {
+/*const setupSwaggerDocs = async (app) => {
     // Load the OpenAPI definition from the YAML file.
-    const swaggerDocument = YAML.load('src/docs/openapi.yaml');
+    const swaggerDocument = YAML.load('src/docs/v1/openapi.yaml');
 
     // Serve Swagger UI at /api-docs with the loaded document.
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -33,5 +35,51 @@ const setupSwaggerDocs = async (app) => {
     // Log successful setup
     logger.info("Swagger API setup!");
 }
+
+module.exports = setupSwaggerDocs;*/
+
+/**
+ * @function setupSwagger
+ * @description
+ * Integrates Swagger UI into an Express application with proper $ref resolution.
+ * Uses swagger-jsdoc for better handling of external references.
+ *
+ * @async
+ * @param {import('express').Express} app - The Express application instance
+ * @returns {Promise<void>} Resolves once Swagger UI has been successfully set up.
+ */
+const setupSwaggerDocs = async (app) => {
+    const options = {
+        definition: {
+            openapi: '3.0.3',
+            info: {
+                title: 'Blog API',
+                version: '1.0.0',
+                description: 'API documentation for the blog platform',
+            },
+            servers: [
+                {
+                    url: 'http://localhost:5000/api/v1',
+                },
+            ],
+        },
+        apis: [
+            path.join(__dirname, '../docs/v1/openapi.yaml'),
+            path.join(__dirname, '../docs/v1/routes/**/*.yaml'),
+            path.join(__dirname, '../docs/v1/components/**/*.yaml'),
+        ],
+    };
+
+    try {
+        const swaggerDocument = swaggerJSDoc(options);
+        
+        // Serve Swagger UI at /api-docs
+        app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+        
+        logger.info("Swagger API setup completed successfully!");
+    } catch (error) {
+        logger.error("Error setting up Swagger:", error);
+    }
+};
 
 module.exports = setupSwaggerDocs;

@@ -1,0 +1,76 @@
+
+summary: Create a new blog post.
+description: Creates a new blog post. Requires authentication (author or admin roles).
+tags: [Posts]
+security:
+  - bearerAuth: []
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - title
+          - content
+        properties:
+          title:
+            type: string
+            description: The title of the post.
+            maxLength: 255 # Example max length, adjust as per constants.MAX_POST_TITLE_LENGTH
+          content:
+            type: string
+            description: The content of the post.
+            maxLength: 5000 # Example max length, adjust as per constants.MAX_POST_CONTENT_LENGTH
+      example:
+        title: "My New Blog Post"
+        content: "This is the exciting content of my new post."
+responses:
+  201:
+    description: Post created successfully.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            post:
+              $ref: '#components/schemas/Post'
+  400:
+    description: Validation Error - Missing or invalid input fields.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        examples:
+          missingFields:
+            summary: Missing required fields
+            value:
+              message: "Title and content must not be empty."
+          invalidLength:
+            summary: Content/title too long
+            value:
+              message: "Content must be under 5000 characters."
+  401:
+    description: Unauthorized - Authentication token is missing or invalid.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+  403:
+    description: Forbidden - User does not have author or admin role.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+  404:
+    description: User Not Found - Author ID associated with token not found.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'

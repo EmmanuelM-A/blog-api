@@ -2,3 +2,4 @@
 type: http
 scheme: bearer
 bearerFormat: JWT
+description: JWT token authentication

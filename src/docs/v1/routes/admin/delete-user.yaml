@@ -1,0 +1,51 @@
+
+summary: Delete a user by their ID.
+description: Deletes a user from the system using their unique user ID. This action requires authentication and admin privileges.
+tags: [Admin]
+security:
+  - bearerAuth: []
+parameters:
+  - name: userId
+    in: path
+    required: true
+    schema:
+      type: string
+    description: The unique ID of the user to delete.
+    example: "609d6c9b3f1d2b001f89f100"
+responses:
+  200:
+    description: The user was successfully deleted.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "User newuser deleted successfully."
+  401:
+    description: Unauthorized - Authentication token is missing or invalid.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+  403:
+    description: Forbidden - The authenticated user does not have sufficient permissions (e.g., not an admin).
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+  404:
+    description: User Not Found - No user exists with the provided ID.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+        example:
+          message: "User not found"
+  500:
+    description: Internal Server Error - An unexpected error occurred on the server.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'

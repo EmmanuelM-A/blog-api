@@ -1,0 +1,81 @@
+
+summary: Update a user's role.
+description: Updates the role of a specific user. This action requires authentication and admin privileges. Valid roles are 'user', 'author', 'admin'.
+tags: [Admin]
+security:
+  - bearerAuth: []
+parameters:
+  - name: userId
+    in: path
+    required: true
+    schema:
+      type: string
+    description: The unique ID of the user whose role is to be updated.
+    example: "609d6c9b3f1d2b001f89f100"
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          role:
+            type: string
+            enum: [user, author, admin]
+            description: The new role for the user.
+        required:
+          - role
+      example:
+        role: author
+responses:
+  200:
+    description: User's role updated successfully.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "User JohnD's role updated to author"
+  400:
+    description: Validation Error - Missing or invalid role provided.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+        examples:
+          missingRole:
+            summary: Role not provided
+            value:
+              message: "Role is required"
+          invalidRole:
+            summary: Invalid role value
+            value:
+              message: "Invalid role. Valid roles are: user, author, admin."
+  401:
+    description: Unauthorized - Authentication token is missing or invalid.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+  403:
+    description: Forbidden - The authenticated user does not have sufficient permissions (e.g., not an admin).
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+  404:
+    description: User Not Found - No user exists with the provided ID.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'
+        example:
+          message: "User not found"
+  500:
+    description: Internal Server Error - An unexpected error occurred on the server.
+    content:
+      application/json:
+        schema:
+          $ref: '../components/responses/ErrorResponse.yaml'

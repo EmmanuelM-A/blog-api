@@ -1,0 +1,77 @@
+
+summary: Add a comment to a post.
+description: Allows an authenticated user to add a comment to a specific blog post.
+tags: [Posts]
+security:
+  - bearerAuth: []
+parameters:
+  - name: postId
+    in: path
+    required: true
+    schema:
+      type: string
+    description: The unique ID of the post to comment on.
+    example: "60a6b9d4f1e9a21e4cfa1234"
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          comment:
+            type: string
+            description: The content of the comment.
+            maxLength: 500 # Example max length, adjust as per constants.MAX_CHAR_COMMENT_LENGTH
+        required:
+          - comment
+      example:
+        comment: "This is a great post!"
+responses:
+  200:
+    description: Comment added successfully.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Comment added successfully."
+  400:
+    description: Validation Error - Comment is empty or exceeds character limits.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        examples:
+          emptyComment:
+            summary: Empty comment
+            value:
+              message: "Comment must be a non-empty string."
+          commentTooLong:
+            summary: Comment too long
+            value:
+              message: "Comment exceeds 500 characters."
+  401:
+    description: Unauthorized - Authentication required to comment.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Authentication required to comment on a post."
+  404:
+    description: Post Not Found - The specified post ID does not exist.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Post not found."
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'

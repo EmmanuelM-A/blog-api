@@ -18,7 +18,7 @@ properties:
   stackTrace:
     type: string
     description: "Only included in development mode"
-    example: "Error: Username required at utils/validator.js:22:15"
+    example: "Error: Username required at users/user-service.js:22:15"
 required:
   - success
   - message

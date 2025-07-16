@@ -1,4 +1,3 @@
-/api/users/register:
 post:
   summary: Register a new user.
   description: Creates a new user account in the system.
@@ -25,7 +24,7 @@ post:
               type: string
               format: password
               description: The user's password.
-              minLength: 8 # Example, align with validation
+              minLength: 8
         example:
           username: "newuser"
           email: "newuser@example.com"

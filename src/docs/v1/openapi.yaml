@@ -1,7 +1,7 @@
 # Swagger/OpenAPI documentation for the blog API
 # This file describes the API endpoints, request/response formats, and security requirements.
 
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Blog API
   version: 1.0.0
@@ -11,14 +11,70 @@ servers:
   - url: http://localhost:5000/api/v1
 
 paths:
-  /admin:
-    $ref: "./components/schemas/User.yaml"
-  
+  # ----------------- ADMIN ENDPOINTS -----------------
+
+  /admin/users:
+    get:
+      $ref: "./routes/admin/get-users.yaml"
+
+  /admin/users/{userId}:
+    delete:
+      $ref: "./routes/admin/delete-user.yaml"
+
+  /admin/users/{userId}/role:
+    patch:
+      $ref: "./routes/admin/update-user-role.yaml"
+
+  # ----------------- USER ENDPOINTS -----------------
+
   /users/register:
     $ref: "./routes/users/register.yaml"
+  
+  users/login:
+    $ref: "./routes/users/login.yaml"
+
+  users/current:
+    $ref: "./routes/users/current.yaml"
+
+  users/refresh-token:
+    $ref: "./routes/users/refresh-token.yaml"
+
+  users/logout:
+    $ref: "./routes/users/logout.yaml"
+
+  # ----------------- POST ENDPOINTS -----------------
 
   /posts:
-    $ref: './paths/Posts.yaml'
+    post:
+      $ref: "./routes/posts/create-post.yaml" 
+    get:
+      $ref: "./routes/posts/get-posts.yaml"
+
+  /posts/user/{username}:
+    get:
+      $ref: "./routes/posts/get-user-posts.yaml"
+
+  /posts/{postId}:
+    patch:
+      $ref: "./routes/posts/update-post.yaml"
+    delete:
+      $ref: "./routes/posts/delete-post.yaml"
+
+  /posts/comment/{postId}:
+    post:
+      $ref: "./routes/posts/create-post-comment.yaml"
+
+  /posts/comments/{postId}:
+    get:
+      $ref: "./routes/posts/get-post-comments.yaml"
+  
+  /posts/like/{postId}:
+    post:
+      $ref: "./routes/posts/toggle-post-like.yaml"
+
+  /posts/likes/{postId}:
+    get:
+      $ref: "./routes/posts/get-post-likes.yaml"
 
 components:
   securitySchemes:
