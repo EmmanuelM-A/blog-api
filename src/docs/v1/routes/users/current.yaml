@@ -1,0 +1,34 @@
+
+summary: Get current authenticated user.
+description: Retrieves the profile information of the currently authenticated user.
+tags: [Users]
+security:
+  - bearerAuth: []
+responses:
+  200:
+    description: Successfully retrieved current user's profile.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/BaseUser'
+        example:
+          _id: "60a6b9d4f1e9a21e4cfa1234"
+          username: "loggedInUser"
+          email: "loggedin@example.com"
+          role: "user"
+          createdAt: "2024-01-01T10:00:00Z"
+          updatedAt: "2024-01-01T10:00:00Z"
+  401:
+    description: Unauthorized - Authentication token is missing or invalid.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Not authorized: no token"
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'

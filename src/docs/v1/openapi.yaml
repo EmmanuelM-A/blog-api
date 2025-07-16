@@ -28,19 +28,24 @@ paths:
   # ----------------- USER ENDPOINTS -----------------
 
   /users/register:
-    $ref: "./routes/users/register.yaml"
+    post:
+      $ref: "./routes/users/register.yaml"
   
   users/login:
-    $ref: "./routes/users/login.yaml"
+    post:
+      $ref: "./routes/users/login.yaml"
 
   users/current:
-    $ref: "./routes/users/current.yaml"
+    get:
+      $ref: "./routes/users/current.yaml"
 
   users/refresh-token:
-    $ref: "./routes/users/refresh-token.yaml"
+    post:
+      $ref: "./routes/users/refresh-token.yaml"
 
   users/logout:
-    $ref: "./routes/users/logout.yaml"
+    post:
+      $ref: "./routes/users/logout.yaml"
 
   # ----------------- POST ENDPOINTS -----------------
 
@@ -80,17 +85,23 @@ components:
   securitySchemes:
     bearerAuth:
       $ref: './components/security/securitySchemes/BearerAuth.yaml'
+
   schemas:
     User:
       $ref: './components/schemas/User.yaml'
+
     Post:
       $ref: './components/schemas/Post.yaml'
+  
     Like:
       $ref: './components/schemas/Like.yaml'
+  
     Comment:
       $ref: './components/schemas/Comment.yaml'
+
   responses:
     ErrorResponse:
       $ref: './components/responses/ErrorResponse.yaml'
+  
     SuccessResponse:
       $ref: './components/responses/SuccessResponse.yaml'

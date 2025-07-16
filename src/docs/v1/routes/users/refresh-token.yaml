@@ -1,0 +1,21 @@
+
+summary: Log out a user.
+description: Invalidates the user's refresh token and clears the refresh token cookie, effectively logging the user out.
+tags: [Users]
+responses:
+  200:
+    description: User logged out successfully.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Logged out successfully"
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'

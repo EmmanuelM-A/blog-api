@@ -1,0 +1,70 @@
+
+summary: Get all posts by a specific user.
+description: Retrieve a paginated list of blog posts authored by a given username.
+tags: [Posts]
+parameters:
+  - name: username
+    in: path
+    required: true
+    schema:
+      type: string
+    description: The username of the author.
+    example: "john.doe"
+  - name: page
+    in: query
+    required: false
+    schema:
+      type: integer
+      default: 1
+    description: The page number for pagination.
+responses:
+  200:
+    description: A paginated list of posts by the specified user.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            userPosts:
+              type: array
+              items:
+                $ref: '#components/schemas/Post'
+            page:
+              type: integer
+            totalPages:
+              type: integer
+            totalPosts:
+              type: integer
+        example:
+          userPosts:
+            - _id: "60a6b9d4f1e9a21e4cfa1234"
+              title: "John's First Post"
+              content: "Content by John."
+              author_id: "609d6c9b3f1d2b001f89f100"
+              createdAt: "2024-06-25T10:20:30Z"
+              updatedAt: "2024-06-25T10:20:30Z"
+          page: 1
+          totalPages: 2
+          totalPosts: 15
+  400:
+    description: Validation Error - Missing or invalid username.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Username must be provided."
+  404:
+    description: User Not Found - The specified username does not exist.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "User does not exist."
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'

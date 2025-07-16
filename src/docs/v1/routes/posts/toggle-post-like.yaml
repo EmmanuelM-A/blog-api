@@ -1,0 +1,56 @@
+
+summary: Like or unlike a post.
+description: Toggles a like for a post by an authenticated user. If the user has already liked the post, it will be unliked; otherwise, it will be liked.
+tags: [Posts]
+security:
+  - bearerAuth: []
+parameters:
+  - name: postId
+    in: path
+    required: true
+    schema:
+      type: string
+    description: The unique ID of the post to like/unlike.
+    example: "60a6b9d4f1e9a21e4cfa1234"
+responses:
+  200:
+    description: Post liked or unliked successfully.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              enum: ["Post liked.", "Post unliked."]
+        examples:
+          liked:
+            summary: Post liked
+            value:
+              message: "Post liked."
+          unliked:
+            summary: Post unliked
+            value:
+              message: "Post unliked."
+  401:
+    description: Unauthorized - Authentication required to like/unlike a post.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Authentication required to like a post."
+  404:
+    description: Post Not Found - The specified post ID does not exist.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Post not found."
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'

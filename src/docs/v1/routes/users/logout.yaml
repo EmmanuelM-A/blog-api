@@ -1,0 +1,50 @@
+
+summary: Refresh access token.
+description: Obtains a new access token using a valid refresh token stored in cookies.
+tags: [Users]
+responses:
+  200:
+    description: New access token successfully issued.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            accessToken:
+              type: string
+              description: The newly issued JWT access token.
+        example:
+          accessToken: "eyJhbGciOiJIUzI1NiI.newly_generated_token..."
+  401:
+    description: Unauthorized - Refresh token not provided in cookies.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Refresh token not provided"
+  403:
+    description: Forbidden - Invalid or expired refresh token.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        examples:
+          invalidUser:
+            summary: User not found for token
+            value:
+              message: "Invalid refresh token"
+          tokenMismatch:
+            summary: Token mismatch in DB
+            value:
+              message: "Invalid refresh token"
+          expiredToken:
+            summary: Expired token
+            value:
+              message: "Invalid or expired refresh token"
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'

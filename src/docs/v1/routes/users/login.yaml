@@ -1,0 +1,82 @@
+
+summary: Log in a user.
+description: Authenticates a user and issues access and refresh tokens.
+tags: [Users]
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - email
+          - password
+        properties:
+          email:
+            type: string
+            format: email
+            description: The user's email address.
+          password:
+            type: string
+            format: password
+            description: The user's password.
+            minLength: 8 # Example, align with validation
+      example:
+        email: "existinguser@example.com"
+        password: "CorrectPassword123!"
+responses:
+  200:
+    description: User logged in successfully.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            _id:
+              type: string
+            username:
+              type: string
+            email:
+              type: string
+              format: email
+            role:
+              type: string
+              enum: [user, author, admin]
+            token:
+              type: string
+              description: The JWT access token.
+        example:
+          _id: "60a6b9d4f1e9a21e4cfa1234"
+          username: "existinguser"
+          email: "existinguser@example.com"
+          role: "user"
+          token: "eyJhbGciOiJIUzI1NiI..."
+  400:
+    description: Validation Error - Missing fields or invalid input.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        examples:
+          missingFields:
+            summary: Missing Fields
+            value:
+              message: "All fields must be filled!"
+          invalidEmail:
+            summary: Invalid Email Format
+            value:
+              message: "Login failed: Invalid email!"
+  401:
+    description: Unauthorized - Invalid credentials.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
+        example:
+          message: "Invalid credentials"
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '#components/schemas/Error'
