@@ -1,18 +1,18 @@
-# Use official Node.js LTS image
+# Use Node.js official image
 FROM node:alpine
 
-# Set working directory
-WORKDIR /app
+# Create app directory
+WORKDIR /usr/src/app
 
-# Copy package files and install only production dependencies
-COPY package*.json .
-RUN npm ci
+# Install app dependencies
+COPY package*.json ./
+RUN npm install
 
-# Copy the rest of the app
+# Copy app source code
 COPY . .
 
-# Expose the port your app runs on (adjust if needed)
-#EXPOSE 5000
+# Expose port
+EXPOSE 8080
 
-# Start the server
-CMD ["npm", "run", "start"]
+# Start the app
+CMD [ "npm", "start" ]
