@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  dev-check:
+  docker-compose-dev-check:
     name: 🧪 Docker Compose (Dev)
     runs-on: ubuntu-latest
     steps:
@@ -33,8 +33,35 @@ jobs:
           docker compose -f docker-compose.dev.yml ps
           docker compose -f docker-compose.dev.yml logs api
           docker compose -f docker-compose.dev.yml down
+  
+  docker-compose-prod-check:
+    name: 🧪 Docker Compose (Prod)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-  prod-check:
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "NODE_ENV=development" >> .env
+          echo "PORT=${{ secrets.PORT }}" >> .env
+          echo "DEV_MONGO_URI=${{ secrets.DEV_MONGO_URI }}" >> .env
+          echo "DEV_REDIS_URL=${{ secrets.DEV_REDIS_URL }}" >> .env
+          echo "PROD_MONGO_URI=${{ secrets.PROD_MONGO_URI }}" >> .env
+          echo "PROD_REDIS_URL=${{ secrets.PROD_REDIS_URL }}" >> .env
+
+      - name: Run docker-compose.prod.yml
+        run: |
+          export NODE_ENV=development
+          docker compose -f docker-compose.prod.yml up --build -d
+          sleep 10
+          docker compose -f docker-compose.prod.yml ps
+          docker compose -f docker-compose.prod.yml logs api
+          docker compose -f docker-compose.prod.yml down
+
+  dockerfile-prod-check:
     name: 🚀 Dockerfile (Prod)
     runs-on: ubuntu-latest
     steps:
