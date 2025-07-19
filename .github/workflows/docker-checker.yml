@@ -19,7 +19,7 @@ jobs:
       - name: Run docker-compose.dev.yml
         run: |
           export NODE_ENV=development
-          docker-compose -f docker-compose.dev.yml up --build -d
+          docker-compose -f "../../docker-compose.dev.yml" up --build -d
           sleep 10
           docker-compose -f docker-compose.dev.yml ps
           docker-compose -f docker-compose.dev.yml logs api
@@ -36,7 +36,7 @@ jobs:
 
       - name: Build Prod Image
         run: |
-          docker build -f Prod.Dockerfile -t blog-api-prod .
+          docker build -f "../../Dockerfile.Prod" -t blog-api-prod .
 
       - name: Run Prod Container
         run: |
