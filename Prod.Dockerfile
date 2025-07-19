@@ -8,16 +8,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install app dependencies
-RUN npm install --production
+RUN npm install --production --omit=dev
 
 # Copy the rest of the application
 COPY . .
 
-# Set environment variables (optional - better to use --env or .env files)
-ENV 
-
 # Expose the port your app listens on
-EXPOSE 5000
+EXPOSE 5050
 
 # Define the default command to run the app
 CMD ["npm", "start"]
