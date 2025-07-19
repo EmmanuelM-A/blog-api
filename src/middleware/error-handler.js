@@ -84,7 +84,7 @@ const errorHandler = (error, request, response, next) => {
         // In production, log the full error for server-side debugging, but don't send to client.
         logger.error({
             message: error.message,
-            stack: error.stack,
+            //stack: error.stack,
             url: request.originalUrl,
             method: request.method,
             // Add any other relevant request info here

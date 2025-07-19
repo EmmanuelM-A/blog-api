@@ -14,7 +14,7 @@ RUN npm install --production --omit=dev
 COPY . .
 
 # Expose the port your app listens on
-EXPOSE 5050
+EXPOSE 5000
 
 # Define the default command to run the app
 CMD ["npm", "start"]

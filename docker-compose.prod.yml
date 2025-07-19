@@ -4,7 +4,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Prod.Dockerfile
+      dockerfile: Dockerfile.Prod
     ports:
       - "5000:5000"
     env_file:

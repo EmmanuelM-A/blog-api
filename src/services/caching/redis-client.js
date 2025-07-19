@@ -1,12 +1,14 @@
 const redis = require('redis');
 const logger = require("../../utils/logger");
 
+const REDIS_URL = process.env.NODE_ENV === "development" ? process.env.DEV_REDIS_URL : process.env.PROD_REDIS_URL;
+
 /**
  * Initializes and exports a Redis client configured to connect using a URL defined
  * in the environment variable `REDIS_URL`.
  */
 const redisClient = redis.createClient({
-    url: process.env.NODE_ENV === "development" ? process.env.DEV_REDIS_URL : process.env.PROD_REDIS_URL, // Redis connection URL
+    url: REDIS_URL, // Redis connection URL
 });
 
 // Event: Fired when the client is initiating a connection to Redis.

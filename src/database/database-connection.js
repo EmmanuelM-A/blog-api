@@ -3,6 +3,8 @@ const logger = require('../utils/logger');
 
 require('dotenv').config(); // Load environment variables from .env file
 
+const DATABASE_URI = process.env.NODE_ENV === "development" ? process.env.DEV_MONGO_URI : process.env.PROD_MONGO_URI;
+
 /**
  * @function connectToDatabase
  * @description
@@ -23,7 +25,7 @@ require('dotenv').config(); // Load environment variables from .env file
 const connectToDatabase = async () => {
     try {
         // Attempt to connect to MongoDB using the connection string from environment variables.
-        await mongoose.connect(process.env.NODE_ENV === "development" ? process.env.DEV_MONGO_URI : process.env.PROD_MONGO_URI);
+        await mongoose.connect(DATABASE_URI);
 
         logger.info("Database connected!");
     } catch (error) {
