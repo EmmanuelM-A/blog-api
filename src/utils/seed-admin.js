@@ -13,7 +13,7 @@ const seedAdmin = async () => {
     };
 
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(process.env.DEV_MONGO_URI);
 
         const isUserAvailable = await findUserByCriteria({
             $or: [{ username: adminDetails.username }, { email: adminDetails.email }]
