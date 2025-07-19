@@ -40,7 +40,6 @@ jobs:
 
       - name: Run Prod Container
         run: |
-          export NODE_ENV=production
           docker run -d \
             --name blog-api-prod \
             --env NODE_ENV=production \
