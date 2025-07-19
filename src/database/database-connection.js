@@ -35,7 +35,7 @@ const connectToDatabase = async () => {
         mongoose.connection.close();
 
         // Log the error to standard error output.
-        logger.error(`Error: ${error.message}`);
+        logger.error(`${error.message}`);
 
         // Exit the process with a failure code (1) to indicate a fatal error.
         process.exit(1);

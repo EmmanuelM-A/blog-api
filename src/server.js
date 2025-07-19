@@ -24,7 +24,7 @@ async function startServer() {
 
         // Start the Express server
         app.listen(PORT, "0.0.0.0", () => {
-            logger.info(`Server running on port ${PORT} at http://localhost:${PORT}`);
+            logger.info(`Server running on port ${PORT}`);
         });
 
     } catch (error) {
