@@ -1,0 +1,52 @@
+name: Docker Image & Compose Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  dev-check:
+    name: 🧪 Docker Compose (Dev)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Run docker-compose.dev.yml
+        run: |
+          export NODE_ENV=development
+          docker-compose -f docker-compose.dev.yml up --build -d
+          sleep 10
+          docker-compose -f docker-compose.dev.yml ps
+          docker-compose -f docker-compose.dev.yml logs api
+          docker-compose -f docker-compose.dev.yml down
+
+  prod-check:
+    name: 🚀 Dockerfile (Prod)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Prod Image
+        run: |
+          docker build -f Prod.Dockerfile -t blog-api-prod .
+
+      - name: Run Prod Container
+        run: |
+          export NODE_ENV=production
+          docker run -d \
+            --name blog-api-prod \
+            --env NODE_ENV=production \
+            --env-file .env \
+            -p 5000:5000 \
+            blog-api-prod
+          sleep 10
+          docker logs blog-api-prod
+          docker stop blog-api-prod && docker rm blog-api-prod
