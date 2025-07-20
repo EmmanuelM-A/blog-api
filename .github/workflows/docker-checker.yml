@@ -45,7 +45,7 @@ jobs:
       
       - name: Create .env file from GitHub Secrets
         run: |
-          echo "NODE_ENV=development" >> .env
+          echo "NODE_ENV=production" >> .env
           echo "PORT=${{ secrets.PORT }}" >> .env
           echo "DEV_MONGO_URI=${{ secrets.DEV_MONGO_URI }}" >> .env
           echo "DEV_REDIS_URL=${{ secrets.DEV_REDIS_URL }}" >> .env
@@ -72,7 +72,7 @@ jobs:
       
       - name: Create .env file from GitHub Secrets
         run: |
-          echo "NODE_ENV=development" >> .env
+          echo "NODE_ENV=production" >> .env
           echo "PORT=${{ secrets.PORT }}" >> .env
           echo "DEV_MONGO_URI=${{ secrets.DEV_MONGO_URI }}" >> .env
           echo "DEV_REDIS_URL=${{ secrets.DEV_REDIS_URL }}" >> .env

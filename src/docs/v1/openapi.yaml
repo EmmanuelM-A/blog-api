@@ -9,6 +9,7 @@ info:
 
 servers:
   - url: http://localhost:5000/api/v1
+  #- url: http://localhost:5000/api/v1
 
 paths:
   # ----------------- ADMIN ENDPOINTS -----------------
@@ -31,19 +32,19 @@ paths:
     post:
       $ref: "./routes/users/register.yaml"
   
-  users/login:
+  /users/login:
     post:
       $ref: "./routes/users/login.yaml"
 
-  users/current:
+  /users/current:
     get:
       $ref: "./routes/users/current.yaml"
 
-  users/refresh-token:
+  /users/refresh-token:
     post:
       $ref: "./routes/users/refresh-token.yaml"
 
-  users/logout:
+  /users/logout:
     post:
       $ref: "./routes/users/logout.yaml"
 
@@ -99,9 +100,8 @@ components:
     Comment:
       $ref: './components/schemas/Comment.yaml'
 
-  responses:
-    ErrorResponse:
-      $ref: './components/responses/ErrorResponse.yaml'
-  
-    SuccessResponse:
-      $ref: './components/responses/SuccessResponse.yaml'
+    SuccessEnvelope:
+      $ref: "./components/schemas/SuccessEnvelope.yaml"
+
+    ErrorEnvelope:
+      $ref: "./components/schemas/ErrorEnvelope.yaml"

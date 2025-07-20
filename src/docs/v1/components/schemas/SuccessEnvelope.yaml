@@ -1,0 +1,13 @@
+
+type: object
+description: Standard success wrapper used by every endpoint
+properties:
+  success:
+    type: boolean
+    description: Shows that a response was successful.
+    example: true
+  message:
+    type: string
+    description: Explains what action caused a successful response.
+    example: Post created successfully
+required: [success, message]
