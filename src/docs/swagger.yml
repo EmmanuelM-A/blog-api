@@ -962,7 +962,8 @@ paths:
   /users/register:
     post:
       summary: Register a new user.
-      description: Creates a new user account in the system.
+      description: |
+        Creates a new user account in the system.
       tags: [Users]
       requestBody:
         required: true
@@ -986,10 +987,10 @@ paths:
                   type: string
                   format: password
                   description: The user's password.
-                  minLength: 8 # Example, align with validation
+                  minLength: 8
             example:
-              username: "newuser"
-              email: "newuser@example.com"
+              username: "John Doe"
+              email: "jonhdoe@example.com"
               password: "StrongPassword123!"
       responses:
         201:
@@ -997,7 +998,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                #$ref: '#/components/schemas/User'
+                $ref: "#/components/schemas/SuccessEnvelope"
+                
               example:
                 _id: "60a6b9d4f1e9a21e4cfa1234"
                 username: "newuser"
