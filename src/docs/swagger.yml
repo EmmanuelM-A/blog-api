@@ -13,8 +13,8 @@ info:
     blog backend, following standard HTTP and JSON conventions.
 
 servers:
-  #- url: https://blog-api-tp8c.onrender.com/api/v1
-  - url: http://localhost:5000/api/v1
+  - url: https://blog-api-tp8c.onrender.com/api/v1
+  #- url: http://localhost:5000/api/v1
 
 components:
   securitySchemes:
