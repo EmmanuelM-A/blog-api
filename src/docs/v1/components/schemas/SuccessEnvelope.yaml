@@ -1,6 +1,6 @@
 
 type: object
-description: Standard success wrapper used by every endpoint
+description: Standard success wrapper used by every endpoint for successful responses.
 properties:
   success:
     type: boolean
@@ -10,4 +10,10 @@ properties:
     type: string
     description: Explains what action caused a successful response.
     example: Post created successfully
-required: [success, message]
+  data:
+    type: any
+    description: The data object returned after a requirements.
+    example: [{ UserData1...}, {UserData2...}, {UserData3...}]
+required:
+  - success
+  - message
