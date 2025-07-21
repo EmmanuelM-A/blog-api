@@ -168,7 +168,15 @@ components:
         data:
           type: object
           description: The data object returned after a requirements.
-          example: [{ UserData1...}, {UserData2...}, {UserData3...}]
+          example:
+            - id: "609d6c9b3f1d2b001f89f100"
+              username: "john.doe"
+              email: "john@example.com"
+              role: "user"
+            - id: "609d6c9b3f1d2b001f89f101"
+              username: "jane.smith"
+              email: "jane@example.com"
+              role: "author"
       required:
         - success
         - message

@@ -30,12 +30,4 @@ app.use('/api/v1/admin', require('./api/v1/routes/admin-routes'));
 // Error handling middleware
 app.use(errorHandler);
 
-/**
- * TODO: SORT OUT SWAGGER DOCS
- * TODO: MAKE SURE API ROUTES WORK IN DOCS
- * TODO: UPDATE README.md
- * TODO: ADD TO PORTFOLIO
- */
-
-
 module.exports = app;
