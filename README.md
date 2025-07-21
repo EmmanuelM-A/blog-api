@@ -18,29 +18,39 @@ A full-featured RESTful Blog API built with **Node.js**, **Express**, and **Mong
 
 ```bash
 src/
+├── __tests__/
 ├── api/
 │   └── v1/
 │       ├── controllers/
 │       ├── routes/
-├── config/
-├── middleware/
-├── services/
 ├── database/
 │   └── models/
 │   └── schemas/
-├── utils/
-├── __tests__/
+│   └── database-connection.js
 ├── docs/
-│   └── swagger.yaml
+│   └── swagger.yml
+│   └── swagger.js
+├── middleware/
+├── services/
+│   └── caching/
+│   └── comments/
+│   └── likes/
+│   └── posts/
+│   └── users/
+│   └── validation/
+├── utils/
+├── app.js
+├── config.js
+├── server.js
 ```
 
 ## Running the Project
 
 ### 🔧 Prerequisites
 
-- Node.js v18+
-- Docker + Docker Compose
-- MongoDB & Redis (via Docker)
+- **Node.js v18+**
+- **Docker** & **Docker Compose**
+- **MongoDB** & **Redis** (recommended via Docker)
 
 ### 📦 Installation
 
@@ -54,35 +64,53 @@ npm install
 npm run dev
 ```
 
-### 🐳 Run with Docker
+## 🐳 Docker Usage
+
+### Build Production Image
 
 ```bash
-docker-compose up --build
+npm run docker:build:prod
+```
+
+### Run Production Container
+
+```bash
+npm run docker:run:prod
+```
+
+### Run Development Compose
+
+```bash
+npm run docker:compose:dev
+```
+
+### Run Production Compose
+
+```bash
+npm run docker:compose:prod
 ```
 
 ## 🛡️ Authentication
 
 - JWT Access Token in `Authorization: Bearer <token>`.
-
 - Refresh Token in secure HTTP-only cookie.
-
 - Supports user login/logout and token refreshing.
 
 ## 🧑‍💻 Roles & Access
 
-- user ---> Default registered user
-- author ---> Automatically promoted after 1st post
-- admin ---> Full access to all user/admin routes
+- `user` – Default registered user
+- `author` – Automatically promoted after first post
+- `admin` – Full access to all user/admin routes
 
 ## 📄 API Documentation
 
-Swagger UI available at: [API Documentation](<domain>/api-docs)
+Swagger UI available at: [API Documentation](https://blog-api-tp8c.onrender.com/api-docs)
 
 **Live preview of all endpoints, request/response schemas, and error codes.**
 
 ## 📝 License
 
-(View License Here)[]
+[MIT License](LICENSE.md)
 
 ## 👨‍🏫 Author
 
