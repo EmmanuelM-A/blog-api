@@ -3,21 +3,26 @@ properties:
   success:
     type: boolean
     example: false
+    description: Informs the recipient that the request failed.
   message:
     type: string
     example: "Invalid request payload"
+    description: A descriptive message detailing what occured to cause the error.
   error:
     type: object
+    description: An object containing addtitional information about the error.
     properties:
       code:
         type: string
         example: "VALIDATION_ERROR"
+        description: A code used to identify the error.
       details:
         type: string
         example: "Username field is required"
+        description: Addittional details to explain what caused the error.
   stackTrace:
     type: string
-    description: "Only included in development mode"
+    description: "Only included in development mode."
     example: "Error: Username required at users/user-service.js:22:15"
 required:
   - success

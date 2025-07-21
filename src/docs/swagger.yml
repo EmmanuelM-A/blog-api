@@ -1,14 +1,17 @@
 # Swagger/OpenAPI documentation for the blog API
 # This file describes the API endpoints, request/response formats, and security requirements.
 
-openapi: 3.0.0
+openapi: 3.1.0
 info:
-  title: Blog API
+  title: RESTful Blog API
   version: 1.0.0
-  description: API documentation for the blog platform
+  description:
+    This API enables user registration and authentication, post creation and management, comment 
+    functionality, and administrative user controls. It is designed to support scalable, secure 
+    interactions between clients and the blog backend, following standard HTTP and JSON conventions.
 
 servers:
-  - url: http://localhost:5000
+  - url: https://blog-api-tp8c.onrender.com/api/v1
 
 components:
   securitySchemes:
@@ -16,8 +19,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: JWT token authentication
   schemas:
-    BaseUser: # Schema for user objects returned in responses (excluding sensitive data)
+    User: # Schema for user objects returned in responses (excluding sensitive data)
       type: object
       properties:
         _id:
@@ -100,18 +104,12 @@ components:
         user_id:
           type: string
           description: The ID of the user who liked the post.
-    Error: # Generic error response schema
-      type: object
-      properties:
-        message:
-          type: string
-          description: A descriptive error message.
-      example:
-        message: "An error occurred."
+    ErrorEnvelope: # Generic error response schema
+      $ref: "./v1/components/schemas/ErrorEnvelope.yaml"
 
 paths:
   # ------------------------ ADMIN ENDPOINTS ------------------------
-  /api/v1/admin/users:
+  /admin/users:
     get:
       summary: Get all registered users.
       description: Retrieve a list of all registered users in the system. This endpoint requires authentication and admin privileges.
@@ -126,7 +124,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#components/schemas/BaseUser'
+                  $ref: '#components/schemas/User'
               examples:
                 success:
                   value:
@@ -143,7 +141,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Unauthorized - Access token is missing or invalid."
         403:
@@ -151,19 +149,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Forbidden - Requires admin role."
         500:
-          description: Internal Server Error - An unexpected error occurred on the server.
+          description: Internal Server ErrorEnvelope - An unexpected ErrorEnvelope occurred on the server.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
-                message: "Internal server error."
+                message: "Internal server ErrorEnvelope."
 
-  /api/v1/admin/users/{userId}:
+  /admin/users/{userId}:
     delete:
       summary: Delete a user by their ID.
       description: Deletes a user from the system using their unique user ID. This action requires authentication and admin privileges.
@@ -194,29 +192,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         403:
           description: Forbidden - The authenticated user does not have sufficient permissions (e.g., not an admin).
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         404:
           description: User Not Found - No user exists with the provided ID.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "User not found"
         500:
-          description: Internal Server Error - An unexpected error occurred on the server.
+          description: Internal Server ErrorEnvelope - An unexpected ErrorEnvelope occurred on the server.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/admin/users/{userId}/role:
+  /admin/users/{userId}/role:
     patch:
       summary: Update a user's role.
       description: Updates the role of a specific user. This action requires authentication and admin privileges. Valid roles are 'user', 'author', 'admin'.
@@ -258,11 +256,11 @@ paths:
                     type: string
                     example: "User JohnD's role updated to author"
         400:
-          description: Validation Error - Missing or invalid role provided.
+          description: Validation ErrorEnvelope - Missing or invalid role provided.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               examples:
                 missingRole:
                   summary: Role not provided
@@ -277,31 +275,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         403:
           description: Forbidden - The authenticated user does not have sufficient permissions (e.g., not an admin).
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         404:
           description: User Not Found - No user exists with the provided ID.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "User not found"
         500:
-          description: Internal Server Error - An unexpected error occurred on the server.
+          description: Internal Server ErrorEnvelope - An unexpected ErrorEnvelope occurred on the server.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
   # ------------------------ POST ENDPOINTS ------------------------
 
-  /api/v1/posts: # Get all posts
+  /posts: # Get all posts
     get:
       summary: Get all paginated posts.
       description: Retrieve a paginated list of all blog posts, with caching support.
@@ -344,11 +342,11 @@ paths:
                 totalPages: 5
                 totalPosts: 50
         500:
-          description: Internal Server Error - An unexpected error occurred on the server.
+          description: Internal Server ErrorEnvelope - An unexpected ErrorEnvelope occurred on the server.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
     post:
       summary: Create a new blog post.
       description: Creates a new blog post. Requires authentication (author or admin roles).
@@ -387,11 +385,11 @@ paths:
                   post:
                     $ref: '#components/schemas/Post'
         400:
-          description: Validation Error - Missing or invalid input fields.
+          description: Validation ErrorEnvelope - Missing or invalid input fields.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               examples:
                 missingFields:
                   summary: Missing required fields
@@ -406,27 +404,27 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         403:
           description: Forbidden - User does not have author or admin role.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         404:
           description: User Not Found - Author ID associated with token not found.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/posts/user/{username}: # Get all posts by a specific user
+  /posts/user/{username}: # Get all posts by a specific user
     get:
       summary: Get all posts by a specific user.
       description: Retrieve a paginated list of blog posts authored by a given username.
@@ -476,11 +474,11 @@ paths:
                 totalPages: 2
                 totalPosts: 15
         400:
-          description: Validation Error - Missing or invalid username.
+          description: Validation ErrorEnvelope - Missing or invalid username.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Username must be provided."
         404:
@@ -488,17 +486,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "User does not exist."
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/posts/{postId}: # Update a post by ID
+  /posts/{postId}: # Update a post by ID
     patch:
       summary: Update an existing blog post.
       description: Allows an authenticated author or admin to update their own blog post.
@@ -548,11 +546,11 @@ paths:
                   post:
                     $ref: '#components/schemas/Post'
         400:
-          description: Validation Error - Invalid input (e.g., empty title/content, length limits exceeded).
+          description: Validation ErrorEnvelope - Invalid input (e.g., empty title/content, length limits exceeded).
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               examples:
                 emptyContent:
                   summary: Empty content
@@ -567,13 +565,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         403:
           description: Forbidden - User is not the author or an admin.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "You do not have permission to edit this post."
         404:
@@ -581,15 +579,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Post not found."
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
     delete:
       summary: Delete a blog post.
       description: Allows an authenticated author or admin to delete their own blog post.
@@ -620,13 +618,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
         403:
           description: Forbidden - User is not the author or an admin.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "You do not have permission to delete this post."
         404:
@@ -634,17 +632,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Post not found."
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/posts/comment/{postId}: # Add a comment to a post
+  /posts/comment/{postId}: # Add a comment to a post
     post:
       summary: Add a comment to a post.
       description: Allows an authenticated user to add a comment to a specific blog post.
@@ -686,11 +684,11 @@ paths:
                     type: string
                     example: "Comment added successfully."
         400:
-          description: Validation Error - Comment is empty or exceeds character limits.
+          description: Validation ErrorEnvelope - Comment is empty or exceeds character limits.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               examples:
                 emptyComment:
                   summary: Empty comment
@@ -705,7 +703,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Authentication required to comment on a post."
         404:
@@ -713,17 +711,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Post not found."
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/posts/comments/{postId}: # Get all comments for a post
+  /posts/comments/{postId}: # Get all comments for a post
     get:
       summary: Get all comments for a specific post.
       description: Retrieves all comments associated with a given post ID.
@@ -765,17 +763,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Post not found."
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/posts/like/{postId}: # Like or unlike a Post
+  /posts/like/{postId}: # Like or unlike a Post
     post:
       summary: Like or unlike a post.
       description: Toggles a like for a post by an authenticated user. If the user has already liked the post, it will be unliked; otherwise, it will be liked.
@@ -815,7 +813,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Authentication required to like a post."
         404:
@@ -823,17 +821,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Post not found."
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/posts/likes/{postId}: # Get all likes for a post
+  /posts/likes/{postId}: # Get all likes for a post
     get:
       summary: Get all likes for a specific post.
       description: Retrieves the total count of likes and a list of like records for a given post ID.
@@ -879,18 +877,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Post not found."
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
   # ------------------------ USER ENDPOINTS ------------------------
-  /api/v1/users/register:
+  /users/register:
     post:
       summary: Register a new user.
       description: Creates a new user account in the system.
@@ -928,18 +926,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/BaseUser'
+                $ref: '#components/schemas/User'
               example:
                 _id: "60a6b9d4f1e9a21e4cfa1234"
                 username: "newuser"
                 email: "newuser@example.com"
                 role: "user"
         400:
-          description: Validation Error - Missing fields, invalid format, or user already exists.
+          description: Validation ErrorEnvelope - Missing fields, invalid format, or user already exists.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               examples:
                 missingFields:
                   summary: Missing Fields
@@ -953,18 +951,18 @@ paths:
                   summary: User Already Exists
                   value:
                     message: "Unable to register with the provided credentials"
-                internalError:
-                  summary: Internal Registration Error
+                internalErrorEnvelope:
+                  summary: Internal Registration ErrorEnvelope
                   value:
-                    message: "An error occured during user registration!"
+                    message: "An ErrorEnvelope occured during user registration!"
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/users/login:
+  /users/login:
     post:
       summary: Log in a user.
       description: Authenticates a user and issues access and refresh tokens.
@@ -1019,11 +1017,11 @@ paths:
                 role: "user"
                 token: "eyJhbGciOiJIUzI1NiI..."
         400:
-          description: Validation Error - Missing fields or invalid input.
+          description: Validation ErrorEnvelope - Missing fields or invalid input.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               examples:
                 missingFields:
                   summary: Missing Fields
@@ -1038,17 +1036,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Invalid credentials"
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/users/current:
+  /users/current:
     get:
       summary: Get current authenticated user.
       description: Retrieves the profile information of the currently authenticated user.
@@ -1061,7 +1059,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/BaseUser'
+                $ref: '#components/schemas/User'
               example:
                 _id: "60a6b9d4f1e9a21e4cfa1234"
                 username: "loggedInUser"
@@ -1074,17 +1072,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Not authorized: no token"
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/users/refresh-token: # Updated route for clarity
+  /users/refresh-token: # Updated route for clarity
     post:
       summary: Refresh access token.
       description: Obtains a new access token using a valid refresh token stored in cookies.
@@ -1107,7 +1105,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               example:
                 message: "Refresh token not provided"
         403:
@@ -1115,7 +1113,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
               examples:
                 invalidUser:
                   summary: User not found for token
@@ -1130,13 +1128,13 @@ paths:
                   value:
                     message: "Invalid or expired refresh token"
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
 
-  /api/v1/users/logout:
+  /users/logout:
     post:
       summary: Log out a user.
       description: Invalidates the user's refresh token and clears the refresh token cookie, effectively logging the user out.
@@ -1153,8 +1151,8 @@ paths:
                     type: string
                     example: "Logged out successfully"
         500:
-          description: Internal Server Error.
+          description: Internal Server ErrorEnvelope.
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#components/schemas/ErrorEnvelope'
