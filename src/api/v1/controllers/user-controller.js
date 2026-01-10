@@ -52,7 +52,7 @@ const loginUser = expressAsyncHandler(async (request, response) => {
             username: userDB.username,
             email: userDB.email,
             role: userDB.role,
-            token: accessToken
+            token: accessToken 
         }
     );
 

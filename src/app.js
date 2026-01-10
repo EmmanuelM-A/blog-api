@@ -26,6 +26,7 @@ app.use('/api/v1/', limiter);
 app.use('/api/v1/posts', require('./api/v1/routes/post-routes'));
 app.use('/api/v1/users', require('./api/v1/routes/user-routes'));
 app.use('/api/v1/admin', require('./api/v1/routes/admin-routes'));
+app.use('/api/v1/health', require('./api/v1/routes/health-routes'));
 
 // Error handling middleware
 app.use(errorHandler);
