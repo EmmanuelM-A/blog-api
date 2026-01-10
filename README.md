@@ -74,28 +74,62 @@ npm run dev
 
 ## 🐳 Docker Usage
 
-### Build Production Image
+### Production Environemnt
+
+**Most production deployment sites will use Dockerfile for deployment.**
+
+#### Build Production Image
 
 ```bash
 npm run docker:build:prod
 ```
 
-### Run Production Container
+#### Run Production Container
 
 ```bash
 npm run docker:run:prod
 ```
 
-### Run Development Compose
+#### Running `docker-compose.prod.yml`
+
+Build and run the Production Container using the following command:
 
 ```bash
-npm run docker:compose:dev
+npm run dc:prod:build
 ```
 
-### Run Production Compose
+Run the Production Container using the following command:
 
 ```bash
-npm run docker:compose:prod
+npm run dc:prod
+```
+
+To stop and remove the production container, use the following command:
+
+```bash
+npm run dc:prod:down
+```
+
+### Development Environment
+
+#### Running `docker-compose.dev.yml`
+
+Build the Development Image using the following command:
+
+```bash
+npm run dc:dev:build
+```
+
+Run the Development Container using the following command:
+
+```bash
+npm run dc:dev
+```
+
+To stop and remove the development container, use the following command:
+
+```bash
+npm run dc:dev:down
 ```
 
 ## 🛡️ Authentication
