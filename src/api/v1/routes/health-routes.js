@@ -4,7 +4,7 @@ const router = express.Router();
 
 // Public health endpoints
 router.get("/server", serverHealthCheck);
-router.get("/database", databaseHealthCheck);
+router.get("/db", databaseHealthCheck);
 router.get("/redis", redisHealthCheck);
 
 module.exports = router;
