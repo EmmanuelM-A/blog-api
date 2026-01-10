@@ -8,8 +8,12 @@
     "dev": "nodemon src/server.js",
     "docker:build:prod": "docker build -f Dockerfile.Prod -t blog-api-prod .",
     "docker:run:prod": "docker run -d --name blog-api-container -p 5000:5000 --env-file .env blog-api-prod",
-    "docker:compose:dev": "docker-compose -f docker-compose.dev.yml up --build",
-    "docker:compose:prod": "docker-compose -f docker-compose.prod.yml up --build"
+    "dc:dev": "docker-compose -f docker-compose.dev.yml up -d",
+    "dc:dev:build": "docker-compose -f docker-compose.dev.yml up -d --build",
+    "dc:dev:down": "docker-compose -f docker-compose.dev.yml down -v",
+    "dc:prod": "docker-compose -f docker-compose.prod.yml up -d",
+    "dc:prod:build": "docker-compose -f docker-compose.prod.yml up -d --build",
+    "dc:prod:down": "docker-compose -f docker-compose.prod.yml down -v"
   },
   "author": "Emmanuel M-A",
   "license": "MIT",
