@@ -1,0 +1,38 @@
+summary: Server Health Check
+description: |
+  Returns the health status of the API server, including uptime, memory usage, CPU count, platform, and load average.
+tags:
+  - Health
+operationId: serverHealthCheck
+responses:
+  200:
+    description: Server is healthy.
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/SuccessEnvelope.yaml'
+        example:
+          success: true
+          message: Server is healthy.
+          data:
+            status: OK
+            uptime: 123.45
+            memory:
+              rss: 12345678
+              heapUsed: 2345678
+              heapTotal: 3456789
+            cpuCount: 4
+            platform: linux
+            loadAverage: [0.12, 0.15, 0.10]
+  500:
+    description: Internal Server Error.
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
+        example:
+          success: false
+          message: "Internal server error."
+          error:
+            code: "INTERNAL_SERVER_ERROR"
+            details: "Something went wrong on our server."

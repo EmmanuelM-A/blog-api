@@ -1,0 +1,43 @@
+summary: Redis Health Check
+description: |
+  Checks the health of the Redis cache connection. Returns status and Redis connection state.
+tags:
+  - Health
+operationId: redisHealthCheck
+responses:
+  200:
+    description: Redis connection is healthy.
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/SuccessEnvelope.yaml'
+        example:
+          success: true
+          message: Redis connection is healthy.
+          data:
+            status: OK
+            redisStatus: connected
+  500:
+    description: Redis connection is not healthy or internal error.
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
+        example:
+          success: false
+          message: "Redis is not connected."
+          error:
+            code: "REDIS_CONNECTION_FAILED"
+            details: "Redis is not connected."
+  503:
+    description: Redis is not ready.
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
+        example:
+          success: false
+          message: "Redis is not ready. Status: connecting"
+          error:
+            code: "REDIS_NOT_READY"
+            details: "Redis is not ready."

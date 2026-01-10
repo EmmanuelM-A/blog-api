@@ -9,9 +9,23 @@ info:
 
 servers:
   - url: http://localhost:5000/api/v1
-  #- url: http://localhost:5000/api/v1
+  - url: https://blog-api-tp8c.onrender.com/api/v1
 
 paths:
+  # ----------------- HEALTH CHECK ENDPOINTS -----------------
+
+  /health/server:
+    get:
+      $ref: "./routes/health/server-health-check.yaml"
+  
+  /health/db:
+    get:
+      $ref: "./routes/health/database-health-check.yaml"
+  
+  /health/redis:
+    get:
+      $ref: "./routes/health/redis-health-check.yaml"
+
   # ----------------- ADMIN ENDPOINTS -----------------
 
   /admin/users:

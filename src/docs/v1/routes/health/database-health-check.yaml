@@ -1,0 +1,31 @@
+summary: Database Health Check
+description: |
+  Checks the health of the MongoDB database connection. Returns status and connection state.
+tags:
+  - Health
+operationId: databaseHealthCheck
+responses:
+  200:
+    description: Database connection is healthy.
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/SuccessEnvelope.yaml'
+        example:
+          success: true
+          message: Database connection is healthy.
+          data:
+            status: OK
+            dbState: 1
+  500:
+    description: Database connection is not healthy or internal error.
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
+        example:
+          success: false
+          message: "Database connection is not healthy."
+          error:
+            code: "DATABASE_CONNECTION_FAILED"
+            details: "Database connection is not healthy."
