@@ -58,6 +58,14 @@ src/
 npm install
 ```
 
+### Configure Environment Variables
+
+Create a `.env` file in the root directory based on the `.env.example` template and set your environment variables.
+
+```bash
+cp .env.example .env
+```
+
 ### ▶️ Run the API (Development)
 
 ```bash
