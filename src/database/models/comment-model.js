@@ -82,7 +82,7 @@ async function updateComment(commentId, updateData) {
  * @returns {Promise<Object|null>} The updated comment document or null if not found
  */
 async function updateCommentDetail(commentId, detailKey, detailValue) {
-    return Post.findByIdAndUpdate(commentId, { [detailKey]: detailValue }, { new: true });
+    return Comment.findByIdAndUpdate(commentId, { [detailKey]: detailValue }, { new: true });
 }
 
 /**

@@ -9,6 +9,7 @@ const settings = {
 	server: {
 		NODE_ENV: process.env.NODE_ENV ?? "development",
 		PORT: Number(process.env.PORT) ?? 5000,
+		ALLOWED_ORIGIN: process.env.ALLOWED_ORIGIN ?? "http://localhost:3000"
 	},
 
 	app: {
