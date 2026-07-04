@@ -1,5 +1,9 @@
 const winston = require('winston');
-const { combine, timestamp, printf, colorize, errors, json } = winston.format;
+const DailyRotateFile = require('winston-daily-rotate-file');
+const { combine, timestamp, printf, colorize, errors } = winston.format;
+const { settings } = require('../config/configs');
+
+const LOG_DIR = settings.logging.LOG_DIR;
 
 /**
  * Formats log output for development.
@@ -27,7 +31,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 /**
  * Defines the default logging level (can be overridden by LOG_LEVEL env variable).
  */
-const logLevel = process.env.LOG_LEVEL || 'debug';
+const logLevel = settings.logging.LOG_LEVEL;
 
 /**
  * Sets up the console transport (always enabled).
@@ -48,14 +52,27 @@ const consoleTransport = new winston.transports.Console({
       )
 });
 
-/**
- * Logger instance using Winston.
- * Currently logs only to the console. File logging can be added later.
- */
+const errorFileTransport = new DailyRotateFile({
+  level: 'error',
+  dirname: LOG_DIR,
+  filename: 'error-%DATE%.log',
+  datePattern: 'YYYY-MM-DD',
+  maxFiles: '14d',
+  format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), errors({ stack: true }), winston.format.json()),
+});
+
+const combinedFileTransport = new DailyRotateFile({
+  dirname: LOG_DIR,
+  filename: 'combined-%DATE%.log',
+  datePattern: 'YYYY-MM-DD',
+  maxFiles: '14d',
+  format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), errors({ stack: true }), winston.format.json()),
+});
+
 const logger = winston.createLogger({
   level: logLevel,
   levels: winston.config.npm.levels,
-  transports: [consoleTransport],
+  transports: [consoleTransport, errorFileTransport, combinedFileTransport],
   defaultMeta: { service: 'blog-api' }
 });
 

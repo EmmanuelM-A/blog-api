@@ -31,6 +31,12 @@ const settings = {
 		LOG_AS_JSON: process.env.LOG_AS_JSON === "true" ?? false,
 	},
 
+	rateLimit: {
+		WINDOW_MS: 15 * 60 * 1000, // 15 minutes
+		GLOBAL_MAX: 100,
+		AUTH_MAX: 10,
+	},
+
 	database: {
 		MONGO_URI: process.env.MONGO_URI,
 		REDIS_URL: process.env.REDIS_URL,
