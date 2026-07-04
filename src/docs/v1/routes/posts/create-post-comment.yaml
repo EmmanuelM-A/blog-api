@@ -43,7 +43,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         examples:
           emptyComment:
             summary: Empty comment
@@ -58,7 +58,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "Authentication required to comment on a post."
   404:
@@ -66,7 +66,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "Post not found."
   500:
@@ -74,4 +74,4 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'

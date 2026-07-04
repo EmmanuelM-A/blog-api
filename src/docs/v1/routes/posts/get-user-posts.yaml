@@ -51,7 +51,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "Username must be provided."
   404:
@@ -59,7 +59,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "User does not exist."
   500:
@@ -67,4 +67,4 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'

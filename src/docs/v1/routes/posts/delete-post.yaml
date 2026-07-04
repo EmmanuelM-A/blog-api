@@ -28,13 +28,13 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
   403:
     description: Forbidden - User is not the author or an admin.
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "You do not have permission to delete this post."
   404:
@@ -42,7 +42,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "Post not found."
   500:
@@ -50,4 +50,4 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'

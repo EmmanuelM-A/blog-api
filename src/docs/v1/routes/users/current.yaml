@@ -23,7 +23,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "Not authorized: no token"
   500:

@@ -110,6 +110,12 @@ To stop and remove the production container, use the following command:
 npm run dc:prod:down
 ```
 
+To view logs from the production container, use the following command:
+
+```bash
+docker-compose -f docker-compose.prod.yml logs api
+```
+
 ### Development Environment
 
 #### Running `docker-compose.dev.yml`
@@ -130,6 +136,12 @@ To stop and remove the development container, use the following command:
 
 ```bash
 npm run dc:dev:down
+```
+
+To view logs from the development container, use the following command:
+
+```bash
+docker-compose -f docker-compose.dev.yml logs api # Replace 'api' with your service name as defined in the docker-compose file.
 ```
 
 ## 🛡️ Authentication

@@ -20,7 +20,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "Refresh token not provided"
   403:

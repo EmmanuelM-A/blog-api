@@ -29,7 +29,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '../components/responses/ErrorResponse.yaml'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "Unauthorized - Access token is missing or invalid."
   403:
