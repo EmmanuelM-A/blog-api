@@ -37,23 +37,19 @@ const likePost = expressAsyncHandler(async (request, response) => {
  *
  */
 const getLikesForPost = expressAsyncHandler(async (request, response) => {
-    // Extract postId from request parameters
     const { postId } = request.params;
+    const { page, limit } = request.query;
 
-    const { likesCount, likes } = await getLikesForPostService(postId);
+    const responseData = await getLikesForPostService(postId, { page, limit });
 
     sendSuccessResponse(
-        response, 
-        StatusCodes.OK, 
-        "Likes fetched successfully!", 
-        {
-            postId,
-            likesCount,
-            likes
-        }
+        response,
+        StatusCodes.OK,
+        "Likes fetched successfully!",
+        { postId, ...responseData }
     );
 
-    logger.info(`Fetched ${likesCount} likes for post: ${postId}`);
+    logger.info(`Fetched ${responseData.likesCount} likes for post: ${postId}`);
 });
 
 module.exports = {

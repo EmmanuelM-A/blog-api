@@ -56,42 +56,22 @@ Small removals that reduce noise and confusion.
 
 Additions that would make the API stand out without over-engineering it.
 
-### 1. Search & filter on posts
-Add query param support to `GET /api/v1/posts`.
+### ~~1. Search & filter on posts~~
 
-```
-GET /posts?q=keyword&author=username&sort=latest
-```
+~~Add query param support to `GET /api/v1/posts`.~~
 
-- Add a text index to the Post schema on `title` and `content`
-- Handle filtering in `post-service.js` before the Redis cache key is built
+### ~~2. Tags on posts~~
 
-### 2. Tags on posts
-Add a `tags` array field to the Post schema and filter by tag.
+~~Add a `tags` array field to the Post schema and filter by tag.~~
 
-```
-GET /posts?tag=javascript
-POST /posts  { "title": "...", "content": "...", "tags": ["javascript", "node"] }
-```
+### ~~3. File logging~~
 
-- Schema change: `tags: [{ type: String }]`
-- Add tag to the Redis cache key so per-tag pages cache independently
+~~Add `winston-daily-rotate-file` transports for error and combined logs.~~
 
-### 3. File logging
-Winston is already configured and the `logs/` directory exists — it just needs a file transport added.
+### ~~4. Tighter rate limiting on auth routes~~
 
-- **File:** `src/utils/logger.js`
-- Add a `winston.transports.File` with daily rotation (`winston-daily-rotate-file`)
-- Error-level logs → `logs/error.log`, combined → `logs/combined.log`
+~~Apply a stricter limiter (10 req / 15 min) to `POST /login` and `POST /register`.~~
 
-### 4. Tighter rate limiting on auth routes
-The current blanket limit (100 req / 15 min) is too loose for login and register.
+### ~~5. Pagination on likes~~
 
-- **File:** `src/middleware/api-rate-limiter.js`
-- Add a stricter limiter (e.g. 10 req / 15 min) applied only to `POST /login` and `POST /register`
-
-### 5. Pagination on likes
-`getLikesForPostService` returns every like for a post in a single unbounded query.
-
-- **File:** `src/services/likes/like-service.js`
-- Add `page` and `limit` query params, matching the pattern used by posts and comments
+~~Add `page` and `limit` query params to `GET /posts/likes/:postId`.~~

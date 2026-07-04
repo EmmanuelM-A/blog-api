@@ -50,6 +50,17 @@ async function findLikes(criteria = {}, options = {}) {
 }
 
 /**
+ * Count likes by criteria.
+ *
+ * @param {Object} criteria Mongoose query object
+ *
+ * @returns {Promise<number>} Total number of matching likes
+ */
+async function countLikes(criteria = {}) {
+    return Like.countDocuments(criteria);
+}
+
+/**
  * Delete a like by its MongoDB _id.
  * 
  * @param {string} likeId The id assigned to the like.
@@ -76,6 +87,7 @@ module.exports = {
     findLikeById,
     findLikeByCriteria,
     findLikes,
+    countLikes,
     deleteLikeById,
     deleteLikesByCriteria,
 };

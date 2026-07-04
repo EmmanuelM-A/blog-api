@@ -1,8 +1,9 @@
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../../utils/logger");
 const { findPostById } = require("../../database/models/post-model");
-const { createLike, findLikeByCriteria, deleteLikeById, findLikes } = require("../../database/models/like-model");
+const { createLike, findLikeByCriteria, deleteLikeById, findLikes, countLikes } = require("../../database/models/like-model");
 const ApiError = require("../../utils/api-error");
+const { settings } = require("../../config/configs");
 
 /**
  * Toggles a like for a post by a user. If the user has already liked the post, it will 
@@ -51,11 +52,9 @@ async function toggleLikeService(postId, userId) {
  * @returns {Promise<{ postId: string, likesCount: number, likes: Array }>}
  * @throws {ApiError} If the post does not exist.
  */
-async function getLikesForPostService(postId) {
-    // Log the retrieval attempt
+async function getLikesForPostService(postId, options = {}) {
     logger.debug(`Fetching likes for the post: ${postId}`);
 
-    // Check if the post exists
     const post = await findPostById(postId);
     if (!post) {
         logger.warn(`Post with id ${postId} not found when fetching likes.`);
@@ -66,14 +65,23 @@ async function getLikesForPostService(postId) {
         );
     }
 
-    // Retrieve all like documents associated with the post
-    const likes = await findLikes({ post_id: postId });
+    const page = parseInt(options.page, 10) || 1;
+    const rawLimit = parseInt(options.limit, 10);
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.LIKES_PER_PAGE;
+    const skip = (page - 1) * limit;
 
-    logger.debug(`Fetched ${likes.length} likes for post: ${postId}`);
-    
+    const [likes, totalLikes] = await Promise.all([
+        findLikes({ post_id: postId }, { skip, limit, sort: { createdAt: -1 } }),
+        countLikes({ post_id: postId }),
+    ]);
+
+    logger.debug(`Fetched ${likes.length} likes for post: ${postId} (page ${page}).`);
+
     return {
-        likesCount: likes.length,
-        likes
+        likes,
+        likesCount: totalLikes,
+        page,
+        totalPages: Math.ceil(totalLikes / limit),
     };
 }
 

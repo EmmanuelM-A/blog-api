@@ -23,6 +23,7 @@ const settings = {
 		MAX_COMMENT_LENGTH: 500, // In chars
 		MAX_TAG_LENGTH: 30, // In chars
 		MAX_TAGS_PER_POST: 5,
+		LIKES_PER_PAGE: 20,
 	},
 
 	logging: {
