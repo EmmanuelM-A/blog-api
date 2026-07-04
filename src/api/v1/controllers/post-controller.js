@@ -93,11 +93,9 @@ const createPost = expressAsyncHandler(async (request, response) => {
  * }
  */
 const getAllPosts = expressAsyncHandler(async (request, response) => {
-    // Parse query parameters
-    const page = request.query.page;
-    const limit = request.query.limit;
+    const { page, limit, q, author, sort } = request.query;
 
-    const responseData = await getAllPostsService({ page, limit });
+    const responseData = await getAllPostsService({ page, limit, q, author, sort });
 
     if(typeof responseData !== "object") {
         return sendSuccessResponse(

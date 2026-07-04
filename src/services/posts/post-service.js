@@ -1,70 +1,111 @@
 const { StatusCodes } = require("http-status-codes");
-const { findPostById, deletePostById, findPosts, countPostsByCriteria, createPost } = require("../../database/models/post-model");
+const { findPostById, deletePostById, findPosts, createPost } = require("../../database/models/post-model");
 const { clearCacheForKey } = require("../../services/caching/cache-utils");
 const ApiError = require("../../utils/api-error");
 const logger = require("../../utils/logger");
 const { constants } = require("../../config");
 const { validateUsername } = require("../validation/input-validator");
 const redisClient = require("../caching/redis-client");
-const { findUserById, updateUserDetail, findUserByCriteria } = require("../../database/models/user-model");
+const { updateUserDetail, findUserByCriteria } = require("../../database/models/user-model");
 const Post = require("../../database/schemas/post-schema");
 
 
 async function getAllPostsService(options) {
-    // Parse page query parameter or default to 1
     const page = parseInt(options.page, 10) || 1;
-    const rawLimit = parseInt(options.limit);
+    const rawLimit = parseInt(options.limit, 10);
     const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
-    
-    // Calculate number of documents to skip for pagination
     const skip = (page - 1) * limit;
 
-    // Compose Redis cache key for this page
-    const cacheKey = `posts:page:${page}`;
+    const { q, author, sort } = options;
+    const isFiltered = q || author || sort;
+    const sortOrder = sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
 
-    // Attempt to get cached data from Redis
-    const cached = await redisClient.get(cacheKey);
+    // Filtered queries bypass cache — too many possible combinations to cache sensibly
+    if (!isFiltered) {
+        const cacheKey = `posts:page:${page}`;
+        const cached = await redisClient.get(cacheKey);
 
-    if (cached) {
-        logger.debug(`Cache hit for key: ${cacheKey}`);
-        logger.debug(`Returning cached posts for page ${page}.`);
+        if (cached) {
+            logger.debug(`Cache hit for key: ${cacheKey}`);
+            return JSON.parse(cached);
+        }
 
-        return JSON.parse(cached);
+        const [allPosts, total] = await Promise.all([
+            Post.find()
+                .sort(sortOrder)
+                .skip(skip)
+                .limit(limit)
+                .populate("author_id", "username")
+                .exec(),
+            Post.countDocuments()
+        ]);
+
+        const responseData = {
+            allPosts,
+            page,
+            totalPages: Math.ceil(total / constants.POSTS_PER_PAGE_LIMIT),
+            totalPosts: total,
+        };
+
+        logger.debug(`Fetched posts from DB for page ${page}, total posts: ${total}.`);
+        await redisClient.setEx(cacheKey, 3600, JSON.stringify(responseData));
+        logger.debug(`Cache set successfully for key: ${cacheKey}`);
+
+        return responseData;
     }
 
-    // Fetch posts with pagination and populate author username
-    // Get total post count for pagination metadata
+    // Build query for filtered requests
+    const query = {};
+
+    if (q) {
+        query.$text = { $search: q };
+    }
+
+    if (author) {
+        if (!validateUsername(author)) {
+            throw new ApiError(
+                "Invalid username format.",
+                StatusCodes.UNPROCESSABLE_ENTITY,
+                "INVALID_USERNAME_FORMAT"
+            );
+        }
+
+        const authorDB = await findUserByCriteria({ username: author });
+
+        if (!authorDB) {
+            throw new ApiError(
+                `User with username ${author} not found.`,
+                StatusCodes.NOT_FOUND,
+                "USER_NOT_FOUND"
+            );
+        }
+
+        query.author_id = authorDB._id;
+    }
+
     const [allPosts, total] = await Promise.all([
-        Post.find()
-            .sort({ createdAt: -1 })
+        Post.find(query)
+            .sort(sortOrder)
             .skip(skip)
             .limit(limit)
-            .populate("author_id", "username") // Populate username from related user
+            .populate("author_id", "username")
             .exec(),
-        Post.countDocuments()
+        Post.countDocuments(query)
     ]);
 
-    // Construct response payload with pagination info
-    const responseData = {
+    logger.debug(`Filtered post query — q: "${q}", author: "${author}", sort: "${sort}", page: ${page}, total: ${total}.`);
+
+    return {
         allPosts,
         page,
-        totalPages: Math.ceil(total / constants.POSTS_PER_PAGE_LIMIT),
+        totalPages: Math.ceil(total / limit),
         totalPosts: total,
     };
-
-    logger.debug(`Fetched posts from DB for page ${page}, total posts: ${total}.`);
-
-    // Cache the response for 1 hour (3600 seconds)
-    await redisClient.setEx(cacheKey, 3600, JSON.stringify(responseData));
-
-    logger.debug(`Cache set successfully for key: ${cacheKey}`);
-
-    return responseData;
 }
 
 async function getAllPostsByUserService(username, options) {
     const page = parseInt(options.page, 10) || 1;
-    const rawLimit = parseInt(options.limit);
+    const rawLimit = parseInt(options.limit, 10);
     const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
     
     // Validate presence of username
@@ -205,8 +246,6 @@ async function createPostService(userDB, postContent) {
             "CONTENT_TOO_LONG",
         );
     }
-
-    const cacheKey = `posts:user:${userDB.username}:page:${1}`;
 
     // Clear any cached post data to maintain cache consistency after creation
     await clearCacheForKey('posts:user:*');
