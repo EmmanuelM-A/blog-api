@@ -8,7 +8,7 @@ const {
 	updateComment,
 } = require("../../database/models/comment-model");
 const ApiError = require("../../utils/api-error");
-const { constants } = require("../../config");
+const { settings } = require("../../config/configs");
 const Comment = require("../../database/schemas/comment-schema");
 
 /**
@@ -56,11 +56,11 @@ async function commentOnPostService(postId, userId, commentContent) {
 	}
 
 	// Enforce max character limit on comment
-	if (trimmedComment.length > constants.MAX_CHAR_COMMENT_LENGTH) {
-		logger.error(`Comment exceeds ${constants.MAX_CHAR_COMMENT_LENGTH} characters.`);
+	if (trimmedComment.length > settings.app.MAX_COMMENT_LENGTH) {
+		logger.error(`Comment exceeds ${settings.app.MAX_COMMENT_LENGTH} characters.`);
 
 		throw new ApiError(
-			`Comment exceeds the maximum allowed length of ${constants.MAX_CHAR_COMMENT_LENGTH} characters.`,
+			`Comment exceeds the maximum allowed length of ${settings.app.MAX_COMMENT_LENGTH} characters.`,
 			StatusCodes.BAD_REQUEST,
 			"COMMENT_TOO_LONG",
 		);
@@ -106,7 +106,7 @@ async function getCommentsForPostService(postId, options = {}) {
 	const page = parseInt(options.page, 10) || 1;
 	const rawLimit = parseInt(options.limit, 10);
 	const limit =
-		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
+		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
 
 	const skip = (page - 1) * limit;
 
@@ -203,9 +203,9 @@ async function updateCommentService(commentId, userId, userRole, newContent) {
 	if (trimmedContent.length === 0) {
 		throw new ApiError("Comment cannot be empty!", StatusCodes.BAD_REQUEST, "EMPTY_COMMENT");
 	}
-	if (trimmedContent.length > constants.MAX_CHAR_COMMENT_LENGTH) {
+	if (trimmedContent.length > settings.app.MAX_COMMENT_LENGTH) {
 		throw new ApiError(
-			`Comment exceeds the maximum allowed length of ${constants.MAX_CHAR_COMMENT_LENGTH} characters.`,
+			`Comment exceeds the maximum allowed length of ${settings.app.MAX_COMMENT_LENGTH} characters.`,
 			StatusCodes.BAD_REQUEST,
 			"COMMENT_TOO_LONG",
 		);

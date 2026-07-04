@@ -3,7 +3,7 @@ const logger = require("../../utils/logger");
 const { findUserById, deleteUserById } = require("../../database/models/user-model");
 const ApiError = require("../../utils/api-error");
 const User = require("../../database/schemas/user-schema");
-const { constants } = require("../../config");
+const { UserRole } = require("../../config/constants");
 
 /**
  * Service to fetch all users with optional filters and pagination.
@@ -94,14 +94,14 @@ async function updateUserRoleService(userId, updateData) {
 	}
 
 	// Check if the provided role is valid
-	if (!constants.VALID_ROLES.includes(role)) {
+	if (!Object.values(UserRole).includes(role)) {
 		logger.warn(`Role update failed: Invalid role "${role}" provided for user id ${userId}.`);
 
 		throw new ApiError(
 			`Invalid role detected!`,
 			StatusCodes.UNPROCESSABLE_ENTITY,
 			"INVALID_ROLE",
-			`The role provided was '${role}' which is not valid. The valid roles are: [${constants.VALID_ROLES.join(", ")}].`,
+			`The role provided was '${role}' which is not valid. The valid roles are: [${Object.values(UserRole).join(", ")}].`,
 		);
 	}
 

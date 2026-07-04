@@ -1,6 +1,6 @@
 const validator = require("validator");
 const restrictedUsernames = require("../users/restricted-usernames.json");
-const { constants } = require("../../config");
+const { settings } = require("../../config/configs");
 
 /**
  * Validates the username.
@@ -72,7 +72,7 @@ const validatePostTitle = (input) => {
 	return (
 		typeof input === "string" &&
 		!validator.isEmpty(input) &&
-		input.length <= constants.MAX_POST_TITLE_LENGTH
+		input.length <= settings.app.MAX_TITLE_LENGTH
 	);
 };
 
@@ -80,7 +80,7 @@ const validatePostContent = (input) => {
 	return (
 		typeof input === "string" &&
 		!validator.isEmpty(input) &&
-		input.length <= constants.MAX_POST_CONTENT_LENGTH
+		input.length <= settings.app.MAX_CONTENT_LENGTH
 	);
 };
 

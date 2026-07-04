@@ -18,6 +18,7 @@ const settings = {
 		SERVICE_URL: process.env.SERVICE_URL,
 
 		// Logic configs
+		POSTS_PER_PAGE: 10,
 		MAX_TITLE_LENGTH: 100, // In chars
 		MAX_CONTENT_LENGTH: 5000, // In chars
 		MAX_COMMENT_LENGTH: 500, // In chars

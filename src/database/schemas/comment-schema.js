@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
-const { constants } = require("../../config");
+const { settings } = require("../../config/configs");
 
 const commentSchema = new mongoose.Schema(
 	{
@@ -12,7 +12,7 @@ const commentSchema = new mongoose.Schema(
 		content: {
 			type: String,
 			required: [true, "Content is required!"],
-			maxLength: constants.MAX_CHAR_COMMENT_LENGTH,
+			maxLength: settings.app.MAX_COMMENT_LENGTH,
 		},
 		post_id: {
 			type: String,

@@ -8,7 +8,6 @@ const {
 const { clearCacheForKey } = require("../../services/caching/cache-utils");
 const ApiError = require("../../utils/api-error");
 const logger = require("../../utils/logger");
-const { constants } = require("../../config");
 const { settings } = require("../../config/configs");
 const { validateUsername } = require("../validation/input-validator");
 const redisClient = require("../caching/redis-client");
@@ -19,7 +18,7 @@ async function getAllPostsService(options) {
 	const page = parseInt(options.page, 10) || 1;
 	const rawLimit = parseInt(options.limit, 10);
 	const limit =
-		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
+		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
 	const skip = (page - 1) * limit;
 
 	const { q, author, sort, tag } = options;
@@ -44,7 +43,7 @@ async function getAllPostsService(options) {
 		const responseData = {
 			allPosts,
 			page,
-			totalPages: Math.ceil(total / constants.POSTS_PER_PAGE_LIMIT),
+			totalPages: Math.ceil(total / settings.app.POSTS_PER_PAGE),
 			totalPosts: total,
 		};
 
@@ -114,7 +113,7 @@ async function getAllPostsByUserService(username, options) {
 	const page = parseInt(options.page, 10) || 1;
 	const rawLimit = parseInt(options.limit, 10);
 	const limit =
-		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
+		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
 
 	// Validate presence of username
 	if (!username) {
@@ -151,7 +150,7 @@ async function getAllPostsByUserService(username, options) {
 
 	logger.debug(`Cache miss for user ${username} (page ${page}), querying database...`);
 
-	const skip = (page - 1) * constants.POSTS_PER_PAGE_LIMIT;
+	const skip = (page - 1) * settings.app.POSTS_PER_PAGE;
 
 	// Find user by username
 	const userDB = await findUserByCriteria({ username });
@@ -262,25 +261,25 @@ async function createPostService(userDB, postContent) {
 	}
 
 	// Enforce max length constraints for title and content
-	if (trimmedTitle.length > constants.MAX_POST_TITLE_LENGTH) {
+	if (trimmedTitle.length > settings.app.MAX_TITLE_LENGTH) {
 		logger.error(
-			`Post title exceeds maximum length of ${constants.MAX_POST_TITLE_LENGTH} characters.`,
+			`Post title exceeds maximum length of ${settings.app.MAX_TITLE_LENGTH} characters.`,
 		);
 
 		throw new ApiError(
-			`Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`,
+			`Title must be under ${settings.app.MAX_TITLE_LENGTH} characters.`,
 			StatusCodes.UNPROCESSABLE_ENTITY,
 			"TITLE_TOO_LONG",
 		);
 	}
 
-	if (trimmedContent.length > constants.MAX_POST_CONTENT_LENGTH) {
+	if (trimmedContent.length > settings.app.MAX_CONTENT_LENGTH) {
 		logger.error(
-			`Post content exceeds maximum length of ${constants.MAX_POST_CONTENT_LENGTH} characters.`,
+			`Post content exceeds maximum length of ${settings.app.MAX_CONTENT_LENGTH} characters.`,
 		);
 
 		throw new ApiError(
-			`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`,
+			`Content must be under ${settings.app.MAX_CONTENT_LENGTH} characters.`,
 			StatusCodes.UNPROCESSABLE_ENTITY,
 			"CONTENT_TOO_LONG",
 		);
@@ -352,21 +351,21 @@ async function editPostService(user, postId, newContent) {
 		);
 	}
 
-	if (trimmedTitle.length > constants.MAX_POST_TITLE_LENGTH) {
-		logger.error(`Post title exceeds ${constants.MAX_POST_TITLE_LENGTH} characters.`);
+	if (trimmedTitle.length > settings.app.MAX_TITLE_LENGTH) {
+		logger.error(`Post title exceeds ${settings.app.MAX_TITLE_LENGTH} characters.`);
 
 		throw new ApiError(
-			`Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`,
+			`Title must be under ${settings.app.MAX_TITLE_LENGTH} characters.`,
 			StatusCodes.UNPROCESSABLE_ENTITY,
 			"TITLE_TOO_LONG",
 		);
 	}
 
-	if (trimmedContent.length > constants.MAX_POST_CONTENT_LENGTH) {
-		logger.error(`Post content exceeds ${constants.MAX_POST_CONTENT_LENGTH} characters.`);
+	if (trimmedContent.length > settings.app.MAX_CONTENT_LENGTH) {
+		logger.error(`Post content exceeds ${settings.app.MAX_CONTENT_LENGTH} characters.`);
 
 		throw new ApiError(
-			`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`,
+			`Content must be under ${settings.app.MAX_CONTENT_LENGTH} characters.`,
 			StatusCodes.UNPROCESSABLE_ENTITY,
 			"CONTENT_TOO_LONG",
 		);

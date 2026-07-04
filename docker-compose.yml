@@ -1,5 +1,6 @@
 services:
     api:
+        build: .
         container_name: blog_api
         ports:
             - "5000:5000"
@@ -8,6 +9,9 @@ services:
             - redis
         env_file:
             - .env.local
+        environment:
+            - MONGO_URI=mongodb://mongo_db:27017
+            - REDIS_URL=redis://redis:6379
         command: >
             sh -c "node src/utils/seed-admin.js && node src/server.js"
         networks:
