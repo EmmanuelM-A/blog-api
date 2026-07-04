@@ -1,0 +1,37 @@
+const path = require("node:path");
+
+const PROJECT_ROOT = path.resolve(__dirname, "../..");
+
+/**
+ * All the configurations and settigns for the application
+ */
+const settings = {
+	server: {
+		NODE_ENV: process.env.NODE_ENV ?? "development",
+		PORT: Number(process.env.PORT) ?? 5000,
+	},
+
+	app: {
+		ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
+		REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
+		SERVICE_URL: process.env.SERVICE_URL,
+
+		// Logic configs
+		MAX_TITLE_LENGTH: 100, // In chars
+		MAX_CONTENT_LENGTH: 5000, // In chars
+		MAX_COMMENT_LENGTH: 500, // In chars
+	},
+
+	logging: {
+		LOG_LEVEL: process.env.LOG_LEVEL ?? "debug",
+		LOG_DIR: `${PROJECT_ROOT}/logs`,
+		LOG_AS_JSON: process.env.LOG_AS_JSON === "true" ?? false,
+	},
+
+	database: {
+		MONGO_URI: process.env.MONGO_URI,
+		REDIS_URL: process.env.REDIS_URL,
+	},
+};
+
+module.exports = { settings };
