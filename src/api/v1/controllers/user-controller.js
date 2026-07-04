@@ -3,6 +3,7 @@ const { sendSuccessResponse } = require("../../../utils/helpers");
 const { registerUserService, loginUserService, getCurrentUserService, refreshAccessTokenService, logoutUserService } = require("../../../services/users/user-service");
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../../../utils/logger");
+const { settings } = require("../../../config/configs");
 
 /**
  * Handles an HTTP POST request to register a new user.
@@ -38,7 +39,7 @@ const loginUser = expressAsyncHandler(async (request, response) => {
     // Set the refresh token as an HTTP-only cookie for secure storage on the client side.
     response.cookie("refreshToken", refreshToken, {
         httpOnly: true, // Prevents client-side JavaScript access to the cookie.
-        secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production.
+        secure: settings.server.NODE_ENV === "production", // Only send over HTTPS in production.
         sameSite: "strict", // Protects against CSRF attacks.
         maxAge: 7 * 24 * 60 * 60 * 1000 // Cookie expiration in 7 days.
     });
@@ -103,7 +104,7 @@ const logoutUser = expressAsyncHandler(async (request, response) => {
 	// The options must match those used when setting the cookie during login.
 	response.clearCookie("refreshToken", {
 		httpOnly: true, // Must match the `httpOnly` setting used when the cookie was set.
-		secure: process.env.NODE_ENV === "production", // Must match `secure` setting.
+		secure: settings.server.NODE_ENV === "production", // Must match `secure` setting.
 		sameSite: "Strict" // Must match `sameSite` setting.
 	});
 

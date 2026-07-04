@@ -5,6 +5,7 @@ const expressAsyncHandler = require("express-async-handler");
 const { StatusCodes } = require("http-status-codes");
 const { findUserById } = require("../database/models/user-model");
 const User = require("../database/schemas/user-schema");
+const { settings } = require("../config/configs");
 
 /**
  * Checks if a request has a valid authorization header and verifies its value (the acess token).
@@ -19,7 +20,7 @@ const authRouteProtection = expressAsyncHandler(async (request, response, next) 
             logger.debug("Authorization header found. Token extracted.");
 
             // Verify token
-            const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+            const decoded = jwt.verify(token, settings.app.ACCESS_TOKEN_SECRET);
             logger.debug(`Token verified for user ID: ${decoded.id}`);
 
             // Get user from token without password

@@ -5,9 +5,9 @@ const connectToDatabase = require("./database/database-connection");
 const logger = require('./utils/logger');
 const redisClient = require('./services/caching/redis-client');
 const setupSwaggerDocs = require("./docs/swagger");
-const { constants } = require('./config');
+const { settings } = require('./config/configs');
 
-const PORT = process.env.PORT || constants.DEFAULT_PORT;
+const PORT = settings.server.PORT;
 
 // --------------------- Application Startup Logic ---------------------
 

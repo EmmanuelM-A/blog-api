@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const { hashPassword } = require("./helpers");
 const { findUserByCriteria, createUser } = require("../database/models/user-model");
 const logger = require("./logger");
+const { settings } = require("../config/configs");
 
 const seedAdmin = async () => {
     const adminDetails = {
@@ -13,7 +14,7 @@ const seedAdmin = async () => {
     };
 
     try {
-        await mongoose.connect(process.env.DEV_MONGO_URI);
+        await mongoose.connect(settings.database.MONGO_URI);
 
         const isUserAvailable = await findUserByCriteria({
             $or: [{ username: adminDetails.username }, { email: adminDetails.email }]

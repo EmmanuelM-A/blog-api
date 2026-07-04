@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const express = require("express");
+const { settings } = require("../config/configs");
 
 /**
  * Hashes the password.
@@ -35,7 +36,7 @@ async function comparePassword(inputtedPassword, dbPassword) {
  * @returns The access token generated.
  */
 const generateAccessToken = (userID) => {
-    return jwt.sign({ id: userID }, process.env.ACCESS_TOKEN_SECRET, {
+    return jwt.sign({ id: userID }, settings.app.ACCESS_TOKEN_SECRET, {
         expiresIn: "5m"
     });
 };
@@ -48,7 +49,7 @@ const generateAccessToken = (userID) => {
  * @returns The refresh token generated. 
  */
 const generateRefreshToken = (userID) => {
-    return jwt.sign({ id: userID }, process.env.REFRESH_TOKEN_SECRET, {
+    return jwt.sign({ id: userID }, settings.app.REFRESH_TOKEN_SECRET, {
         expiresIn: "7d"
     });
 }
@@ -105,7 +106,7 @@ const sendErrorResponse = (response, statusCode, message, code = null, details =
     if (code) responseBody.error.code = code;
     if (details) responseBody.error.details = details;
 	
-	if( process.env.NODE_ENV === 'development') {
+	if (settings.server.NODE_ENV === 'development') {
 		// In development, include the stack trace for debugging
 		responseBody.stackTrace = stackTrace;
 	}

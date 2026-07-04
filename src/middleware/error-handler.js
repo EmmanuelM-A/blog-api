@@ -2,6 +2,7 @@ const { sendErrorResponse } = require("../utils/helpers");
 const logger = require("../utils/logger");
 const { StatusCodes } = require('http-status-codes');
 const express = import('express');
+const { settings } = require("../config/configs");
 
 /**
  * @typedef {object} APIErrorResponse
@@ -78,7 +79,7 @@ const errorHandler = (error, request, response, next) => {
     };
 
     // Add stack trace only in development
-    if (process.env.NODE_ENV === 'development') {
+    if (settings.server.NODE_ENV === 'development') {
         responseBody.stackTrace = error.stack;
     } else {
         // In production, log the full error for server-side debugging, but don't send to client.

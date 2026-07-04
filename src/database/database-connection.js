@@ -1,14 +1,11 @@
-const mongoose = require('mongoose');
-const logger = require('../utils/logger');
-
-require('dotenv').config(); // Load environment variables from .env file
-
-const DATABASE_URI = process.env.NODE_ENV === "development" ? process.env.DEV_MONGO_URI : process.env.PROD_MONGO_URI;
+const mongoose = require("mongoose");
+const logger = require("../utils/logger");
+const { settings } = require("../config/configs");
 
 /**
  * @function connectToDatabase
  * @description
- * Asynchronously establishes a connection to a MongoDB database using Mongoose. 
+ * Asynchronously establishes a connection to a MongoDB database using Mongoose.
  * It uses the connection string defined in the environment variable.
  *
  * If the connection attempt fails, it logs the error, closes any open Mongoose connections,
@@ -23,23 +20,23 @@ const DATABASE_URI = process.env.NODE_ENV === "development" ? process.env.DEV_MO
  * @see {@link https://mongoosejs.com/docs/connections.html Mongoose Connection Docs}
  */
 const connectToDatabase = async () => {
-    try {
-        // Attempt to connect to MongoDB using the connection string from environment variables.
-        await mongoose.connect(DATABASE_URI);
+	try {
+		// Attempt to connect to MongoDB using the connection string from environment variables.
+		await mongoose.connect(settings.database.MONGO_URI);
 
-        logger.info("Database connected!");
-    } catch (error) {
-        // If connection fails:
-        
-        // Gracefully close any existing connection (if partially established).
-        mongoose.connection.close();
+		logger.info("Database connected!");
+	} catch (error) {
+		// If connection fails:
 
-        // Log the error to standard error output.
-        logger.error(`${error.message}`);
+		// Gracefully close any existing connection (if partially established).
+		mongoose.connection.close();
 
-        // Exit the process with a failure code (1) to indicate a fatal error.
-        process.exit(1);
-    }
+		// Log the error to standard error output.
+		logger.error(`${error.message}`);
+
+		// Exit the process with a failure code (1) to indicate a fatal error.
+		process.exit(1);
+	}
 };
 
 module.exports = connectToDatabase;

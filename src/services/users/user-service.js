@@ -5,6 +5,7 @@ const { StatusCodes } = require('http-status-codes');
 const { hashPassword, comparePassword, generateAccessToken, generateRefreshToken, sanitizeUser } = require("../../utils/helpers");
 const logger = require("../../utils/logger");
 const jwt = require("jsonwebtoken");
+const { settings } = require("../../config/configs");
 
 /**
  * Registers a new user after validating and hashing the password.
@@ -204,7 +205,7 @@ async function refreshAccessTokenService(token) {
 
     try {
         logger.debug("Verifying refresh token...");
-        const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+        const decoded = jwt.verify(token, settings.app.REFRESH_TOKEN_SECRET);
         logger.debug(`Refresh token verified for user ID: ${decoded.id}`);
 
 		const userDB = await findUserById(decoded.id);

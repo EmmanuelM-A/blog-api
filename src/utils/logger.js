@@ -26,7 +26,7 @@ const prettyJsonFormat = printf(info => {
 /**
  * Determines if the environment is production.
  */
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = settings.server.NODE_ENV === 'production';
 
 /**
  * Defines the default logging level (can be overridden by LOG_LEVEL env variable).
