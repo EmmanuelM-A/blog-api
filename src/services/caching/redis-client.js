@@ -1,4 +1,4 @@
-const redis = require('redis');
+const redis = require("redis");
 const logger = require("../../utils/logger");
 const { settings } = require("../../config/configs");
 
@@ -9,23 +9,23 @@ const REDIS_URL = settings.database.REDIS_URL;
  * in the environment variable `REDIS_URL`.
  */
 const redisClient = redis.createClient({
-    url: REDIS_URL, // Redis connection URL
+	url: REDIS_URL, // Redis connection URL
 });
 
 // Event: Fired when the client is initiating a connection to Redis.
-redisClient.on('connect', () => {
-    logger.info('Redis client attempting connection...');
+redisClient.on("connect", () => {
+	logger.info("Redis client attempting connection...");
 });
 
 // Event: Fired once the Redis client has successfully connected and is ready to use.
-redisClient.on('ready', () => {
-    logger.info('Redis client is ready to use!');
+redisClient.on("ready", () => {
+	logger.info("Redis client is ready to use!");
 });
 
 // Event: Fired when there is an error with the Redis connection or during operations.
 // It helps in diagnosing issues like invalid URL, authentication errors, or network issues.
-redisClient.on('error', (err) => {
-    logger.error('Redis connection error: ', err);
+redisClient.on("error", (err) => {
+	logger.error("Redis connection error: ", err);
 });
 
 module.exports = redisClient;

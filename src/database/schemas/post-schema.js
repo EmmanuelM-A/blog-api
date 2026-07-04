@@ -1,32 +1,35 @@
-const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid');
+const mongoose = require("mongoose");
+const { v4: uuidv4 } = require("uuid");
 
-const postSchema = new mongoose.Schema({
-    _id: {
-        type: String,
-        required: true,
-        default: uuidv4
-    },
-    title: {
-        type: String,
-        required: [true, "All posts must have a title!"],
-        maxlength: 100,
-    },
-    content: {
-        type: String,
-        required: [true, "All posts must have content!"],
-        maxlength: 5000,
-    },
-    author_id: {
-        type: String,
-        required: true,
-        ref: "User"
-    },
-    tags: {
-        type: [String],
-        default: [],
-    }
-}, { timestamps: true });
+const postSchema = new mongoose.Schema(
+	{
+		_id: {
+			type: String,
+			required: true,
+			default: uuidv4,
+		},
+		title: {
+			type: String,
+			required: [true, "All posts must have a title!"],
+			maxlength: 100,
+		},
+		content: {
+			type: String,
+			required: [true, "All posts must have content!"],
+			maxlength: 5000,
+		},
+		author_id: {
+			type: String,
+			required: true,
+			ref: "User",
+		},
+		tags: {
+			type: [String],
+			default: [],
+		},
+	},
+	{ timestamps: true },
+);
 
 postSchema.index({ title: "text", content: "text" });
 

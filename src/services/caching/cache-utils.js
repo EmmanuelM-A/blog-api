@@ -1,7 +1,6 @@
 const redisClient = require("../caching/redis-client");
 const logger = require("../../utils/logger");
 
-
 /**
  * @function clearCacheForKey
  * @description
@@ -15,11 +14,11 @@ const logger = require("../../utils/logger");
  * await clearCacheForKey('posts:page:*');
  */
 const clearCacheForKey = async (keyPattern) => {
-    const keys = await redisClient.keys(keyPattern);
-    if (keys.length) {
-        await Promise.all(keys.map(k => redisClient.del(k)));
-        logger.info(`Cleared ${keys.length} cached pages for the keys: ${keyPattern}.`);
-    }
+	const keys = await redisClient.keys(keyPattern);
+	if (keys.length) {
+		await Promise.all(keys.map((k) => redisClient.del(k)));
+		logger.info(`Cleared ${keys.length} cached pages for the keys: ${keyPattern}.`);
+	}
 };
 
 module.exports = { clearCacheForKey };

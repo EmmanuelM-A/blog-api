@@ -1,9 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../../utils/logger");
-const {
-	findUserById,
-	deleteUserById,
-} = require("../../database/models/user-model");
+const { findUserById, deleteUserById } = require("../../database/models/user-model");
 const ApiError = require("../../utils/api-error");
 const User = require("../../database/schemas/user-schema");
 const { constants } = require("../../config");

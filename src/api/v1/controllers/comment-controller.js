@@ -1,7 +1,10 @@
 const logger = require("../../../utils/logger");
 const { sendSuccessResponse } = require("../../../utils/helpers");
 const expressAsyncHandler = require("express-async-handler");
-const { commentOnPostService, getCommentsForPostService } = require("../../../services/comments/comment-service");
+const {
+	commentOnPostService,
+	getCommentsForPostService,
+} = require("../../../services/comments/comment-service");
 const { StatusCodes } = require("http-status-codes");
 
 /**
@@ -16,20 +19,18 @@ const { StatusCodes } = require("http-status-codes");
  * @returns {Response} 404 - If the specified post does not exist.
  */
 const commentOnPost = expressAsyncHandler(async (request, response) => {
-    // Extract all the details needed for commenting
-    const { postId } = request.params;
-    const userId = request.user?.id;
-    const { comment } = request.body;
+	// Extract all the details needed for commenting
+	const { postId } = request.params;
+	const userId = request.user?.id;
+	const { comment } = request.body;
 
-    const createdComment = await commentOnPostService(postId, userId, comment);
+	const createdComment = await commentOnPostService(postId, userId, comment);
 
-    sendSuccessResponse(
-        response,
-        StatusCodes.CREATED,
-        "Comment added successfully.",
-    );
+	sendSuccessResponse(response, StatusCodes.CREATED, "Comment added successfully.");
 
-    logger.info(`The comment with the comment_id: ${createdComment.id} created successfully by the user: ${request.user.username} (${userId})`);
+	logger.info(
+		`The comment with the comment_id: ${createdComment.id} created successfully by the user: ${request.user.username} (${userId})`,
+	);
 });
 
 /**
@@ -42,29 +43,27 @@ const commentOnPost = expressAsyncHandler(async (request, response) => {
  *
  */
 const getCommentsForPost = expressAsyncHandler(async (request, response) => {
-    // Extract the postId from the request parameters
-    const { postId } = request.params;
-    const { page, limit } = request.query;
+	// Extract the postId from the request parameters
+	const { postId } = request.params;
+	const { page, limit } = request.query;
 
-    const { comments, currPage, totalPages, totalComments } = await getCommentsForPostService(postId, { page, limit });
+	const { comments, currPage, totalPages, totalComments } = await getCommentsForPostService(
+		postId,
+		{ page, limit },
+	);
 
-    sendSuccessResponse(
-        response,
-        StatusCodes.OK,
-        "Comments fetched successfully.",
-        {
-            postId,
-            comments,
-            currPage,
-            totalPages,
-            totalComments
-        }
-    );
+	sendSuccessResponse(response, StatusCodes.OK, "Comments fetched successfully.", {
+		postId,
+		comments,
+		currPage,
+		totalPages,
+		totalComments,
+	});
 
-    logger.info(`Fetched ${comments.length} comments for the post: ${postId}`);
+	logger.info(`Fetched ${comments.length} comments for the post: ${postId}`);
 });
 
-module.exports = { 
-    commentOnPost,
-    getCommentsForPost
+module.exports = {
+	commentOnPost,
+	getCommentsForPost,
 };
