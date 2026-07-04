@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    uses: ./.github/workflows/lint.yml
+
+  tests:
+    name: Tests
+    uses: ./.github/workflows/tests.yml
+
+  docker:
+    name: Docker
+    uses: ./.github/workflows/docker.yml
