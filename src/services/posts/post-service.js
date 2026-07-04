@@ -73,7 +73,7 @@ async function getAllPostsByUserService(username, options) {
 
         throw new ApiError(
             "Username must be provided.",
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "USERNAME_REQUIRED"
         );
     }
@@ -84,7 +84,7 @@ async function getAllPostsByUserService(username, options) {
 
         throw new ApiError(
             "Invalid username format.",
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "INVALID_USERNAME_FORMAT"
         );
     }
@@ -165,7 +165,7 @@ async function createPostService(userDB, postContent) {
 
         throw new ApiError(
             "Title and content must be strings.",
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "INVALID_INPUT_TYPE",
         );
     }
@@ -180,7 +180,7 @@ async function createPostService(userDB, postContent) {
 
         throw new ApiError(
             "Title and content must not be empty.",
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "EMPTY_TITLE_OR_CONTENT",
         );
     }
@@ -191,7 +191,7 @@ async function createPostService(userDB, postContent) {
 
         throw new ApiError(
             `Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`,   
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "TITLE_TOO_LONG",
         );
     }
@@ -201,7 +201,7 @@ async function createPostService(userDB, postContent) {
 
         throw new ApiError(
             `Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`,
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "CONTENT_TOO_LONG",
         );
     }
@@ -253,7 +253,7 @@ async function editPostService(user, postId, newContent) {
 
         throw new ApiError(
             "Title and content must be strings.",
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "INVALID_INPUT_TYPE"
         );
     }
@@ -266,7 +266,7 @@ async function editPostService(user, postId, newContent) {
 
         throw new ApiError(
             "Title and content must not be empty.",
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "EMPTY_TITLE_OR_CONTENT"
         );
     }
@@ -276,7 +276,7 @@ async function editPostService(user, postId, newContent) {
 
         throw new ApiError(
             `Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`,
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "TITLE_TOO_LONG"
         );
     }
@@ -286,7 +286,7 @@ async function editPostService(user, postId, newContent) {
 
         throw new ApiError(
             `Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`,
-            StatusCodes.VALIDATION_ERROR,
+            StatusCodes.UNPROCESSABLE_ENTITY,
             "CONTENT_TOO_LONG"
         );
     }
