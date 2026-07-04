@@ -46,9 +46,9 @@ These are broken right now and should be fixed before deploying.
 
 Small removals that reduce noise and confusion.
 
-- **Remove `pg` dependency** — PostgreSQL is installed but never imported or used anywhere (`npm uninstall pg`)
-- **Remove `express-validator`** — installed but unused; input validation is handled manually in the service layer (`npm uninstall express-validator`)
-- **Delete `docker-checker.yml`** — superseded by the new reusable `docker.yml` called from `ci.yml`; having both causes duplicate runs on push to `main`
+- [x] **Remove `pg` dependency** — PostgreSQL is installed but never imported or used anywhere (`npm uninstall pg`)
+- [x] **Remove `express-validator`** — installed but unused; input validation is handled manually in the service layer (`npm uninstall express-validator`)
+- [x] **Delete `docker-checker.yml`** — superseded by the new reusable `docker.yml` called from `ci.yml`
 
 ---
 
