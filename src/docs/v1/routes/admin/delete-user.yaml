@@ -34,13 +34,13 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '../components/responses/ErrorResponse.yaml'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
   404:
     description: User Not Found - No user exists with the provided ID.
     content:
       application/json:
         schema:
-          $ref: '../components/responses/ErrorResponse.yaml'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
         example:
           message: "User not found"
   500:
@@ -48,4 +48,4 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '../components/responses/ErrorResponse.yaml'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'

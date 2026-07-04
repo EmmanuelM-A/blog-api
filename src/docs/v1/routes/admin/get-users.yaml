@@ -1,50 +1,80 @@
 
 summary: Get all registered users.
-description: Retrieve a list of all registered users in the system. This endpoint requires authentication and admin privileges.
+description: Retrieve a paginated list of all registered users. Requires authentication and admin privileges.
 tags: [Admin]
 security:
   - bearerAuth: []
+parameters:
+  - name: page
+    in: query
+    required: false
+    schema:
+      type: integer
+      default: 1
+    description: Page number for pagination.
+  - name: limit
+    in: query
+    required: false
+    schema:
+      type: integer
+      default: 10
+    description: Number of users per page.
 responses:
   200:
-    description: A list of user objects, excluding sensitive data like passwords and refresh tokens.
+    description: A paginated list of users, excluding sensitive data.
     content:
       application/json:
         schema:
-          type: array
-          items:
-            $ref: "./Users.yaml"
-        examples:
-          success:
-            value:
-              - _id: "609d6c9b3f1d2b001f89f100"
-                username: "john.doe"
-                email: "john@example.com"
-                role: "user"
-              - _id: "609d6c9b3f1d2b001f89f101"
-                username: "jane.smith"
-                email: "jane@example.com"
-                role: "admin"
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                $ref: '../../components/schemas/User.yaml'
+            pagination:
+              type: object
+              properties:
+                totalUsers:
+                  type: integer
+                currentPage:
+                  type: integer
+                totalPages:
+                  type: integer
+                limit:
+                  type: integer
+                hasNextPage:
+                  type: boolean
+        example:
+          users:
+            - _id: "609d6c9b3f1d2b001f89f100"
+              username: "john.doe"
+              email: "john@example.com"
+              role: "user"
+            - _id: "609d6c9b3f1d2b001f89f101"
+              username: "jane.smith"
+              email: "jane@example.com"
+              role: "admin"
+          pagination:
+            totalUsers: 2
+            currentPage: 1
+            totalPages: 1
+            limit: 10
+            hasNextPage: false
   401:
     description: Unauthorized - Authentication token is missing or invalid.
     content:
       application/json:
         schema:
           $ref: '../../components/schemas/ErrorEnvelope.yaml'
-        example:
-          message: "Unauthorized - Access token is missing or invalid."
   403:
-    description: Forbidden - The authenticated user does not have sufficient permissions (e.g., not an admin).
+    description: Forbidden - The authenticated user does not have admin privileges.
     content:
       application/json:
         schema:
-          $ref: '../components/responses/ErrorResponse.yaml'
-        example:
-          message: "Forbidden - Requires admin role."
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
   500:
-    description: Internal Server Error - An unexpected error occurred on the server.
+    description: Internal Server Error.
     content:
       application/json:
         schema:
-          $ref: '../components/responses/ErrorResponse.yaml'
-        example:
-          message: "Internal server error."
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'

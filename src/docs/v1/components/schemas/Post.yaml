@@ -18,6 +18,12 @@ properties:
     type: string
     format: date-time
     description: The timestamp when the post was created.
+  tags:
+    type: array
+    items:
+      type: string
+    description: A list of tags associated with the post.
+    example: ["javascript", "node"]
   updatedAt:
     type: string
     format: date-time

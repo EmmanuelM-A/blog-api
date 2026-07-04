@@ -1,0 +1,1461 @@
+openapi: 3.1.0
+info:
+  title: Blog API
+  version: 1.0.0
+  description: API documentation for the blog platform
+servers:
+  - url: 'http://localhost:5000/api/v1'
+  - url: 'https://blog-api-tp8c.onrender.com/api/v1'
+paths:
+  /health/server:
+    get:
+      summary: Server Health Check
+      description: |
+        Returns the health status of the API server, including uptime, memory usage, CPU count, platform, and load average.
+      tags:
+        - Health
+      operationId: serverHealthCheck
+      responses:
+        '200':
+          description: Server is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+              example:
+                success: true
+                message: Server is healthy.
+                data:
+                  status: OK
+                  uptime: 123.45
+                  memory:
+                    rss: 12345678
+                    heapUsed: 2345678
+                    heapTotal: 3456789
+                  cpuCount: 4
+                  platform: linux
+                  loadAverage:
+                    - 0.12
+                    - 0.15
+                    - 0.1
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                message: Internal server error.
+                error:
+                  code: INTERNAL_SERVER_ERROR
+                  details: Something went wrong on our server.
+  /health/db:
+    get:
+      summary: Database Health Check
+      description: |
+        Checks the health of the MongoDB database connection. Returns status and connection state.
+      tags:
+        - Health
+      operationId: databaseHealthCheck
+      responses:
+        '200':
+          description: Database connection is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+              example:
+                success: true
+                message: Database connection is healthy.
+                data:
+                  status: OK
+                  dbState: 1
+        '500':
+          description: Database connection is not healthy or internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                message: Database connection is not healthy.
+                error:
+                  code: DATABASE_CONNECTION_FAILED
+                  details: Database connection is not healthy.
+  /health/redis:
+    get:
+      summary: Redis Health Check
+      description: |
+        Checks the health of the Redis cache connection. Returns status and Redis connection state.
+      tags:
+        - Health
+      operationId: redisHealthCheck
+      responses:
+        '200':
+          description: Redis connection is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+              example:
+                success: true
+                message: Redis connection is healthy.
+                data:
+                  status: OK
+                  redisStatus: connected
+        '500':
+          description: Redis connection is not healthy or internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                message: Redis is not connected.
+                error:
+                  code: REDIS_CONNECTION_FAILED
+                  details: Redis is not connected.
+        '503':
+          description: Redis is not ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                message: 'Redis is not ready. Status: connecting'
+                error:
+                  code: REDIS_NOT_READY
+                  details: Redis is not ready.
+  /admin/users:
+    get:
+      summary: Get all registered users.
+      description: Retrieve a paginated list of all registered users. Requires authentication and admin privileges.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Number of users per page.
+      responses:
+        '200':
+          description: 'A paginated list of users, excluding sensitive data.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    type: object
+                    properties:
+                      totalUsers:
+                        type: integer
+                      currentPage:
+                        type: integer
+                      totalPages:
+                        type: integer
+                      limit:
+                        type: integer
+                      hasNextPage:
+                        type: boolean
+              example:
+                users:
+                  - _id: 609d6c9b3f1d2b001f89f100
+                    username: john.doe
+                    email: john@example.com
+                    role: user
+                  - _id: 609d6c9b3f1d2b001f89f101
+                    username: jane.smith
+                    email: jane@example.com
+                    role: admin
+                pagination:
+                  totalUsers: 2
+                  currentPage: 1
+                  totalPages: 1
+                  limit: 10
+                  hasNextPage: false
+        '401':
+          description: Unauthorized - Authentication token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Forbidden - The authenticated user does not have admin privileges.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  '/admin/users/{userId}':
+    delete:
+      summary: Delete a user by their ID.
+      description: Deletes a user from the system using their unique user ID. This action requires authentication and admin privileges.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the user to delete.
+          example: 609d6c9b3f1d2b001f89f100
+      responses:
+        '200':
+          description: The user was successfully deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User newuser deleted successfully.
+        '401':
+          description: Unauthorized - Authentication token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: 'Forbidden - The authenticated user does not have sufficient permissions (e.g., not an admin).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: User Not Found - No user exists with the provided ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: User not found
+        '500':
+          description: Internal Server Error - An unexpected error occurred on the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  '/admin/users/{userId}/role':
+    patch:
+      summary: Update a user's role.
+      description: 'Updates the role of a specific user. This action requires authentication and admin privileges. Valid roles are ''user'', ''author'', ''admin''.'
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the user whose role is to be updated.
+          example: 609d6c9b3f1d2b001f89f100
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum:
+                    - user
+                    - author
+                    - admin
+                  description: The new role for the user.
+              required:
+                - role
+            example:
+              role: author
+      responses:
+        '200':
+          description: User's role updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User JohnD's role updated to author
+        '400':
+          description: Validation Error - Missing or invalid role provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                missingRole:
+                  summary: Role not provided
+                  value:
+                    message: Role is required
+                invalidRole:
+                  summary: Invalid role value
+                  value:
+                    message: 'Invalid role. Valid roles are: user, author, admin.'
+        '401':
+          description: Unauthorized - Authentication token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: 'Forbidden - The authenticated user does not have sufficient permissions (e.g., not an admin).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: User Not Found - No user exists with the provided ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: User not found
+        '500':
+          description: Internal Server Error - An unexpected error occurred on the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /users/register:
+    post:
+      summary: Register a new user.
+      description: Creates a new user account in the system given the user's credentials.
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The desired username.
+                email:
+                  type: string
+                  format: email
+                  description: The user's email address.
+                password:
+                  type: string
+                  format: password
+                  description: The user's password.
+                  minLength: 8
+            example:
+              username: newuser
+              email: newuser@example.com
+              password: StrongPassword123!
+      responses:
+        '201':
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/BaseUser'
+              example:
+                _id: 60a6b9d4f1e9a21e4cfa1234
+                username: newuser
+                email: newuser@example.com
+                role: user
+        '400':
+          description: 'Validation Error - Missing fields, invalid format, or user already exists.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                missingFields:
+                  summary: Missing Fields
+                  value:
+                    message: All fields must be filled!
+                invalidEmail:
+                  summary: Invalid Email Format
+                  value:
+                    message: 'Registration failed: Invalid email!'
+                userExists:
+                  summary: User Already Exists
+                  value:
+                    message: Unable to register with the provided credentials
+                internalError:
+                  summary: Internal Registration Error
+                  value:
+                    message: An error occured during user registration!
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/Error'
+  /users/login:
+    post:
+      summary: Log in a user.
+      description: Authenticates a user and issues access and refresh tokens.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The user's email address.
+                password:
+                  type: string
+                  format: password
+                  description: The user's password.
+                  minLength: 8
+            example:
+              email: existinguser@example.com
+              password: CorrectPassword123!
+      responses:
+        '200':
+          description: User logged in successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  username:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  role:
+                    type: string
+                    enum:
+                      - user
+                      - author
+                      - admin
+                  token:
+                    type: string
+                    description: The JWT access token.
+              example:
+                _id: 60a6b9d4f1e9a21e4cfa1234
+                username: existinguser
+                email: existinguser@example.com
+                role: user
+                token: eyJhbGciOiJIUzI1NiI...
+        '400':
+          description: Validation Error - Missing fields or invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                missingFields:
+                  summary: Missing Fields
+                  value:
+                    message: All fields must be filled!
+                invalidEmail:
+                  summary: Invalid Email Format
+                  value:
+                    message: 'Login failed: Invalid email!'
+        '401':
+          description: Unauthorized - Invalid credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/Error'
+              example:
+                message: Invalid credentials
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/Error'
+  /users/current:
+    get:
+      summary: Get current authenticated user.
+      description: Retrieves the profile information of the currently authenticated user.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved current user's profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/BaseUser'
+              example:
+                _id: 60a6b9d4f1e9a21e4cfa1234
+                username: loggedInUser
+                email: loggedin@example.com
+                role: user
+                createdAt: '2024-01-01T10:00:00Z'
+                updatedAt: '2024-01-01T10:00:00Z'
+        '401':
+          description: Unauthorized - Authentication token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: 'Not authorized: no token'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/Error'
+  /users/refresh-token:
+    post:
+      summary: Log out a user.
+      description: 'Invalidates the user''s refresh token and clears the refresh token cookie, effectively logging the user out.'
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User logged out successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /users/logout:
+    post:
+      summary: Refresh access token.
+      description: Obtains a new access token using a valid refresh token stored in cookies.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: New access token successfully issued.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    description: The newly issued JWT access token.
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiI.newly_generated_token...
+        '401':
+          description: Unauthorized - Refresh token not provided in cookies.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Refresh token not provided
+        '403':
+          description: Forbidden - Invalid or expired refresh token.
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/Error'
+              examples:
+                invalidUser:
+                  summary: User not found for token
+                  value:
+                    message: Invalid refresh token
+                tokenMismatch:
+                  summary: Token mismatch in DB
+                  value:
+                    message: Invalid refresh token
+                expiredToken:
+                  summary: Expired token
+                  value:
+                    message: Invalid or expired refresh token
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/Error'
+  /posts:
+    post:
+      summary: Create a new blog post.
+      description: Creates a new blog post. Requires authentication. Creating your first post automatically promotes your role from user to author.
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                  description: The title of the post.
+                  maxLength: 100
+                content:
+                  type: string
+                  description: The content of the post.
+                  maxLength: 5000
+                tags:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 30
+                  maxItems: 5
+                  description: 'Optional list of tags (max 5, each max 30 chars).'
+            example:
+              title: My New Blog Post
+              content: This is the exciting content of my new post.
+              tags:
+                - javascript
+                - node
+      responses:
+        '201':
+          description: Post created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  createdPost:
+                    $ref: '#/components/schemas/Post'
+        '401':
+          description: Unauthorized - Authentication token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Forbidden - User does not have the required role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: 'Unprocessable Entity - Validation failed (missing fields, length exceeded, invalid tags).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                emptyFields:
+                  summary: Empty title or content
+                  value:
+                    message: Title and content must not be empty.
+                titleTooLong:
+                  summary: Title exceeds 100 characters
+                  value:
+                    message: Title must be under 100 characters.
+                tooManyTags:
+                  summary: Too many tags
+                  value:
+                    message: A post can have at most 5 tags.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    get:
+      summary: Get all paginated posts.
+      description: 'Retrieve a paginated list of all blog posts. Supports full-text search, filtering by author or tag, and sorting. Cached results are returned for unfiltered requests.'
+      tags:
+        - Posts
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Number of posts per page.
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Full-text search query against post titles and content.
+          example: javascript tips
+        - name: author
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter posts by author username.
+          example: johndoe
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter posts by a single tag.
+          example: node
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - latest
+              - oldest
+            default: latest
+          description: Sort order for posts.
+      responses:
+        '200':
+          description: A paginated list of posts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  allPosts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+                  page:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  totalPosts:
+                    type: integer
+              example:
+                allPosts:
+                  - _id: 60a6b9d4f1e9a21e4cfa1234
+                    title: Example Post Title
+                    content: This is some content for the example post.
+                    author_id: 609d6c9b3f1d2b001f89f100
+                    tags:
+                      - javascript
+                      - node
+                    createdAt: '2024-06-25T10:20:30Z'
+                    updatedAt: '2024-06-25T10:20:30Z'
+                page: 1
+                totalPages: 5
+                totalPosts: 50
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  '/posts/user/{username}':
+    get:
+      summary: Get all posts by a specific user.
+      description: Retrieve a paginated list of blog posts authored by a given username.
+      tags:
+        - Posts
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The username of the author.
+          example: john.doe
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: The page number for pagination.
+      responses:
+        '200':
+          description: A paginated list of posts by the specified user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userPosts:
+                    type: array
+                    items:
+                      $ref: '#components/schemas/Post'
+                  page:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  totalPosts:
+                    type: integer
+              example:
+                userPosts:
+                  - _id: 60a6b9d4f1e9a21e4cfa1234
+                    title: John's First Post
+                    content: Content by John.
+                    author_id: 609d6c9b3f1d2b001f89f100
+                    createdAt: '2024-06-25T10:20:30Z'
+                    updatedAt: '2024-06-25T10:20:30Z'
+                page: 1
+                totalPages: 2
+                totalPosts: 15
+        '400':
+          description: Validation Error - Missing or invalid username.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Username must be provided.
+        '404':
+          description: User Not Found - The specified username does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: User does not exist.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  '/posts/{postId}':
+    patch:
+      summary: Update an existing blog post.
+      description: Allows an authenticated author or admin to update a blog post. Only the post owner or an admin can edit.
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the post to update.
+          example: 60a6b9d4f1e9a21e4cfa1234
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                  description: The new title for the post.
+                  maxLength: 100
+                content:
+                  type: string
+                  description: The new content for the post.
+                  maxLength: 5000
+                tags:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 30
+                  maxItems: 5
+                  description: Replaces the post's tags. Omit to leave tags unchanged.
+            example:
+              title: My Updated Blog Post Title
+              content: This is the updated content for my post.
+              tags:
+                - typescript
+      responses:
+        '200':
+          description: Post updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  postDB:
+                    $ref: '#/components/schemas/Post'
+        '401':
+          description: Unauthorized - Authentication token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Forbidden - User is not the post owner or an admin.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Post Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Unprocessable Entity - Validation failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                emptyContent:
+                  summary: Empty title or content
+                  value:
+                    message: Title and content must not be empty.
+                titleTooLong:
+                  summary: Title exceeds 100 characters
+                  value:
+                    message: Title must be under 100 characters.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      summary: Delete a blog post.
+      description: Allows an authenticated author or admin to delete their own blog post.
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the post to delete.
+          example: 60a6b9d4f1e9a21e4cfa1234
+      responses:
+        '200':
+          description: Post deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Post deleted successfully.
+        '401':
+          description: Unauthorized - Authentication token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Forbidden - User is not the author or an admin.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: You do not have permission to delete this post.
+        '404':
+          description: Post Not Found - The specified post ID does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Post not found.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  '/posts/comment/{postId}':
+    post:
+      summary: Add a comment to a post.
+      description: Allows an authenticated user to add a comment to a specific blog post.
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the post to comment on.
+          example: 60a6b9d4f1e9a21e4cfa1234
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  description: The content of the comment.
+                  maxLength: 500
+              required:
+                - comment
+            example:
+              comment: This is a great post!
+      responses:
+        '200':
+          description: Comment added successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Comment added successfully.
+        '400':
+          description: Validation Error - Comment is empty or exceeds character limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                emptyComment:
+                  summary: Empty comment
+                  value:
+                    message: Comment must be a non-empty string.
+                commentTooLong:
+                  summary: Comment too long
+                  value:
+                    message: Comment exceeds 500 characters.
+        '401':
+          description: Unauthorized - Authentication required to comment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Authentication required to comment on a post.
+        '404':
+          description: Post Not Found - The specified post ID does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Post not found.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  '/posts/comments/{postId}':
+    get:
+      summary: Get all comments for a specific post.
+      description: Retrieves a paginated list of comments associated with a given post ID.
+      tags:
+        - Posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the post to retrieve comments for.
+          example: 60a6b9d4f1e9a21e4cfa1234
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Number of comments per page.
+      responses:
+        '200':
+          description: A paginated list of comments for the specified post.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  postId:
+                    type: string
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+                  page:
+                    type: integer
+                  totalPages:
+                    type: integer
+              example:
+                postId: 60a6b9d4f1e9a21e4cfa1234
+                page: 1
+                totalPages: 2
+                comments:
+                  - _id: 64a5f10eaa1234567890abc1
+                    content: Great post!
+                    user_id:
+                      _id: 609d6c9b3f1d2b001f89f100
+                      username: johndoe
+                    createdAt: '2025-06-24T10:00:00.000Z'
+                    updatedAt: '2025-06-24T10:00:00Z'
+        '404':
+          description: Post Not Found - The specified post ID does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Post not found.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  '/posts/like/{postId}':
+    post:
+      summary: Like or unlike a post.
+      description: 'Toggles a like for a post by an authenticated user. If the user has already liked the post, it will be unliked; otherwise, it will be liked.'
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the post to like/unlike.
+          example: 60a6b9d4f1e9a21e4cfa1234
+      responses:
+        '200':
+          description: Post liked or unliked successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    enum:
+                      - Post liked.
+                      - Post unliked.
+              examples:
+                liked:
+                  summary: Post liked
+                  value:
+                    message: Post liked.
+                unliked:
+                  summary: Post unliked
+                  value:
+                    message: Post unliked.
+        '401':
+          description: Unauthorized - Authentication required to like/unlike a post.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Authentication required to like a post.
+        '404':
+          description: Post Not Found - The specified post ID does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Post not found.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  '/posts/likes/{postId}':
+    get:
+      summary: Get all likes for a specific post.
+      description: Retrieves a paginated list of like records and totals for a given post ID.
+      tags:
+        - Posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the post to retrieve likes for.
+          example: 60a6b9d4f1e9a21e4cfa1234
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+          description: Number of likes per page.
+      responses:
+        '200':
+          description: A paginated list of likes for the specified post.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  postId:
+                    type: string
+                  likesCount:
+                    type: integer
+                  page:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  likes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Like'
+              example:
+                postId: 60a6b9d4f1e9a21e4cfa1234
+                likesCount: 3
+                page: 1
+                totalPages: 1
+                likes:
+                  - _id: 60a6b9d4f1e9a21e4cfa1235
+                    post_id: 60a6b9d4f1e9a21e4cfa1234
+                    user_id: 609d6c9b3f1d2b001f89f100
+                    createdAt: '2024-06-25T10:25:00Z'
+                  - _id: 60a6b9d4f1e9a21e4cfa1236
+                    post_id: 60a6b9d4f1e9a21e4cfa1234
+                    user_id: 609d6c9b3f1d2b001f89f101
+                    createdAt: '2024-06-25T10:26:00Z'
+        '404':
+          description: Post Not Found - The specified post ID does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                message: Post not found.
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        username:
+          type: string
+          description: The user's chosen username.
+        email:
+          type: string
+          format: email
+          description: The user's email address.
+        role:
+          type: string
+          enum:
+            - user
+            - author
+            - admin
+          description: The role assigned to the user.
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp when the user account was created.
+        updatedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the user account was last updated.
+    Post:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: The unique identifier of the post.
+        title:
+          type: string
+          description: The title of the blog post.
+        content:
+          type: string
+          description: The main content of the blog post.
+        author_id:
+          type: string
+          description: The ID of the user who authored the post.
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp when the post was created.
+        tags:
+          type: array
+          items:
+            type: string
+          description: A list of tags associated with the post.
+          example:
+            - javascript
+            - node
+        updatedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the post was last updated.
+    Like:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: The unique identifier of the like.
+        post_id:
+          type: string
+          description: The ID of the post that was liked.
+        user_id:
+          type: string
+          description: The ID of the user who liked the post.
+    Comment:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: The unique identifier of the comment.
+        content:
+          type: string
+          description: The content of the comment.
+        post_id:
+          type: string
+          description: The ID of the post the comment belongs to.
+        user_id:
+          type: string
+          description: The ID of the user who made the comment.
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp when the comment was created.
+        updatedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the comment was last updated.
+    SuccessEnvelope:
+      type: object
+      description: Standard success wrapper used by every endpoint for successful responses.
+      properties:
+        success:
+          type: boolean
+          description: Shows that a response was successful.
+          example: true
+        message:
+          type: string
+          description: Explains what action caused a successful response.
+          example: Post created successfully
+        data:
+          type: any
+          description: The data object returned after a requirements.
+          example:
+            - UserData1...: null
+            - UserData2...: null
+            - UserData3...: null
+      required:
+        - success
+        - message
+    ErrorEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+          description: Informs the recipient that the request failed.
+        message:
+          type: string
+          example: Invalid request payload
+          description: A descriptive message detailing what occured to cause the error.
+        error:
+          type: object
+          description: An object containing addtitional information about the error.
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+              description: A code used to identify the error.
+            details:
+              type: string
+              example: Username field is required
+              description: Addittional details to explain what caused the error.
+        stackTrace:
+          type: string
+          description: Only included in development mode.
+          example: 'Error: Username required at users/user-service.js:22:15'
+      required:
+        - success
+        - message
+        - error
