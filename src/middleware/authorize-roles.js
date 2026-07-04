@@ -11,7 +11,7 @@ const { StatusCodes } = require("http-status-codes");
  * @returns A function that checks if a user is authorized to access a route.
  */
 const authorizeRoles = (...allowedRoles) => {
-	return expressAsyncHandler((request, response, next) => {
+	return expressAsyncHandler((request, _response, next) => {
 		const user = request.user;
 		if (!user || !allowedRoles.includes(user.role)) {
 			logger.warn(

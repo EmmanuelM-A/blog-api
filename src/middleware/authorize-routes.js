@@ -3,17 +3,16 @@ const logger = require("../utils/logger");
 const ApiError = require("../utils/api-error");
 const expressAsyncHandler = require("express-async-handler");
 const { StatusCodes } = require("http-status-codes");
-const { findUserById } = require("../database/models/user-model");
 const User = require("../database/schemas/user-schema");
 const { settings } = require("../config/configs");
 
 /**
  * Checks if a request has a valid authorization header and verifies its value (the acess token).
  */
-const authRouteProtection = expressAsyncHandler(async (request, response, next) => {
+const authRouteProtection = expressAsyncHandler(async (request, _response, next) => {
 	let token;
 
-	if (request.headers.authorization && request.headers.authorization.startsWith("Bearer")) {
+	if (request.headers.authorization?.startsWith("Bearer")) {
 		try {
 			// Extract token
 			token = request.headers.authorization.split(" ")[1];

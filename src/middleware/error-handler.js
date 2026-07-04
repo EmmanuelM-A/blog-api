@@ -1,7 +1,6 @@
 const { sendErrorResponse } = require("../utils/helpers");
 const logger = require("../utils/logger");
 const { StatusCodes } = require("http-status-codes");
-const express = import("express");
 const { settings } = require("../config/configs");
 
 /**
@@ -72,7 +71,7 @@ const errorHandler = (error, request, response, next) => {
 		COMMON_ERRORS_MAP[statusCode] || COMMON_ERRORS_MAP[StatusCodes.INTERNAL_SERVER_ERROR];
 
 	// Build the response body
-	let responseBody = {
+	const responseBody = {
 		message: error.message || errorDetails.message, // Prioritize error.message if available
 		error: {
 			code: error.code || errorDetails.code,

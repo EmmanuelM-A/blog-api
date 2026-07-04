@@ -1,5 +1,4 @@
 const validator = require("validator");
-const { body } = require("express-validator");
 const restrictedUsernames = require("../users/restricted-usernames.json");
 const { constants } = require("../../config");
 

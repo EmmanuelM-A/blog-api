@@ -1,4 +1,4 @@
-const os = require("os");
+const os = require("node:os");
 const mongoose = require("mongoose");
 const ApiError = require("../../utils/api-error");
 const { StatusCodes } = require("http-status-codes");

@@ -3,13 +3,9 @@ const logger = require("../../utils/logger");
 const { findPostById } = require("../../database/models/post-model");
 const {
 	createComment,
-	findComments,
 	findCommentById,
 	deleteCommentById,
 	updateComment,
-	findCommentByCriteria,
-	deleteCommentsByCriteria,
-	countComments,
 } = require("../../database/models/comment-model");
 const ApiError = require("../../utils/api-error");
 const { constants } = require("../../config");
@@ -108,7 +104,7 @@ async function commentOnPostService(postId, userId, commentContent) {
  */
 async function getCommentsForPostService(postId, options = {}) {
 	const page = parseInt(options.page, 10) || 1;
-	const rawLimit = parseInt(options.limit);
+	const rawLimit = parseInt(options.limit, 10);
 	const limit =
 		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
 
