@@ -1,7 +1,7 @@
 const express = require("express");
 const errorHandler = require("./middleware/error-handler");
 const cookieParser = require("cookie-parser");
-const limiter = require("./middleware/api-rate-limiter");
+const { limiter } = require("./middleware/api-rate-limiter");
 const helmet = require("helmet");
 const cors = require("cors");
 const { settings } = require("./config/configs");
