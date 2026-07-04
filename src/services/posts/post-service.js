@@ -4,6 +4,7 @@ const { clearCacheForKey } = require("../../services/caching/cache-utils");
 const ApiError = require("../../utils/api-error");
 const logger = require("../../utils/logger");
 const { constants } = require("../../config");
+const { settings } = require("../../config/configs");
 const { validateUsername } = require("../validation/input-validator");
 const redisClient = require("../caching/redis-client");
 const { updateUserDetail, findUserByCriteria } = require("../../database/models/user-model");
@@ -16,8 +17,8 @@ async function getAllPostsService(options) {
     const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : constants.POSTS_PER_PAGE_LIMIT;
     const skip = (page - 1) * limit;
 
-    const { q, author, sort } = options;
-    const isFiltered = q || author || sort;
+    const { q, author, sort, tag } = options;
+    const isFiltered = q || author || sort || tag;
     const sortOrder = sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
 
     // Filtered queries bypass cache — too many possible combinations to cache sensibly
@@ -81,6 +82,10 @@ async function getAllPostsService(options) {
         }
 
         query.author_id = authorDB._id;
+    }
+
+    if (tag) {
+        query.tags = tag.toLowerCase();
     }
 
     const [allPosts, total] = await Promise.all([
@@ -183,6 +188,32 @@ async function getAllPostsByUserService(username, options) {
     return responseData;
 }
 
+function validateTags(tags) {
+    if (!Array.isArray(tags)) {
+        throw new ApiError("Tags must be an array.", StatusCodes.UNPROCESSABLE_ENTITY, "INVALID_TAGS_TYPE");
+    }
+    if (tags.length > settings.app.MAX_TAGS_PER_POST) {
+        throw new ApiError(
+            `A post can have at most ${settings.app.MAX_TAGS_PER_POST} tags.`,
+            StatusCodes.UNPROCESSABLE_ENTITY,
+            "TOO_MANY_TAGS"
+        );
+    }
+    for (const tag of tags) {
+        if (typeof tag !== "string" || !tag.trim()) {
+            throw new ApiError("Each tag must be a non-empty string.", StatusCodes.UNPROCESSABLE_ENTITY, "INVALID_TAG");
+        }
+        if (tag.trim().length > settings.app.MAX_TAG_LENGTH) {
+            throw new ApiError(
+                `Each tag must be under ${settings.app.MAX_TAG_LENGTH} characters.`,
+                StatusCodes.UNPROCESSABLE_ENTITY,
+                "TAG_TOO_LONG"
+            );
+        }
+    }
+    return tags.map(t => t.trim().toLowerCase());
+}
+
 async function createPostService(userDB, postContent) {
     // Extract title and content from the request body
     const { title, content } = postContent;
@@ -262,11 +293,14 @@ async function createPostService(userDB, postContent) {
     // Log the creation attempt
     logger.debug(`Post creation attempt by the user: ${userId}`);
 
+    const tags = postContent.tags !== undefined ? validateTags(postContent.tags) : [];
+
     // Create and save the new post document
     const post = await createPost({
         title: trimmedTitle,
         content: trimmedContent,
         author_id: userId,
+        tags,
     });
 
     return post;
@@ -357,6 +391,9 @@ async function editPostService(user, postId, newContent) {
 
     postDB.title = trimmedTitle;
     postDB.content = trimmedContent;
+    if (newContent.tags !== undefined) {
+        postDB.tags = validateTags(newContent.tags);
+    }
     await postDB.save();
 
     return postDB;

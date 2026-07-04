@@ -21,6 +21,8 @@ const settings = {
 		MAX_TITLE_LENGTH: 100, // In chars
 		MAX_CONTENT_LENGTH: 5000, // In chars
 		MAX_COMMENT_LENGTH: 500, // In chars
+		MAX_TAG_LENGTH: 30, // In chars
+		MAX_TAGS_PER_POST: 5,
 	},
 
 	logging: {

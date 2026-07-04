@@ -3,7 +3,6 @@ const logger = require("../../../utils/logger");
 const { sendSuccessResponse } = require("../../../utils/helpers");
 const { deletePostService, editPostService, getAllPostsByUserService, createPostService, getAllPostsService } = require("../../../services/posts/post-service");
 const { StatusCodes } = require("http-status-codes");
-const { countPostsByCriteria, findPostByCriteria, findPosts } = require("../../../database/models/post-model");
 
 
 /**
@@ -93,9 +92,9 @@ const createPost = expressAsyncHandler(async (request, response) => {
  * }
  */
 const getAllPosts = expressAsyncHandler(async (request, response) => {
-    const { page, limit, q, author, sort } = request.query;
+    const { page, limit, q, author, sort, tag } = request.query;
 
-    const responseData = await getAllPostsService({ page, limit, q, author, sort });
+    const responseData = await getAllPostsService({ page, limit, q, author, sort, tag });
 
     if(typeof responseData !== "object") {
         return sendSuccessResponse(
