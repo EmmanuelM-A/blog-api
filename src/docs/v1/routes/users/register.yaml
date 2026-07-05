@@ -35,7 +35,7 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/BaseUser'
+          $ref: '../../components/schemas/User.yaml'
         example:
           _id: "60a6b9d4f1e9a21e4cfa1234"
           username: "newuser"
@@ -69,4 +69,4 @@ responses:
     content:
       application/json:
         schema:
-          $ref: '#components/schemas/Error'
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
