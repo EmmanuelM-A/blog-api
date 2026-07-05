@@ -15,7 +15,6 @@ const settings = {
 	app: {
 		ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
 		REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
-		SERVICE_URL: process.env.SERVICE_URL,
 
 		// Logic configs
 		POSTS_PER_PAGE: 10,

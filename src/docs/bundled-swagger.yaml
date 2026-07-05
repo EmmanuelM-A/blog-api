@@ -354,7 +354,7 @@ paths:
       summary: Register a new user.
       description: Creates a new user account in the system given the user's credentials.
       tags:
-        - User
+        - Users
       requestBody:
         required: true
         content:
