@@ -1,5 +1,9 @@
 const express = require("express");
-const { serverHealthCheck, databaseHealthCheck, redisHealthCheck } = require("../controllers/health-check-controller");
+const {
+	serverHealthCheck,
+	databaseHealthCheck,
+	redisHealthCheck,
+} = require("../controllers/health-check-controller");
 const router = express.Router();
 
 // Public health endpoints

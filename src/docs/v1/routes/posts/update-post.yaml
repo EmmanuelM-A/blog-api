@@ -1,6 +1,6 @@
 
 summary: Update an existing blog post.
-description: Allows an authenticated author or admin to update their own blog post.
+description: Allows an authenticated author or admin to update a blog post. Only the post owner or an admin can edit.
 tags: [Posts]
 security:
   - bearerAuth: []
@@ -18,21 +18,29 @@ requestBody:
     application/json:
       schema:
         type: object
+        required:
+          - title
+          - content
         properties:
           title:
             type: string
             description: The new title for the post.
-            maxLength: 255
+            maxLength: 100
           content:
             type: string
             description: The new content for the post.
             maxLength: 5000
-        required:
-          - title
-          - content
+          tags:
+            type: array
+            items:
+              type: string
+              maxLength: 30
+            maxItems: 5
+            description: Replaces the post's tags. Omit to leave tags unchanged.
       example:
         title: "My Updated Blog Post Title"
         content: "This is the updated content for my post."
+        tags: ["typescript"]
 responses:
   200:
     description: Post updated successfully.
@@ -41,26 +49,8 @@ responses:
         schema:
           type: object
           properties:
-            message:
-              type: string
-              example: "Post updated successfully."
-            post:
-              $ref: '#components/schemas/Post'
-  400:
-    description: Validation Error - Invalid input (e.g., empty title/content, length limits exceeded).
-    content:
-      application/json:
-        schema:
-          $ref: '../../components/schemas/ErrorEnvelope.yaml'
-        examples:
-          emptyContent:
-            summary: Empty content
-            value:
-              message: "Title and content must not be empty."
-          titleTooLong:
-            summary: Title too long
-            value:
-              message: "Title must be under 255 characters."
+            postDB:
+              $ref: '../../components/schemas/Post.yaml'
   401:
     description: Unauthorized - Authentication token is missing or invalid.
     content:
@@ -68,25 +58,35 @@ responses:
         schema:
           $ref: '../../components/schemas/ErrorEnvelope.yaml'
   403:
-    description: Forbidden - User is not the author or an admin.
+    description: Forbidden - User is not the post owner or an admin.
     content:
       application/json:
         schema:
           $ref: '../../components/schemas/ErrorEnvelope.yaml'
-        example:
-          message: "You do not have permission to edit this post."
   404:
-    description: Post Not Found - The specified post ID does not exist.
+    description: Post Not Found.
     content:
       application/json:
         schema:
           $ref: '../../components/schemas/ErrorEnvelope.yaml'
-        example:
-          message: "Post not found."
+  422:
+    description: Unprocessable Entity - Validation failed.
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/ErrorEnvelope.yaml'
+        examples:
+          emptyContent:
+            summary: Empty title or content
+            value:
+              message: "Title and content must not be empty."
+          titleTooLong:
+            summary: Title exceeds 100 characters
+            value:
+              message: "Title must be under 100 characters."
   500:
     description: Internal Server Error.
     content:
       application/json:
         schema:
           $ref: '../../components/schemas/ErrorEnvelope.yaml'
-  

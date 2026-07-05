@@ -1,220 +1,97 @@
-const { status } = require("../../utils/status"); // Adjust path as needed
-const Post = require("../../models/post-schema"); // Adjust path as needed
-const Like = require("../../models/like-schema"); // Adjust path as needed
-const ApiError = require("../../utils/ApiError"); // Adjust path as needed
-const { sendSuccessResponse } = require("../../utils/helpers"); // Adjust path as needed
-const { likePost, getLikesForPost } = require("../../controllers/like-controller"); // Adjust path as needed
+const { likePost, getLikesForPost } = require('../../src/api/v1/controllers/like-controller');
+const { toggleLikeService, getLikesForPostService } = require('../../src/services/likes/like-service');
+const { StatusCodes } = require('http-status-codes');
+const ApiError = require('../../src/utils/api-error');
 
-// Mock logger to prevent console output during tests
-jest.mock("../../utils/logger", () => ({
+jest.mock('../../src/services/likes/like-service');
+jest.mock('../../src/utils/logger', () => ({
     info: jest.fn(),
+    error: jest.fn(),
     warn: jest.fn(),
+    debug: jest.fn()
 }));
 
-// Mock sendSuccessResponse
-jest.mock("../../utils/helpers", () => ({
-    sendSuccessResponse: jest.fn(),
-}));
-
-// Mock Post and Like models
-jest.mock("../../models/post-schema", () => ({
-    findById: jest.fn(),
-}));
-
-jest.mock("../../models/like-schema", () => ({
-    findOne: jest.fn(),
-    create: jest.fn(),
-    find: jest.fn(), // Added for getLikesForPost
-}));
-
-// Mock ApiError
-jest.mock("../../utils/ApiError");
-
-describe('Like Controller Tests', () => {
-    let mockRequest;
-    let mockResponse;
-    let next;
+describe('Like Controller', () => {
+    let req, res, next;
 
     beforeEach(() => {
-        jest.clearAllMocks();
-        mockResponse = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn(),
+        req = {
+            params: { postId: 'post-123' },
+            user: { id: 'user-456' },
+            query: {}
         };
-        mockRequest = {
-            params: {},
-            user: {
-                id: 'mockUserId456'
-            }, // Default user for authenticated requests
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
         };
         next = jest.fn();
+        jest.clearAllMocks();
     });
 
-    // --- Tests for likePost ---
     describe('likePost', () => {
-        it('should like a post for the first time and return 200 with "Post liked." message', async () => {
-            mockRequest.params.postId = 'mockPostId123';
+        it('should respond with 200 and "liked" message when a post is liked', async () => {
+            toggleLikeService.mockResolvedValue('liked');
 
-            Post.findById.mockResolvedValue({
-                _id: 'mockPostId123'
-            });
+            await likePost(req, res, next);
 
-            Like.findOne.mockResolvedValue(null); // No existing like
-            Like.create.mockResolvedValue({
-                _id: 'newLikeId',
-                post_id: 'mockPostId123',
-                user_id: 'mockUserId456'
+            expect(toggleLikeService).toHaveBeenCalledWith('post-123', 'user-456');
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Post liked!'
             });
-
-            await likePost(mockRequest, mockResponse, next);
-
-            expect(Post.findById).toHaveBeenCalledWith('mockPostId123');
-            expect(Like.findOne).toHaveBeenCalledWith({
-                post_id: 'mockPostId123',
-                user_id: 'mockUserId456'
-            });
-            expect(Like.create).toHaveBeenCalledWith({
-                post_id: 'mockPostId123',
-                user_id: 'mockUserId456'
-            });
-            expect(sendSuccessResponse).toHaveBeenCalledWith(
-                mockResponse,
-                status.OK,
-                "Post liked."
-            );
         });
 
-        it('should unlike an already liked post and return 200 with "Post unliked." message', async () => {
-            mockRequest.params.postId = 'mockPostId123';
+        it('should respond with 200 and "unliked" message when a post is unliked', async () => {
+            toggleLikeService.mockResolvedValue('unliked');
 
-            Post.findById.mockResolvedValue({
-                _id: 'mockPostId123',
-                title: 'Test Post'
+            await likePost(req, res, next);
+
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Post unliked!'
             });
-            const mockExistingLike = {
-                _id: 'existingLikeId',
-                post_id: 'mockPostId123',
-                user_id: 'mockUserId456',
-                deleteOne: jest.fn().mockResolvedValue(true),
-            };
-            Like.findOne.mockResolvedValue(mockExistingLike);
-
-            await likePost(mockRequest, mockResponse, next);
-
-            expect(Post.findById).toHaveBeenCalledWith('mockPostId123');
-            expect(Like.findOne).toHaveBeenCalledWith({
-                post_id: 'mockPostId123',
-                user_id: 'mockUserId456'
-            });
-            expect(mockExistingLike.deleteOne).toHaveBeenCalledTimes(1);
-            expect(Like.create).not.toHaveBeenCalled(); // Ensure create is not called
-            expect(sendSuccessResponse).toHaveBeenCalledWith(
-                mockResponse,
-                status.OK,
-                "Post unliked."
-            );
         });
 
-        it('should throw ApiError with status 404 if post is not found for like/unlike', async () => {
-            mockRequest.params.postId = 'nonExistentPost';
-            Post.findById.mockResolvedValue(null); // Post not found
+        it('should pass a 404 error to next if the post is not found', async () => {
+            const error = new ApiError('Post not found', StatusCodes.NOT_FOUND, 'POST_NOT_FOUND');
+            toggleLikeService.mockRejectedValue(error);
 
-            await likePost(mockRequest, mockResponse, next); // Call the function
+            await likePost(req, res, next);
 
-            expect(next).toHaveBeenCalledTimes(1); // Expect next to be called once
-            const errorPassedToNext = next.mock.calls[0][0]; // Get the error passed to next
-
-            expect(errorPassedToNext).toBeInstanceOf(ApiError); // Ensure it's an ApiError instance
-            expect(errorPassedToNext.message).toBe(``);
-            expect(errorPassedToNext.statusCode).toBe(status.NOT_FOUND);
-            expect(errorPassedToNext.code).toBe("POST_NOT_FOUND");
-
-            expect(sendSuccessResponse).not.toHaveBeenCalled();
-            expect(Like.findOne).not.toHaveBeenCalled();
-            expect(Like.create).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
         });
     });
 
-    // --- Tests for getLikesForPost ---
     describe('getLikesForPost', () => {
-        it('should return likes for a post and return 200 with correct data', async () => {
-            const postId = 'mockPostId789';
-            mockRequest.params.postId = postId;
+        it('should respond with 200 and paginated likes data', async () => {
+            const mockLikesData = {
+                likes: [{ _id: 'like1', user_id: 'user-456' }],
+                likesCount: 1,
+                page: 1,
+                totalPages: 1
+            };
+            getLikesForPostService.mockResolvedValue(mockLikesData);
 
-            const mockLikes = [{
-                _id: 'like1',
-                post_id: postId,
-                user_id: 'userA'
-            }, {
-                _id: 'like2',
-                post_id: postId,
-                user_id: 'userB'
-            }, ];
+            await getLikesForPost(req, res, next);
 
-            Post.findById.mockResolvedValue({
-                _id: postId,
-                title: 'Another Post'
+            expect(getLikesForPostService).toHaveBeenCalledWith('post-123', { page: undefined, limit: undefined });
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Likes fetched successfully!',
+                data: { postId: 'post-123', ...mockLikesData }
             });
-            Like.find.mockResolvedValue(mockLikes);
-
-            await getLikesForPost(mockRequest, mockResponse, next);
-
-            expect(Post.findById).toHaveBeenCalledWith(postId);
-            expect(Like.find).toHaveBeenCalledWith({
-                post_id: postId
-            });
-            expect(sendSuccessResponse).toHaveBeenCalledWith(
-                mockResponse,
-                status.OK,
-                "Likes fetched successfully!", {
-                    postId,
-                    likesCount: mockLikes.length,
-                    likes: mockLikes,
-                }
-            );
         });
 
-        it('should return empty likes array if no likes exist for post', async () => {
-            const postId = 'mockPostId101';
-            mockRequest.params.postId = postId;
+        it('should pass a 404 error to next if the post is not found', async () => {
+            const error = new ApiError('Post not found', StatusCodes.NOT_FOUND, 'POST_NOT_FOUND');
+            getLikesForPostService.mockRejectedValue(error);
 
-            Post.findById.mockResolvedValue({
-                _id: postId,
-                title: 'Empty Likes Post'
-            });
-            Like.find.mockResolvedValue([]); // No likes found
+            await getLikesForPost(req, res, next);
 
-            await getLikesForPost(mockRequest, mockResponse, next);
-
-            expect(Post.findById).toHaveBeenCalledWith(postId);
-            expect(Like.find).toHaveBeenCalledWith({
-                post_id: postId
-            });
-            expect(sendSuccessResponse).toHaveBeenCalledWith(
-                mockResponse,
-                status.OK,
-                "Likes fetched successfully!", {
-                    postId,
-                    likesCount: 0,
-                    likes: [],
-                }
-            );
-        });
-
-        it('should throw ApiError with status 404 if post is not found for fetching likes', async () => {
-            const postId = 'nonExistentPostForLikes';
-            mockRequest.params.postId = postId;
-
-            Post.findById.mockResolvedValue(null); // Post not found
-
-            await expect(getLikesForPost(mockRequest, mockResponse, next)).rejects.toThrow(ApiError);
-            expect(ApiError).toHaveBeenCalledWith(
-                `Post with id ${postId} not found.`,
-                status.NOT_FOUND,
-                "POST_NOT_FOUND"
-            );
-            expect(sendSuccessResponse).not.toHaveBeenCalled();
-            expect(Like.find).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
         });
     });
 });

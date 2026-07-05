@@ -1,6 +1,6 @@
 
 summary: Create a new blog post.
-description: Creates a new blog post. Requires authentication (author or admin roles).
+description: Creates a new blog post. Requires authentication. Creating your first post automatically promotes your role from user to author.
 tags: [Posts]
 security:
   - bearerAuth: []
@@ -17,14 +17,22 @@ requestBody:
           title:
             type: string
             description: The title of the post.
-            maxLength: 255 # Example max length, adjust as per constants.MAX_POST_TITLE_LENGTH
+            maxLength: 100
           content:
             type: string
             description: The content of the post.
-            maxLength: 5000 # Example max length, adjust as per constants.MAX_POST_CONTENT_LENGTH
+            maxLength: 5000
+          tags:
+            type: array
+            items:
+              type: string
+              maxLength: 30
+            maxItems: 5
+            description: Optional list of tags (max 5, each max 30 chars).
       example:
         title: "My New Blog Post"
         content: "This is the exciting content of my new post."
+        tags: ["javascript", "node"]
 responses:
   201:
     description: Post created successfully.
@@ -33,23 +41,8 @@ responses:
         schema:
           type: object
           properties:
-            post:
-              $ref: '#components/schemas/Post'
-  400:
-    description: Validation Error - Missing or invalid input fields.
-    content:
-      application/json:
-        schema:
-          $ref: '../../components/schemas/ErrorEnvelope.yaml'
-        examples:
-          missingFields:
-            summary: Missing required fields
-            value:
-              message: "Title and content must not be empty."
-          invalidLength:
-            summary: Content/title too long
-            value:
-              message: "Content must be under 5000 characters."
+            createdPost:
+              $ref: '../../components/schemas/Post.yaml'
   401:
     description: Unauthorized - Authentication token is missing or invalid.
     content:
@@ -57,17 +50,30 @@ responses:
         schema:
           $ref: '../../components/schemas/ErrorEnvelope.yaml'
   403:
-    description: Forbidden - User does not have author or admin role.
+    description: Forbidden - User does not have the required role.
     content:
       application/json:
         schema:
           $ref: '../../components/schemas/ErrorEnvelope.yaml'
-  404:
-    description: User Not Found - Author ID associated with token not found.
+  422:
+    description: Unprocessable Entity - Validation failed (missing fields, length exceeded, invalid tags).
     content:
       application/json:
         schema:
           $ref: '../../components/schemas/ErrorEnvelope.yaml'
+        examples:
+          emptyFields:
+            summary: Empty title or content
+            value:
+              message: "Title and content must not be empty."
+          titleTooLong:
+            summary: Title exceeds 100 characters
+            value:
+              message: "Title must be under 100 characters."
+          tooManyTags:
+            summary: Too many tags
+            value:
+              message: "A post can have at most 5 tags."
   500:
     description: Internal Server Error.
     content:

@@ -1,14 +1,17 @@
 const logger = require("../../../utils/logger");
 const { sendSuccessResponse } = require("../../../utils/helpers");
-const { toggleLikeService, getLikesForPostService } = require("../../../services/likes/like-service");
+const {
+	toggleLikeService,
+	getLikesForPostService,
+} = require("../../../services/likes/like-service");
 const { StatusCodes } = require("http-status-codes");
 const expressAsyncHandler = require("express-async-handler");
 
 /**
  * Handles an HTTP POST request to like or unlike a post.
- * 
+ *
  * @route POST /api/posts/like/:postId
- * 
+ *
  * @access Private (Authenticated users only)
  *
  * @returns {Response} 200 - Returns success message indicating whether the post was liked or unliked.
@@ -16,20 +19,20 @@ const expressAsyncHandler = require("express-async-handler");
  *
  */
 const likePost = expressAsyncHandler(async (request, response) => {
-    // Extract postId from request parameters and user ID from the request object
-    const { postId } = request.params;
-    const userId = request.user?.id;
+	// Extract postId from request parameters and user ID from the request object
+	const { postId } = request.params;
+	const userId = request.user?.id;
 
-    const resultMsg = await toggleLikeService(postId, userId);
+	const resultMsg = await toggleLikeService(postId, userId);
 
-    sendSuccessResponse(response, StatusCodes.OK, `Post ${resultMsg}!`);
+	sendSuccessResponse(response, StatusCodes.OK, `Post ${resultMsg}!`);
 });
 
 /**
  * Handles an HTTP GET request to retrieve all likes associated with a specific post.
- * 
+ *
  * @route GET /api/posts/likes/:postId
- * 
+ *
  * @access Public
  *
  * @returns {Response} 200 - Returns the number of likes and like data for the specified post.
@@ -37,26 +40,20 @@ const likePost = expressAsyncHandler(async (request, response) => {
  *
  */
 const getLikesForPost = expressAsyncHandler(async (request, response) => {
-    // Extract postId from request parameters
-    const { postId } = request.params;
+	const { postId } = request.params;
+	const { page, limit } = request.query;
 
-    const { likesCount, likes } = await getLikesForPostService(postId);
+	const responseData = await getLikesForPostService(postId, { page, limit });
 
-    sendSuccessResponse(
-        response, 
-        StatusCodes.OK, 
-        "Likes fetched successfully!", 
-        {
-            postId,
-            likesCount,
-            likes
-        }
-    );
+	sendSuccessResponse(response, StatusCodes.OK, "Likes fetched successfully!", {
+		postId,
+		...responseData,
+	});
 
-    logger.info(`Fetched ${likesCount} likes for post: ${postId}`);
+	logger.info(`Fetched ${responseData.likesCount} likes for post: ${postId}`);
 });
 
 module.exports = {
-    likePost,
-    getLikesForPost
+	likePost,
+	getLikesForPost,
 };

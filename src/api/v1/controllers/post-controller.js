@@ -1,10 +1,14 @@
 const expressAsyncHandler = require("express-async-handler");
 const logger = require("../../../utils/logger");
 const { sendSuccessResponse } = require("../../../utils/helpers");
-const { deletePostService, editPostService, getAllPostsByUserService, createPostService, getAllPostsService } = require("../../../services/posts/post-service");
+const {
+	deletePostService,
+	editPostService,
+	getAllPostsByUserService,
+	createPostService,
+	getAllPostsService,
+} = require("../../../services/posts/post-service");
 const { StatusCodes } = require("http-status-codes");
-const { countPostsByCriteria, findPostByCriteria, findPosts } = require("../../../database/models/post-model");
-
 
 /**
  * @function createPost
@@ -17,7 +21,7 @@ const { countPostsByCriteria, findPostByCriteria, findPosts } = require("../../.
  * @route POST /api/posts
  * @access Private
  *
- * @param {import('express').Request} request - Express request object. 
+ * @param {import('express').Request} request - Express request object.
  *   Expects `title` and `content` in the JSON body, and `author_id` as a query parameter.
  * @param {import('express').Response} response - Express response object used to return the created post.
  *
@@ -49,21 +53,15 @@ const { countPostsByCriteria, findPostByCriteria, findPosts } = require("../../.
  * }
  */
 const createPost = expressAsyncHandler(async (request, response) => {
-    const createdPost = await createPostService(request.user, request.body);
+	const createdPost = await createPostService(request.user, request.body);
 
-    if(request.user.role !== "author") request.user.role = "author";
+	if (request.user.role !== "author") request.user.role = "author";
 
-    sendSuccessResponse(
-        response,
-        StatusCodes.CREATED,
-        "Post created successfully.",
-        { createdPost }
-    );
+	sendSuccessResponse(response, StatusCodes.CREATED, "Post created successfully.", { createdPost });
 
-    // Log success and respond with the created post object
-    logger.info(`New post created by user ${request.user.username} with ID: ${createdPost.id}`);
+	// Log success and respond with the created post object
+	logger.info(`New post created by user ${request.user.username} with ID: ${createdPost.id}`);
 });
-
 
 /**
  * @function getAllPosts
@@ -93,29 +91,21 @@ const createPost = expressAsyncHandler(async (request, response) => {
  * }
  */
 const getAllPosts = expressAsyncHandler(async (request, response) => {
-    // Parse query parameters
-    const page = request.query.page;
-    const limit = request.query.limit;
+	const { page, limit, q, author, sort, tag } = request.query;
 
-    const responseData = await getAllPostsService({ page, limit });
+	const responseData = await getAllPostsService({ page, limit, q, author, sort, tag });
 
-    if(typeof responseData !== "object") {
-        return sendSuccessResponse(
-            response,
-            StatusCodes.OK,
-            "Posts fetched successfully from cache.",
-            responseData
-        );
-    }
+	if (typeof responseData !== "object") {
+		return sendSuccessResponse(
+			response,
+			StatusCodes.OK,
+			"Posts fetched successfully from cache.",
+			responseData,
+		);
+	}
 
-    sendSuccessResponse(
-        response,
-        StatusCodes.OK,
-        "Posts fetched successfully.",
-        responseData
-    );
+	sendSuccessResponse(response, StatusCodes.OK, "Posts fetched successfully.", responseData);
 });
-
 
 /**
  * @function getAllPostsByUser
@@ -130,18 +120,18 @@ const getAllPosts = expressAsyncHandler(async (request, response) => {
  * @param {import('express').Response} response - Express response object
  */
 const getAllPostsByUser = expressAsyncHandler(async (request, response) => {
-    const { username } = request.params;
-    const page = request.query.page;
-    const limit = request.query.limit;
+	const { username } = request.params;
+	const page = request.query.page;
+	const limit = request.query.limit;
 
-    const responseData = await getAllPostsByUserService(username, { page, limit});
+	const responseData = await getAllPostsByUserService(username, { page, limit });
 
-    sendSuccessResponse(
-        response,
-        StatusCodes.OK,
-        `Posts for user ${username} on page ${page} fetched successfully!`,
-        responseData
-    );
+	sendSuccessResponse(
+		response,
+		StatusCodes.OK,
+		`Posts for user ${username} on page ${page} fetched successfully!`,
+		responseData,
+	);
 });
 
 /**
@@ -183,21 +173,15 @@ const getAllPostsByUser = expressAsyncHandler(async (request, response) => {
  * }
  */
 const editPost = expressAsyncHandler(async (request, response) => {
-    const { postId } = request.params;
-    const user = request.user;
+	const { postId } = request.params;
+	const user = request.user;
 
-    const postDB = await editPostService(user, postId, request.body);
+	const postDB = await editPostService(user, postId, request.body);
 
-    sendSuccessResponse(
-        response,
-        StatusCodes.OK,
-        "Post updated successfully.",
-        { postDB }
-    );
+	sendSuccessResponse(response, StatusCodes.OK, "Post updated successfully.", { postDB });
 
-    logger.info(`Post ${postId} edited by user ${postDB.id}.`);
+	logger.info(`Post ${postId} edited by user ${postDB.id}.`);
 });
-
 
 /**
  * @function deletePost
@@ -230,19 +214,15 @@ const editPost = expressAsyncHandler(async (request, response) => {
  *   "message": "Post deleted successfully."
  * }
  */
-const deletePost = expressAsyncHandler( async (request, response) => {
-    const { postId } = request.params;
-    const user = request.user;
+const deletePost = expressAsyncHandler(async (request, response) => {
+	const { postId } = request.params;
+	const user = request.user;
 
-    await deletePostService(user, postId);
-    
-    sendSuccessResponse(
-        response,
-        StatusCodes.OK,
-        "Post deleted successfully."
-    );
+	await deletePostService(user, postId);
 
-    logger.info(`Post ${postId} deleted by user ${user.id}.`);
+	sendSuccessResponse(response, StatusCodes.OK, "Post deleted successfully.");
+
+	logger.info(`Post ${postId} deleted by user ${user.id}.`);
 });
 
 module.exports = { getAllPosts, getAllPostsByUser, createPost, editPost, deletePost };

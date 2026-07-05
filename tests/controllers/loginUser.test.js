@@ -1,112 +1,78 @@
-const { loginUser } = require("../../controllers/user-controller");
-const User = require('../../models/user-schema');
-const { status } = require('../../utils/status');
-const logger = require('../../utils/logger');
-const { validatePassword, validateEmail } = require("../../utils/input-validator");
-const { comparePassword, generateToken } = require("../../utils/helpers");
+const { loginUser } = require('../../src/api/v1/controllers/user-controller');
+const { loginUserService } = require('../../src/services/users/user-service');
+const { StatusCodes } = require('http-status-codes');
+const ApiError = require('../../src/utils/api-error');
 
-jest.mock('../../models/user-schema.js'); // Mock User model
-jest.mock('../../utils/logger'); // Mock logger
-jest.mock("../../utils/input-validator"); // Mock validators
-
-jest.mock("../../utils/helpers", () => ({
-    comparePassword: jest.fn((x) => x),
-    generateToken: jest.fn((x) => x),
+jest.mock('../../src/services/users/user-service');
+jest.mock('../../src/utils/logger', () => ({
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+}));
+jest.mock('../../src/config/configs', () => ({
+    settings: { server: { NODE_ENV: 'test' }, app: {} }
 }));
 
-describe('loginUser', () => {
-    let request, response;
+describe('loginUser controller', () => {
+    let req, res, next;
 
     beforeEach(() => {
-        request = {
-            body: {
-                email: 'test@example.com',
-                password: 'Password123!'
-            }
+        req = {
+            body: { email: 'test@example.com', password: 'Password123!' }
         };
-        response = {
+        res = {
             status: jest.fn().mockReturnThis(),
-            json: jest.fn()
+            json: jest.fn(),
+            cookie: jest.fn()
         };
-
-        // Reset mock states before each test
-        validateEmail.mockReset();
-        validatePassword.mockReset();
-        User.findOne.mockReset();
-        User.create.mockReset();
-        generateToken.mockReset();
-        comparePassword.mockReset();
-        logger.info.mockReset();
-        logger.error.mockReset();
-
-        // Valid by default
-        validateEmail.mockReturnValue(true);
-        validatePassword.mockReturnValue(true);
+        next = jest.fn();
+        jest.clearAllMocks();
     });
 
-    it('should throw an error if any field is missing', async () => {
-        request.body.email = '';
-
-        await expect(loginUser(request, response)).rejects.toThrow("All fields must be filled!");
-
-        expect(logger.error).toHaveBeenCalledWith("Login failed: Missing fields detected.");
-    });
-
-    it('should throw an error if the email inputted is invalid', async () => {
-        validateEmail.mockReturnValue(false);
-
-        await expect(loginUser(request, response)).rejects.toThrow("Login failed: Invalid email!");
-
-        expect(logger.error).toHaveBeenCalledWith("Login failed: Invalid input!");
-    });
-
-    it('should throw an error if the password inputted is invalid', async () => {
-        validatePassword.mockReturnValue(false);
-
-        await expect(loginUser(request, response)).rejects.toThrow("Login failed: Invalid password!");
-
-        expect(logger.error).toHaveBeenCalledWith("Login failed: Invalid input!");
-    });
-
-    it('should login a user successfully', async () => {
-        const userDB = {
-            id: "123",
-            username: 'testuser',
-            email: 'test@example.com',
-            role: 'user',
-            password: 'hashedPassword'
-        };
-
-        // User with matching creditials does exist in database
-        User.findOne.mockResolvedValue(userDB);
-
-        // Password comparison successful
-        comparePassword.mockResolvedValue(true);
-
-        // Mock generated token
-        generateToken.mockReturnValue("accessToken");
-
-        await loginUser(request, response);
-
-        expect(response.status).toHaveBeenCalledWith(status.OK);
-
-        expect(response.json).toHaveBeenCalledWith({
-            _id: userDB.id,
-            username: userDB.username,
-            email: userDB.email,
-            role: userDB.role,
-            token: "accessToken"
+    it('should call loginUserService with the request body', async () => {
+        loginUserService.mockResolvedValue({
+            userDB: { id: '123', username: 'testuser', email: 'test@example.com', role: 'user' },
+            accessToken: 'access-token',
+            refreshToken: 'refresh-token'
         });
 
-        expect(logger.info).toHaveBeenCalledWith(`Login successful: ${request.body.email}`);
+        await loginUser(req, res, next);
+
+        expect(loginUserService).toHaveBeenCalledWith(req.body);
     });
 
-    it('should throw an error if the user login is unsuccessful', async () => {
-        // User not found
-        User.findOne.mockResolvedValue(null);
+    it('should set a refreshToken cookie and respond with 200 on success', async () => {
+        const mockUserDB = { id: '123', username: 'testuser', email: 'test@example.com', role: 'user' };
+        loginUserService.mockResolvedValue({
+            userDB: mockUserDB,
+            accessToken: 'access-token',
+            refreshToken: 'refresh-token'
+        });
 
-        await expect(loginUser(request, response)).rejects.toThrow("Invalid credentials");
+        await loginUser(req, res, next);
 
-        expect(logger.error).toHaveBeenCalledWith(`Login unsuccessful: ${request.body.email}`);
+        expect(res.cookie).toHaveBeenCalledWith('refreshToken', 'refresh-token', expect.any(Object));
+        expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+        expect(res.json).toHaveBeenCalledWith({
+            success: true,
+            message: 'User logged in successfully.',
+            data: {
+                userId: mockUserDB.id,
+                username: mockUserDB.username,
+                email: mockUserDB.email,
+                role: mockUserDB.role,
+                token: 'access-token'
+            }
+        });
+    });
+
+    it('should pass errors from loginUserService to next', async () => {
+        const error = new ApiError('Invalid credentials', StatusCodes.UNAUTHORIZED, 'INVALID_CREDENTIALS');
+        loginUserService.mockRejectedValue(error);
+
+        await loginUser(req, res, next);
+
+        expect(next).toHaveBeenCalledWith(error);
     });
 });

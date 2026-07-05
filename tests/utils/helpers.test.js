@@ -1,9 +1,16 @@
-const { hashPassword, comparePassword, generateToken } = require('../../utils/helpers');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
+jest.mock('../../src/config/configs', () => ({
+    settings: {
+        app: { ACCESS_TOKEN_SECRET: 'testsecret', REFRESH_TOKEN_SECRET: 'refreshsecret' },
+        server: { NODE_ENV: 'test' }
+    }
+}));
+
+const { hashPassword, comparePassword, generateAccessToken } = require('../../src/utils/helpers');
 
 describe('helpers', () => {
     describe('hashPassword', () => {
@@ -29,21 +36,12 @@ describe('helpers', () => {
         });
     });
 
-    describe('generateToken', () => {
-        const OLD_ENV = process.env;
-
-        beforeEach(() => {
-            jest.resetModules();
-            process.env = { ...OLD_ENV, ACCESS_TOKEN_SECRET: 'testsecret' };
-        });
-
-        afterAll(() => {
-            process.env = OLD_ENV;
-        });
-
-        it('should generate a JWT token with userId', () => {
+    describe('generateAccessToken', () => {
+        it('should generate a JWT access token with userId', () => {
             jwt.sign.mockReturnValue('token');
-            const token = generateToken('user123');
+
+            const token = generateAccessToken('user123');
+
             expect(jwt.sign).toHaveBeenCalledWith(
                 { id: 'user123' },
                 'testsecret',

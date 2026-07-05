@@ -1,35 +1,34 @@
 const expressAsyncHandler = require("express-async-handler");
 const logger = require("../../../utils/logger");
-const { getAllUsersService, deleteUserByIdService, updateUserRoleService } = require("../../../services/users/admin-service");
+const {
+	getAllUsersService,
+	deleteUserByIdService,
+	updateUserRoleService,
+} = require("../../../services/users/admin-service");
 const { StatusCodes } = require("http-status-codes");
 const { sendSuccessResponse } = require("../../../utils/helpers");
 
 /**
  * Handles an HTTP GET request to retrieve all registered users from the database.
- * 
+ *
  * @route GET /api/admin/users
  * @access Private (Admin only)
  *
  * @returns {express.Response} 200 - Returns an array of user objects excluding sensitive fields.
  * @returns {express.Response} 500 - If there is a server/database error, an appropriate error response is automatically handled by expressAsyncHandler.
- * 
+ *
  */
 const getAllUsers = expressAsyncHandler(async (request, response) => {
-    // Extract page and lmit from query parameters
-    const page = request.query.page;
-    const limit = request.query.limit;
+	// Extract page and lmit from query parameters
+	const page = request.query.page;
+	const limit = request.query.limit;
 
-    // Get all users and paginated metadata
-    const data = await getAllUsersService({}, { page, limit });
+	// Get all users and paginated metadata
+	const data = await getAllUsersService({}, { page, limit });
 
-    sendSuccessResponse(
-        response, 
-        StatusCodes.OK, 
-        "Registered users fetched successfully.", 
-        data
-    );
+	sendSuccessResponse(response, StatusCodes.OK, "Registered users fetched successfully.", data);
 
-    logger.info(`Registered users fetched successfully (page: ${page}, limit: ${limit}).`);
+	logger.info(`Registered users fetched successfully (page: ${page}, limit: ${limit}).`);
 });
 
 /**
@@ -42,11 +41,15 @@ const getAllUsers = expressAsyncHandler(async (request, response) => {
  * @returns {Response} 404 - JSON error response if the specified user does not exist.
  */
 const deleteUser = expressAsyncHandler(async (request, response) => {
-    const deletedUser = await deleteUserByIdService(request.params.userId);
+	const deletedUser = await deleteUserByIdService(request.params.userId);
 
-    sendSuccessResponse(response, StatusCodes.OK, `User ${deletedUser.username} deleted successfully.`);
+	sendSuccessResponse(
+		response,
+		StatusCodes.OK,
+		`User ${deletedUser.username} deleted successfully.`,
+	);
 
-    logger.info(`User ${deletedUser.username} (id: ${deletedUser.id}) deleted successfully.`);
+	logger.info(`User ${deletedUser.username} (id: ${deletedUser.id}) deleted successfully.`);
 });
 
 /**
@@ -69,21 +72,25 @@ const deleteUser = expressAsyncHandler(async (request, response) => {
  * @throws {Error} - Throws an error on validation failure or user not found. These are handled by the global error handler.
  */
 const updateUserRole = expressAsyncHandler(async (request, response) => {
-    const { userDB, oldRole, role } = await updateUserRoleService(request.params.userId, request.body);
+	const { userDB, oldRole, role } = await updateUserRoleService(
+		request.params.userId,
+		request.body,
+	);
 
-    sendSuccessResponse(
-        response, 
-        StatusCodes.OK, 
-        `The user ${userDB.username}'s role has been updated successfully!`, 
-        {
-            userId: userDB.id,
-            oldRole,
-            newRole: role
-        }
-    );
+	sendSuccessResponse(
+		response,
+		StatusCodes.OK,
+		`The user ${userDB.username}'s role has been updated successfully!`,
+		{
+			userId: userDB.id,
+			oldRole,
+			newRole: role,
+		},
+	);
 
-    logger.info(`User ${userDB.username} (id: ${userDB.id}) role updated from ${oldRole} to ${role}.`);
+	logger.info(
+		`User ${userDB.username} (id: ${userDB.id}) role updated from ${oldRole} to ${role}.`,
+	);
 });
-
 
 module.exports = { getAllUsers, deleteUser, updateUserRole };

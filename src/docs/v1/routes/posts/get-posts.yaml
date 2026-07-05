@@ -1,6 +1,6 @@
 
 summary: Get all paginated posts.
-description: Retrieve a paginated list of all blog posts, with caching support.
+description: Retrieve a paginated list of all blog posts. Supports full-text search, filtering by author or tag, and sorting. Cached results are returned for unfiltered requests.
 tags: [Posts]
 parameters:
   - name: page
@@ -9,10 +9,46 @@ parameters:
     schema:
       type: integer
       default: 1
-    description: The page number for pagination.
+    description: Page number for pagination.
+  - name: limit
+    in: query
+    required: false
+    schema:
+      type: integer
+      default: 10
+    description: Number of posts per page.
+  - name: q
+    in: query
+    required: false
+    schema:
+      type: string
+    description: Full-text search query against post titles and content.
+    example: "javascript tips"
+  - name: author
+    in: query
+    required: false
+    schema:
+      type: string
+    description: Filter posts by author username.
+    example: "johndoe"
+  - name: tag
+    in: query
+    required: false
+    schema:
+      type: string
+    description: Filter posts by a single tag.
+    example: "node"
+  - name: sort
+    in: query
+    required: false
+    schema:
+      type: string
+      enum: [latest, oldest]
+      default: latest
+    description: Sort order for posts.
 responses:
   200:
-    description: A paginated list of posts, including total pages and total posts count.
+    description: A paginated list of posts.
     content:
       application/json:
         schema:
@@ -21,7 +57,7 @@ responses:
             allPosts:
               type: array
               items:
-                $ref: '#components/schemas/Post'
+                $ref: '../../components/schemas/Post.yaml'
             page:
               type: integer
             totalPages:
@@ -34,13 +70,14 @@ responses:
               title: "Example Post Title"
               content: "This is some content for the example post."
               author_id: "609d6c9b3f1d2b001f89f100"
+              tags: ["javascript", "node"]
               createdAt: "2024-06-25T10:20:30Z"
               updatedAt: "2024-06-25T10:20:30Z"
           page: 1
           totalPages: 5
           totalPosts: 50
   500:
-    description: Internal Server Error - An unexpected error occurred on the server.
+    description: Internal Server Error.
     content:
       application/json:
         schema:

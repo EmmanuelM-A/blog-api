@@ -1,109 +1,108 @@
-const { getAllUsers, deleteUser, updateUserRole } = require("../../controllers/admin-controller");
-const User = require('../../models/user-schema');
-const { status } = require('../../utils/status');
-const logger = require('../../utils/logger');
+const { getAllUsers, deleteUser, updateUserRole } = require('../../src/api/v1/controllers/admin-controller');
+const { getAllUsersService, deleteUserByIdService, updateUserRoleService } = require('../../src/services/users/admin-service');
+const { StatusCodes } = require('http-status-codes');
+const ApiError = require('../../src/utils/api-error');
 
-jest.mock('../../models/user-schema.js'); 
-jest.mock('../../utils/logger');
+jest.mock('../../src/services/users/admin-service');
+jest.mock('../../src/utils/logger', () => ({
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+}));
 
-// NOTE TESTS HAVE NOT BEEN UPDATED SO WILL NOT WORK!!! DO NOT REFER TO THEM FOR GUIDANCE OF FUNCTIONALITY
-
-describe("Admin Controller", () => {
-    let request, response;
+describe('Admin Controller', () => {
+    let req, res, next;
 
     beforeEach(() => {
-        request = { params: { id: '123' }, body: {} };
-        response = {
+        req = { params: { userId: '123' }, body: {}, query: {} };
+        res = {
             status: jest.fn().mockReturnThis(),
             json: jest.fn()
         };
+        next = jest.fn();
         jest.clearAllMocks();
     });
 
-    describe("getAllUsers", () => {
-        it("should return all registered users", async () => {
-            const users = {
-                "data": [{"username": "user1"}, {"username": "user2"}], 
-                "message": "Registered users fetched successfully.", 
-                "success": true
-            };
+    describe('getAllUsers', () => {
+        it('should respond with 200 and all users on success', async () => {
+            const mockData = { users: [{ username: 'user1' }, { username: 'user2' }], totalUsers: 2, page: 1, totalPages: 1 };
+            getAllUsersService.mockResolvedValue(mockData);
 
-            User.find.mockReturnValue({ select: jest.fn().mockResolvedValue(users) });
+            await getAllUsers(req, res, next);
 
-            await getAllUsers(request, response);
+            expect(getAllUsersService).toHaveBeenCalled();
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Registered users fetched successfully.',
+                data: mockData
+            });
+        });
 
-            expect(User.find).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(status.OK);
-            //expect(response.json).toHaveBeenCalledWith(users);
-            //expect(logger.info).toHaveBeenCalledWith("Registered users fetched successfully.");
+        it('should pass errors to next', async () => {
+            const error = new Error('DB error');
+            getAllUsersService.mockRejectedValue(error);
+
+            await getAllUsers(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(error);
         });
     });
 
-
     describe('deleteUser', () => {
-        it('should delete a user if found', async () => {
-            const user = { username: 'user1', id: '123', deleteOne: jest.fn().mockResolvedValue() };
+        it('should respond with 200 and success message when user is deleted', async () => {
+            const mockUser = { id: '123', username: 'user1' };
+            deleteUserByIdService.mockResolvedValue(mockUser);
 
-            User.findById.mockResolvedValue(user);
+            await deleteUser(req, res, next);
 
-            await deleteUser(request, response);
-
-            expect(User.findById).toHaveBeenCalledWith('123');
-            expect(user.deleteOne).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(status.OK);
-            expect(response.json).toHaveBeenCalledWith({ message: `User ${user.username} deleted successfully.` });
-            //expect(logger.info).toHaveBeenCalledWith(`User ${user.username} (id: ${user.id}) deleted successfully.`);
+            expect(deleteUserByIdService).toHaveBeenCalledWith('123');
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: `User ${mockUser.username} deleted successfully.`
+            });
         });
 
-        it('should return 404 if user not found', async () => {
-            User.findById.mockResolvedValue(null);
+        it('should pass a 404 error to next if user is not found', async () => {
+            const error = new ApiError('User not found', StatusCodes.NOT_FOUND, 'USER_NOT_FOUND');
+            deleteUserByIdService.mockRejectedValue(error);
 
-            await expect(deleteUser(request, response)).rejects.toThrow('User not found');
-            expect(response.status).toHaveBeenCalledWith(status.NOT_FOUND);
-            expect(logger.warn).toHaveBeenCalledWith('Delete failed: User with id 123 not found.');
+            await deleteUser(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(error);
         });
     });
 
     describe('updateUserRole', () => {
-        it('should update user role if valid', async () => {
-            request.body.role = 'user';
-            const user = { username: 'user1', id: '123', role: 'author', save: jest.fn().mockResolvedValue() };
-            User.findById.mockResolvedValue(user);
+        it('should respond with 200 and updated role info on success', async () => {
+            req.body.role = 'author';
+            const mockResult = {
+                userDB: { id: '123', username: 'user1' },
+                oldRole: 'user',
+                role: 'author'
+            };
+            updateUserRoleService.mockResolvedValue(mockResult);
 
-            await updateUserRole(request, response);
+            await updateUserRole(req, res, next);
 
-            expect(User.findById).toHaveBeenCalledWith('123');
-            expect(user.role).toBe('user');
-            expect(user.save).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(status.OK);
-            expect(response.json).toHaveBeenCalledWith({ message: `User ${user.username}'s role updated to user` });
-            expect(logger.info).toHaveBeenCalledWith(`User ${user.username} (id: ${user.id}) role updated from author to user.`);
+            expect(updateUserRoleService).toHaveBeenCalledWith('123', req.body);
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: `The user ${mockResult.userDB.username}'s role has been updated successfully!`,
+                data: { userId: mockResult.userDB.id, oldRole: 'user', newRole: 'author' }
+            });
         });
 
-        it('should return validation error if no role provided', async () => {
-            request.body.role = undefined;
+        it('should pass errors to next if validation or user lookup fails', async () => {
+            const error = new ApiError('Invalid role', StatusCodes.BAD_REQUEST, 'INVALID_ROLE');
+            updateUserRoleService.mockRejectedValue(error);
 
-            await expect(updateUserRole(request, response)).rejects.toThrow("Role is required");
-            expect(response.status).toHaveBeenCalledWith(status.VALIDATION_ERROR);
-            expect(logger.warn).toHaveBeenCalledWith('Role update failed: No role provided for user id 123.');
-        });
+            await updateUserRole(req, res, next);
 
-        it('should return validation error if role is invalid', async () => {
-            request.body.role = 'superadmin';
-
-            await expect(updateUserRole(request, response)).rejects.toThrow('Invalid role. Valid roles are: user, author, admin.');
-            expect(response.status).toHaveBeenCalledWith(status.VALIDATION_ERROR);
-            expect(logger.warn).toHaveBeenCalledWith('Role update failed: Invalid role "superadmin" provided for user id 123.');
-        });
-
-        it('should return 404 if user not found', async () => {
-            request.body.role = 'admin';
-            User.findById.mockResolvedValue(null);
-
-            await expect(updateUserRole(request, response)).rejects.toThrow('User not found');
-            expect(response.status).toHaveBeenCalledWith(status.NOT_FOUND);
-            expect(logger.warn).toHaveBeenCalledWith('Role update failed: User with id 123 not found.');
+            expect(next).toHaveBeenCalledWith(error);
         });
     });
-
 });
