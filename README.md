@@ -2,6 +2,8 @@
 
 A REST API for a blogging platform built with **Node.js**, **Express**, **MongoDB**, and **Redis**.
 
+**Live API Docs:** [Live Demo](https://blog-api-production-b62c.up.railway.app/api-docs)
+
 ## Features
 
 - User registration and login with JWT authentication

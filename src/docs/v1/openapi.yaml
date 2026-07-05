@@ -9,7 +9,7 @@ info:
 
 servers:
   - url: http://localhost:5000/api/v1
-  - url: blog-api-production-b62c.up.railway.app
+  - url: https://blog-api-production-b62c.up.railway.app/api/v1
 
 paths:
   # ----------------- HEALTH CHECK ENDPOINTS -----------------

@@ -1,11 +1,11 @@
 openapi: 3.1.0
 info:
   title: Blog API
-  version: 1.0.0
+  version: 1.1.0
   description: API documentation for the blog platform
 servers:
   - url: 'http://localhost:5000/api/v1'
-  - url: 'https://blog-api-tp8c.onrender.com/api/v1'
+  - url: 'https://blog-api-production-b62c.up.railway.app/api/v1'
 paths:
   /health/server:
     get:
@@ -388,7 +388,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/BaseUser'
+                $ref: '#/components/schemas/User'
               example:
                 _id: 60a6b9d4f1e9a21e4cfa1234
                 username: newuser
@@ -422,7 +422,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#/components/schemas/ErrorEnvelope'
   /users/login:
     post:
       summary: Log in a user.
@@ -501,7 +501,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#/components/schemas/ErrorEnvelope'
               example:
                 message: Invalid credentials
         '500':
@@ -509,7 +509,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#/components/schemas/ErrorEnvelope'
   /users/current:
     get:
       summary: Get current authenticated user.
@@ -524,7 +524,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/BaseUser'
+                $ref: '#/components/schemas/User'
               example:
                 _id: 60a6b9d4f1e9a21e4cfa1234
                 username: loggedInUser
@@ -545,31 +545,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
-  /users/refresh-token:
-    post:
-      summary: Log out a user.
-      description: 'Invalidates the user''s refresh token and clears the refresh token cookie, effectively logging the user out.'
-      tags:
-        - Users
-      responses:
-        '200':
-          description: User logged out successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Logged out successfully
-        '500':
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-  /users/logout:
+  /users/refresh-token:
     post:
       summary: Refresh access token.
       description: Obtains a new access token using a valid refresh token stored in cookies.
@@ -601,7 +578,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#/components/schemas/ErrorEnvelope'
               examples:
                 invalidUser:
                   summary: User not found for token
@@ -620,7 +597,30 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#components/schemas/Error'
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /users/logout:
+    post:
+      summary: Log out a user.
+      description: 'Invalidates the user''s refresh token and clears the refresh token cookie, effectively logging the user out.'
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User logged out successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
   /posts:
     post:
       summary: Create a new blog post.
@@ -828,7 +828,7 @@ paths:
                   userPosts:
                     type: array
                     items:
-                      $ref: '#components/schemas/Post'
+                      $ref: '#/components/schemas/Post'
                   page:
                     type: integer
                   totalPages:
