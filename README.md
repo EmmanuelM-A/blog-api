@@ -1,171 +1,150 @@
 # Blog API
 
-A full-featured RESTful Blog API built with **Node.js**, **Express**, and **MongoDB**, featuring user authentication, role-based access control, post management, comments, likes, caching with **Redis**, and API documentation using Swagger.
+A REST API for a blogging platform built with **Node.js**, **Express**, **MongoDB**, and **Redis**.
 
-## 🚀 Features
+## Features
 
-- User Registration & Authentication (JWT & Refresh Tokens)
-- Role-Based Access Control (`user`, `author`, `admin`)
-- Post CRUD operations with pagination
+- User registration and login with JWT authentication
+- Role-based access: `user`, `author`, `admin`
+- Create, edit, and delete blog posts with pagination
+- Search and filter posts by keyword, author, or tag
 - Comments and likes on posts
-- Auto-promotion to `author` after first post
-- Input validation and centralized error handling
-- Redis caching for performance
-- Swagger UI for interactive API docs
-- Dockerized for easy deployment
+- New users are automatically promoted to `author` after their first post
+- Redis caching on frequently read endpoints
+- Interactive API docs via Swagger UI
 
-## 📁 Project Structure
+## Tech Stack
 
-```bash
+| Layer | Technology |
+| --- | --- |
+| Runtime | Node.js 18 |
+| Framework | Express v5 |
+| Database | MongoDB (Mongoose) |
+| Cache | Redis |
+| Auth | JWT (access + refresh tokens) |
+| Docs | Swagger / OpenAPI 3.1 |
+| Deployment | Railway |
+
+## Project Structure
+
+```text
 src/
-├── __tests__/
-├── api/
-│   └── v1/
-│       ├── controllers/
-│       ├── routes/
+├── api/v1/
+│   ├── controllers/
+│   └── routes/
+├── config/
 ├── database/
-│   └── models/
+│   ├── models/
 │   └── schemas/
-│   └── database-connection.js
 ├── docs/
-│   └── swagger.yml
-│   └── swagger.js
 ├── middleware/
 ├── services/
-│   └── caching/
-│   └── comments/
-│   └── likes/
-│   └── posts/
-│   └── users/
+│   ├── caching/
+│   ├── comments/
+│   ├── likes/
+│   ├── posts/
+│   ├── users/
 │   └── validation/
-├── utils/
-├── app.js
-├── config.js
-├── server.js
+└── utils/
 ```
 
-## Running the Project
+## Getting Started
 
-### 🔧 Prerequisites
+### Prerequisites
 
-- **Node.js v18+**
-- **Docker** & **Docker Compose**
-- **MongoDB** & **Redis** (recommended via Docker)
+- Node.js v18+
+- Docker and Docker Compose (for local MongoDB and Redis)
 
-### 📦 Installation
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### Configure Environment Variables
+### 2. Set up environment variables
 
-Create a `.env` file in the root directory based on the `.env.example` template and set your environment variables.
+Copy the example file and fill in your values:
 
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
 
-### ▶️ Run the API (Development)
+Key variables:
+
+```env
+MONGO_URI=mongodb://localhost:27017
+REDIS_URL=redis://localhost:6379
+ACCESS_TOKEN_SECRET=your_secret
+REFRESH_TOKEN_SECRET=your_secret
+```
+
+### 3. Start MongoDB and Redis
+
+```bash
+npm run db:up
+```
+
+### 4. Run the API
 
 ```bash
 npm run dev
 ```
 
-## 🐳 Docker Usage
-
-### Production Environemnt
-
-**Most production deployment sites will use Dockerfile for deployment.**
-
-#### Build Production Image
+### Seed an admin user (optional)
 
 ```bash
-npm run docker:build:prod
+npm run seed
 ```
 
-#### Run Production Container
+## Docker
+
+The `docker-compose.yml` runs MongoDB and Redis locally. The `Dockerfile` builds the production image used for deployment.
 
 ```bash
-npm run docker:run:prod
+# Start local databases
+npm run db:up
+
+# Stop local databases
+npm run db:down
+
+# Stop and remove volumes
+npm run db:clear
 ```
 
-#### Running `docker-compose.prod.yml`
+## Authentication
 
-Build and run the Production Container using the following command:
+- Login returns a short-lived **access token** (5 min) in the response body
+- A **refresh token** (7 days) is stored in an HTTP-only cookie
+- Use `Authorization: Bearer <access_token>` on protected routes
 
-```bash
-npm run dc:prod:build
-```
+## Roles
 
-Run the Production Container using the following command:
+| Role | Access |
+| --- | --- |
+| `user` | Register, login, comment, like |
+| `author` | All of the above + create/edit/delete own posts |
+| `admin` | Full access including user management |
 
-```bash
-npm run dc:prod
-```
+## API Documentation
 
-To stop and remove the production container, use the following command:
+Swagger UI is available at `/api-docs` when running locally.
 
-```bash
-npm run dc:prod:down
-```
+## Scripts
 
-To view logs from the production container, use the following command:
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start in development mode with hot reload |
+| `npm start` | Start in production mode |
+| `npm test` | Run tests |
+| `npm run lint` | Lint the codebase |
+| `npm run seed` | Seed an admin user |
+| `npm run db:up` | Start local MongoDB and Redis via Docker |
+| `npm run bundle-docs` | Bundle Swagger docs into a single file |
 
-```bash
-docker-compose -f docker-compose.prod.yml logs api
-```
+## License
 
-### Development Environment
+[MIT](LICENSE.md)
 
-#### Running `docker-compose.dev.yml`
-
-Build the Development Image using the following command:
-
-```bash
-npm run dc:dev:build
-```
-
-Run the Development Container using the following command:
-
-```bash
-npm run dc:dev
-```
-
-To stop and remove the development container, use the following command:
-
-```bash
-npm run dc:dev:down
-```
-
-To view logs from the development container, use the following command:
-
-```bash
-docker-compose -f docker-compose.dev.yml logs api # Replace 'api' with your service name as defined in the docker-compose file.
-```
-
-## 🛡️ Authentication
-
-- JWT Access Token in `Authorization: Bearer <token>`.
-- Refresh Token in secure HTTP-only cookie.
-- Supports user login/logout and token refreshing.
-
-## 🧑‍💻 Roles & Access
-
-- `user` – Default registered user
-- `author` – Automatically promoted after first post
-- `admin` – Full access to all user/admin routes
-
-## 📄 API Documentation
-
-Swagger UI available at: [API Documentation](https://blog-api-tp8c.onrender.com/api-docs)
-
-**Live preview of all endpoints, request/response schemas, and error codes.**
-
-## 📝 License
-
-[MIT License](LICENSE.md)
-
-## 👨‍🏫 Author
+## Author
 
 [Emmanuel Maduka Agbeze](https://github.com/EmmanuelM-A)
