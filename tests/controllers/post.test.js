@@ -1,170 +1,163 @@
+const { createPost, getAllPosts, getAllPostsByUser, editPost, deletePost } = require('../../src/api/v1/controllers/post-controller');
 const {
-	getAllPosts,
-	getAllPostsByUser,
-	createPost,
-	editPost,
-	deletePost,
-	commentOnPost,
-	likePost,
-	getCommentsForPost,
-	getLikesForPost,
-} = require("../../controllers/post-controller");
-const { status } = require("../../utils/status");
-const { constants } = require("../../utils/constants");
-const logger = require("../../utils/logger");
-const Post = require("../../models/post-schema");
-const User = require("../../models/user-schema");
+    createPostService,
+    getAllPostsService,
+    getAllPostsByUserService,
+    editPostService,
+    deletePostService
+} = require('../../src/services/posts/post-service');
+const { StatusCodes } = require('http-status-codes');
+const ApiError = require('../../src/utils/api-error');
 
-jest.mock("../../models/user-schema.js");
-jest.mock("../../models/post-schema.js");
-jest.mock("../../utils/logger");
+jest.mock('../../src/services/posts/post-service');
+jest.mock('../../src/utils/logger', () => ({
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+}));
 
-describe("Post Controller", () => {
-	let request, response;
+describe('Post Controller', () => {
+    let req, res, next;
 
-	beforeEach(() => {
-		request = {
-			params: {
-				id: "123",
-			},
-			body: {},
-			query: {},
-		};
-		response = {
-			status: jest.fn().mockReturnThis(),
-			json: jest.fn(),
-		};
-		jest.clearAllMocks();
-	});
+    beforeEach(() => {
+        req = {
+            params: {},
+            body: {},
+            query: {},
+            user: { id: 'user-123', username: 'testuser', role: 'user' }
+        };
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        };
+        next = jest.fn();
+        jest.clearAllMocks();
+    });
 
-	describe("createPost", () => {
-		it("should throw an error when the author is invalid", async () => {
-			request.params.id = "";
+    describe('createPost', () => {
+        it('should respond with 201 and the created post on success', async () => {
+            req.body = { title: 'New Post', content: 'Some content' };
+            const mockPost = { id: 'post-1', title: 'New Post', content: 'Some content' };
+            createPostService.mockResolvedValue(mockPost);
 
-			await expect(createPost(request, response)).rejects.toThrow(
-				"Authentication required to create a post.",
-			);
+            await createPost(req, res, next);
 
-			expect(response.status).toHaveBeenCalledWith(status.UNAUTHORIZED);
-			expect(logger.warn).toHaveBeenCalledWith("Unauthorized post creation attempt.");
-		});
+            expect(createPostService).toHaveBeenCalledWith(req.user, req.body);
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.CREATED);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Post created successfully.',
+                data: { createdPost: mockPost }
+            });
+        });
 
-		it("should throw an error when either the title or content is an ivalid type", async () => {
-			request.body.title = 2;
-			request.body.content = "Valid Content";
+        it('should pass errors from createPostService to next', async () => {
+            const error = new ApiError('Title must not be empty', StatusCodes.UNPROCESSABLE_ENTITY, 'VALIDATION_ERROR');
+            createPostService.mockRejectedValue(error);
 
-			await expect(createPost(request, response)).rejects.toThrow(
-				"Title and content must be strings.",
-			);
+            await createPost(req, res, next);
 
-			expect(response.status).toHaveBeenCalledWith(status.VALIDATION_ERROR);
-		});
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
 
-		it("should throw an error when either the title or content is empty", async () => {
-			request.body.title = "        ";
-			request.body.content = " ";
+    describe('getAllPosts', () => {
+        it('should respond with 200 and posts data', async () => {
+            const mockData = { allPosts: [], page: 1, totalPages: 1, totalPosts: 0 };
+            getAllPostsService.mockResolvedValue(mockData);
 
-			await expect(createPost(request, response)).rejects.toThrow(
-				"Title and content must not be empty.",
-			);
+            await getAllPosts(req, res, next);
 
-			expect(response.status).toHaveBeenCalledWith(status.VALIDATION_ERROR);
-		});
+            expect(getAllPostsService).toHaveBeenCalledWith({ page: undefined, limit: undefined, q: undefined, author: undefined, sort: undefined, tag: undefined });
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+        });
 
-		it("should throw an error when the title length exceeds the limit", async () => {
-			request.params.id = "123";
-			request.body.title = "a".repeat(constants.MAX_POST_TITLE_LENGTH + 1);
-			request.body.content = "Valid content";
+        it('should pass errors to next', async () => {
+            const error = new Error('DB error');
+            getAllPostsService.mockRejectedValue(error);
 
-			await expect(createPost(request, response)).rejects.toThrow(
-				`Title must be under ${constants.MAX_POST_TITLE_LENGTH} characters.`,
-			);
-			expect(response.status).toHaveBeenCalledWith(status.VALIDATION_ERROR);
-		});
+            await getAllPosts(req, res, next);
 
-		it("should throw an error when the content length exceeds the limit", async () => {
-			request.params.id = "123";
-			request.body.title = "Valid Title";
-			request.body.content = "a".repeat(constants.MAX_POST_CONTENT_LENGTH + 1);
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
 
-			await expect(createPost(request, response)).rejects.toThrow(
-				`Content must be under ${constants.MAX_POST_CONTENT_LENGTH} characters.`,
-			);
-			expect(response.status).toHaveBeenCalledWith(status.VALIDATION_ERROR);
-		});
+    describe('getAllPostsByUser', () => {
+        it('should respond with 200 and user posts data', async () => {
+            req.params.username = 'testuser';
+            const mockData = { userPosts: [], page: 1, totalPages: 1, totalPosts: 0 };
+            getAllPostsByUserService.mockResolvedValue(mockData);
 
-		it("should create a post and return the necessary json data", async () => {
-			request.params.id = "authorId";
-			request.body.title = "Valid Title";
-			request.body.content = "Valid content";
+            await getAllPostsByUser(req, res, next);
 
-			const createdPost = {
-				id: "postId",
-				title: "Valid Title",
-				content: "Valid content",
-				authorID: "authorId",
-			};
+            expect(getAllPostsByUserService).toHaveBeenCalledWith('testuser', { page: undefined, limit: undefined });
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+        });
 
-			Post.create.mockResolvedValue(createdPost);
+        it('should pass a 404 error to next if user is not found', async () => {
+            req.params.username = 'nobody';
+            const error = new ApiError('User not found', StatusCodes.NOT_FOUND, 'USER_NOT_FOUND');
+            getAllPostsByUserService.mockRejectedValue(error);
 
-			await createPost(request, response);
+            await getAllPostsByUser(req, res, next);
 
-			expect(Post.create).toHaveBeenCalledWith({
-				title: "Valid Title",
-				content: "Valid content",
-				authorID: "authorId",
-			});
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
 
-			expect(logger.info).toHaveBeenCalledWith(
-				`New post created by user authorId with ID: ${createdPost.id}`,
-			);
+    describe('editPost', () => {
+        it('should respond with 200 and updated post on success', async () => {
+            req.params.postId = 'post-1';
+            req.body = { title: 'Updated', content: 'Updated content' };
+            const mockPost = { id: 'post-1', title: 'Updated' };
+            editPostService.mockResolvedValue(mockPost);
 
-			expect(response.status).toHaveBeenCalledWith(status.CREATED);
-			expect(response.json).toHaveBeenCalledWith({ post: createdPost });
-		});
-	});
+            await editPost(req, res, next);
 
-	describe("getAllPostsByUser", () => {
-		it("should throw an error if the user does not exist", async () => {
-			request.params.username = "nonexistent";
-			User.findOne.mockResolvedValue(null);
+            expect(editPostService).toHaveBeenCalledWith(req.user, 'post-1', req.body);
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Post updated successfully.',
+                data: { postDB: mockPost }
+            });
+        });
 
-			await expect(getAllPostsByUser(request, response)).rejects.toThrow("User does not exist!");
-			expect(logger.warn).toHaveBeenCalledWith("User not found: nonexistent");
-			expect(response.status).toHaveBeenCalledWith(status.NOT_FOUND);
-		});
+        it('should pass errors to next', async () => {
+            req.params.postId = 'post-1';
+            const error = new ApiError('Post not found', StatusCodes.NOT_FOUND, 'POST_NOT_FOUND');
+            editPostService.mockRejectedValue(error);
 
-		it("should return paginated posts for a user", async () => {
-			request.params.username = "testuser";
-			request.query.page = "2";
-			const userDB = { id: "userId", _id: "userId", username: "testuser" };
-			User.findOne.mockResolvedValue(userDB);
+            await editPost(req, res, next);
 
-			const userPosts = [
-				{ id: "post1", author_id: "userId" },
-				{ id: "post2", author_id: "userId" },
-			];
-			Post.find.mockReturnValue({
-				skip: jest.fn().mockReturnThis(),
-				limit: jest.fn().mockReturnThis(),
-				sort: jest.fn().mockResolvedValue(userPosts),
-			});
-			Post.countDocuments.mockResolvedValue(12);
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
 
-			await getAllPostsByUser(request, response);
+    describe('deletePost', () => {
+        it('should respond with 200 on successful deletion', async () => {
+            req.params.postId = 'post-1';
+            deletePostService.mockResolvedValue();
 
-			expect(User.findOne).toHaveBeenCalledWith({ username: "testuser" });
-			expect(Post.find).toHaveBeenCalledWith({ author_id: "userId" });
-			expect(Post.countDocuments).toHaveBeenCalledWith({ author_id: "userId" });
-			expect(logger.info).toHaveBeenCalledWith("Found the user testuser with ID: userId");
-			expect(logger.info).toHaveBeenCalledWith("Fetched 2 posts for user testuser");
-			expect(response.status).toHaveBeenCalledWith(status.OK);
-			expect(response.json).toHaveBeenCalledWith({
-				userPosts,
-				page: 2,
-				totalPages: Math.ceil(12 / constants.POSTS_PER_PAGE_LIMIT),
-				totalPosts: 12,
-			});
-		});
-	});
+            await deletePost(req, res, next);
+
+            expect(deletePostService).toHaveBeenCalledWith(req.user, 'post-1');
+            expect(res.status).toHaveBeenCalledWith(StatusCodes.OK);
+            expect(res.json).toHaveBeenCalledWith({
+                success: true,
+                message: 'Post deleted successfully.'
+            });
+        });
+
+        it('should pass errors to next', async () => {
+            req.params.postId = 'post-1';
+            const error = new ApiError('Forbidden', StatusCodes.FORBIDDEN, 'FORBIDDEN');
+            deletePostService.mockRejectedValue(error);
+
+            await deletePost(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
 });

@@ -1,12 +1,19 @@
-const { clearPostCache } = require('../../utils/cache-utils');
-const redisClient = require('../../config/redis-client');
+const { clearCacheForKey } = require('../../src/services/caching/cache-utils');
+const redisClient = require('../../src/services/caching/redis-client');
 
-jest.mock('../../config/redis-client', () => ({
+jest.mock('../../src/services/caching/redis-client', () => ({
     keys: jest.fn(),
     del: jest.fn()
 }));
 
-describe('clearPostCache', () => {
+jest.mock('../../src/utils/logger', () => ({
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+}));
+
+describe('clearCacheForKey', () => {
     afterEach(() => {
         jest.clearAllMocks();
     });
@@ -15,7 +22,7 @@ describe('clearPostCache', () => {
         redisClient.keys.mockResolvedValue(['posts:page:1', 'posts:page:2']);
         redisClient.del.mockResolvedValue(1);
 
-        await clearPostCache('posts:page:*');
+        await clearCacheForKey('posts:page:*');
 
         expect(redisClient.keys).toHaveBeenCalledWith('posts:page:*');
         expect(redisClient.del).toHaveBeenCalledTimes(2);
@@ -26,7 +33,7 @@ describe('clearPostCache', () => {
     it('should do nothing if no keys are found', async () => {
         redisClient.keys.mockResolvedValue([]);
 
-        await clearPostCache('posts:page:*');
+        await clearCacheForKey('posts:page:*');
 
         expect(redisClient.keys).toHaveBeenCalledWith('posts:page:*');
         expect(redisClient.del).not.toHaveBeenCalled();
