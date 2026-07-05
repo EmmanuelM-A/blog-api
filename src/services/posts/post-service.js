@@ -17,8 +17,7 @@ const Post = require("../../database/schemas/post-schema");
 async function getAllPostsService(options) {
 	const page = parseInt(options.page, 10) || 1;
 	const rawLimit = parseInt(options.limit, 10);
-	const limit =
-		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
+	const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
 	const skip = (page - 1) * limit;
 
 	const { q, author, sort, tag } = options;
@@ -112,8 +111,7 @@ async function getAllPostsService(options) {
 async function getAllPostsByUserService(username, options) {
 	const page = parseInt(options.page, 10) || 1;
 	const rawLimit = parseInt(options.limit, 10);
-	const limit =
-		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
+	const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
 
 	// Validate presence of username
 	if (!username) {

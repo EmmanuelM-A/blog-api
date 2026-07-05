@@ -105,8 +105,7 @@ async function commentOnPostService(postId, userId, commentContent) {
 async function getCommentsForPostService(postId, options = {}) {
 	const page = parseInt(options.page, 10) || 1;
 	const rawLimit = parseInt(options.limit, 10);
-	const limit =
-		Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
+	const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : settings.app.POSTS_PER_PAGE;
 
 	const skip = (page - 1) * limit;
 
