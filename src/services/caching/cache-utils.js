@@ -14,10 +14,17 @@ const logger = require("../../utils/logger");
  * await clearCacheForKey('posts:page:*');
  */
 const clearCacheForKey = async (keyPattern) => {
-	const keys = await redisClient.keys(keyPattern);
-	if (keys.length) {
-		await Promise.all(keys.map((k) => redisClient.del(k)));
-		logger.info(`Cleared ${keys.length} cached pages for the keys: ${keyPattern}.`);
+	let cleared = 0;
+
+	for await (const keys of redisClient.scanIterator({ MATCH: keyPattern, COUNT: 100 })) {
+		if (keys.length) {
+			await redisClient.del(keys);
+			cleared += keys.length;
+		}
+	}
+
+	if (cleared) {
+		logger.info(`Cleared ${cleared} cached pages for the keys: ${keyPattern}.`);
 	}
 };
 
